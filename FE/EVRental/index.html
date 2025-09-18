@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thuê Xe Điện</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .reveal {
+            position: relative;
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 1s ease;
+        }
+        
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .card {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.5s ease;
+            transition-delay: calc(0.2s * var(--delay));
+        }
+
+        .card.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .price-card {
+            opacity: 0;
+            transform: translateX(-50px);
+            transition: all 0.5s ease;
+            transition-delay: calc(0.2s * var(--delay));
+        }
+
+        .price-card.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .step {
+            opacity: 0;
+            transform: translateX(30px);
+            transition: all 0.5s ease;
+            transition-delay: calc(0.2s * var(--delay));
+        }
+
+        .step.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="container nav">
+            <div class="logo">E-Bike</div>
+            <nav class="menu">
+                <a href="#fleet">Xe</a>
+                <a href="#pricing">Giá</a>
+                <a href="#booking">Đặt xe</a>
+                <a href="#contact">Liên hệ</a>
+                <a href="#login" class="btn btn-ghost">Đăng nhập</a>
+                <a href="#signup" class="btn btn-secondary">Đăng ký</a>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero reveal">
+        <div class="container hero-inner">
+            <h1>Thuê xe điện nhanh chóng, xanh sạch</h1>
+            <p>Đặt xe trong vài phút. Giao nhận linh hoạt. Trải nghiệm di chuyển êm ái và tiết kiệm.</p>
+            <a href="#booking" class="btn btn-primary">Đặt xe ngay</a>
+        </div>
+    </section>
+
+    <section id="locations" class="section reveal">
+        <div class="container">
+            <h2>Điểm thuê xe</h2>
+            <div class="map-container">
+                <!-- Replace src with your actual Google Maps API key -->
+                <iframe
+                    width="100%"
+                    height="450"
+                    style="border:0"
+                    loading="lazy"
+                    allowfullscreen
+                    src="https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY&q=Ho+Chi+Minh+City">
+                </iframe>
+            </div>
+            <div class="location-list">
+                <div class="location-item">
+                    <h4>E-Bike - Quận 1</h4>
+                    <p>123 Đường Xanh, Quận 1, TP.HCM</p>
+                    <p>Giờ mở cửa: 7:00 - 22:00</p>
+                    <p class="availability">Xe có sẵn: 15</p>
+                </div>
+                <div class="location-item">
+                    <h4>E-Bike - Quận 3</h4>
+                    <p>456 Đường Trần Hưng Đạo, Quận 3, TP.HCM</p>
+                    <p>Giờ mở cửa: 7:00 - 22:00</p>
+                    <p class="availability">Xe có sẵn: 8</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="fleet" class="section reveal">
+        <div class="container">
+            <h2>Dòng xe</h2>
+            <div class="grid cards">
+                <article class="card">
+                    <img src="https://images.unsplash.com/photo-1549923746-c502d488b3ea?q=80&w=1200&auto=format&fit=crop" alt="Xe máy điện" />
+                    <div class="card-body">
+                        <h3>Xe máy điện</h3>
+                        <p>Gọn nhẹ, phù hợp nội đô.</p>
+                        <div class="vehicle-specs">
+                            <span class="battery">Pin: 2.4kWh (80-100km/sạc)</span>
+                            <span class="availability available">Còn 5 xe</span>
+                        </div>
+                        <a href="#booking" class="btn btn-primary btn-sm">Đặt ngay</a>
+                    </div>
+                </article>
+                <article class="card">
+                    <img src="https://images.unsplash.com/photo-1619767886558-efdc259cde1b?q=80&w=1200&auto=format&fit=crop" alt="Ô tô điện cỡ nhỏ" />
+                    <div class="card-body">
+                        <h3>Ô tô điện cỡ nhỏ</h3>
+                        <p>4 chỗ, linh hoạt trong phố.</p>
+                        <div class="vehicle-specs">
+                            <span class="battery">Pin: 35kWh (250km/sạc)</span>
+                            <span class="availability limited">Còn 2 xe</span>
+                        </div>
+                        <a href="#booking" class="btn btn-primary btn-sm">Đặt ngay</a>
+                    </div>
+                </article>
+                <article class="card">
+                    <img src="https://images.unsplash.com/photo-1621381364900-bd3f68fb3f5c?q=80&w=1200&auto=format&fit=crop" alt="Ô tô điện SUV" />
+                    <div class="card-body">
+                        <h3>Ô tô điện SUV</h3>
+                        <p>Rộng rãi cho gia đình. An toàn hiện đại.</p>
+                        <div class="vehicle-specs">
+                            <span class="battery">Pin: 75kWh (400km/sạc)</span>
+                            <span class="availability unavailable">Hết xe</span>
+                        </div>
+                        <a href="#booking" class="btn btn-primary btn-sm" disabled>Hết xe</a>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section id="pricing" class="section alt reveal">
+        <div class="container">
+            <h2>Bảng giá</h2>
+            <div class="grid pricing">
+                <div class="price-card">
+                    <h3>Xe máy điện</h3>
+                    <p class="price">120.000đ/ngày</p>
+                    <ul>
+                        <li>Bảo hiểm cơ bản</li>
+                        <li>Miễn phí 1 lần sạc</li>
+                        <li>Giao nhận trong 5km</li>
+                    </ul>
+                </div>
+                <div class="price-card featured">
+                    <h3>Ô tô điện nhỏ</h3>
+                    <p class="price">800.000đ/ngày</p>
+                    <ul>
+                        <li>Bảo hiểm đầy đủ</li>
+                        <li>Hỗ trợ 24/7</li>
+                        <li>Giao nhận tận nơi</li>
+                    </ul>
+                </div>
+                <div class="price-card">
+                    <h3>Ô tô điện SUV</h3>
+                    <p class="price">1.200.000đ/ngày</p>
+                    <ul>
+                        <li>Bảo hiểm đầy đủ</li>
+                        <li>2 tài xế phụ</li>
+                        <li>Giảm 10% khi thuê 3 ngày</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="booking" class="section reveal">
+        <div class="container">
+            <h2>Đặt xe</h2>
+            <form class="booking-form" onsubmit="event.preventDefault(); alert('Cảm ơn bạn! Chúng tôi sẽ liên hệ sớm.');">
+                <div class="grid form-grid">
+                    <label>
+                        Họ và tên
+                        <input type="text" required placeholder="Nguyễn Văn A" />
+                    </label>
+                    <label>
+                        Số điện thoại
+                        <input type="tel" required placeholder="09xx xxx xxx" />
+                    </label>
+                    <label>
+                        Loại xe
+                        <select required>
+                            <option value="">Chọn loại xe</option>
+                            <option>Xe máy điện</option>
+                            <option>Ô tô điện cỡ nhỏ</option>
+                            <option>Ô tô điện SUV</option>
+                        </select>
+                    </label>
+                    <label>
+                        Ngày nhận xe
+                        <input type="date" required />
+                    </label>
+                    <label>
+                        Ngày trả xe
+                        <input type="date" required />
+                    </label>
+                    <label>
+                        Ghi chú
+                        <input type="text" placeholder="Yêu cầu thêm (nếu có)" />
+                    </label>
+                </div>
+                <button class="btn btn-primary" type="submit">Gửi yêu cầu</button>
+            </form>
+        </div>
+    </section>
+
+    <section id="process" class="section alt reveal">
+        <div class="container">
+            <h2>Quy trình thuê xe</h2>
+            <div class="process-steps">
+                <div class="step">
+                    <h3>1. Nhận xe</h3>
+                    <ul>
+                        <li>Check-in tại quầy hoặc qua ứng dụng</li>
+                        <li>Xuất trình CMND/CCCD và GPLX gốc</li>
+                        <li>Ký hợp đồng điện tử</li>
+                        <li>Kiểm tra xe và chụp ảnh với nhân viên</li>
+                    </ul>
+                </div>
+                <div class="step">
+                    <h3>2. Sử dụng xe</h3>
+                    <ul>
+                        <li>Tuân thủ luật giao thông</li>
+                        <li>Theo dõi pin và trạm sạc</li>
+                        <li>Hỗ trợ 24/7 qua hotline</li>
+                    </ul>
+                </div>
+                <div class="step">
+                    <h3>3. Trả xe</h3>
+                    <ul>
+                        <li>Trả xe tại điểm thuê</li>
+                        <li>Kiểm tra xe cùng nhân viên</li>
+                        <li>Thanh toán phụ phí (nếu có)</li>
+                        <li>Đánh giá trải nghiệm</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Auth Modals -->
+    <div id="login" class="modal" aria-labelledby="login-title" role="dialog">
+        <div class="modal-dialog">
+            <a href="#" class="modal-close" aria-label="Đóng">×</a>
+            <h3 id="login-title">Đăng nhập</h3>
+            <form class="auth-form" onsubmit="event.preventDefault(); alert('Đăng nhập thành công (demo)');">
+                <label>
+                    Email
+                    <input type="email" required placeholder="ban@vidu.com" />
+                </label>
+                <label>
+                    Mật khẩu
+                    <input type="password" required placeholder="••••••••" />
+                </label>
+                <button class="btn btn-primary" type="submit">Đăng nhập</button>
+                <p class="muted">Chưa có tài khoản? <a href="#signup">Đăng ký</a></p>
+            </form>
+        </div>
+    </div>
+
+    <div id="signup" class="modal" aria-labelledby="signup-title" role="dialog">
+        <div class="modal-dialog">
+            <a href="#" class="modal-close" aria-label="Đóng">×</a>
+            <h3 id="signup-title">Đăng ký</h3>
+            <form class="auth-form" onsubmit="event.preventDefault(); alert('Đăng ký thành công (demo)');">
+                <label>
+                    Họ và tên
+                    <input type="text" required placeholder="Nguyễn Văn A" />
+                </label>
+                <label>
+                    Email
+                    <input type="email" required placeholder="ban@vidu.com" />
+                </label>
+                <label>
+                    Số điện thoại
+                    <input type="tel" required placeholder="09xx xxx xxx" />
+                </label>
+                <label>
+                    Mật khẩu
+                    <input type="password" required placeholder="••••••••" />
+                </label>
+                <label>
+                    CMND/CCCD (Ảnh mặt trước)
+                    <input type="file" accept="image/*" required />
+                </label>
+                <label>
+                    CMND/CCCD (Ảnh mặt sau)
+                    <input type="file" accept="image/*" required />
+                </label>
+                <label>
+                    Giấy phép lái xe (Ảnh mặt trước)
+                    <input type="file" accept="image/*" required />
+                </label>
+                <label>
+                    Giấy phép lái xe (Ảnh mặt sau)
+                    <input type="file" accept="image/*" required />
+                </label>
+                <p class="muted">*Quý khách vui lòng mang theo bản gốc để xác thực tại điểm thuê</p>
+                <button class="btn btn-secondary" type="submit">Tạo tài khoản</button>
+                <p class="muted">Đã có tài khoản? <a href="#login">Đăng nhập</a></p>
+            </form>
+        </div>
+    </div>
+
+    <footer id="contact" class="site-footer">
+        <div class="container footer-inner">
+            <div>
+                <div class="logo">E-Bike</div>
+                <p>Địa chỉ: 123 Đường Xanh, Quận 1, TP.HCM</p>
+                <p>Hotline: 0909 000 000</p>
+            </div>
+            <div>
+                <h4>Kết nối</h4>
+                <p>
+                    <a href="mailto:contact@e-bike.vn">contact@e-bike.vn</a><br>
+                    <a href="tel:0909000000">Gọi ngay</a>
+                </p>
+            </div>
+        </div>
+        <div class="copyright">© 2025 E-Bike</div>
+    </footer>
+
+    <script>
+        // Thêm số thứ tự cho các phần tử cần animation
+        document.querySelectorAll('.card').forEach((card, index) => {
+            card.style.setProperty('--delay', index);
+        });
+        document.querySelectorAll('.price-card').forEach((card, index) => {
+            card.style.setProperty('--delay', index);
+        });
+        document.querySelectorAll('.step').forEach((step, index) => {
+            step.style.setProperty('--delay', index);
+        });
+
+        // Xử lý hiệu ứng khi cuộn
+        function reveal() {
+            const reveals = document.querySelectorAll('.reveal');
+            const cards = document.querySelectorAll('.card');
+            const priceCards = document.querySelectorAll('.price-card');
+            const steps = document.querySelectorAll('.step');
+            
+            reveals.forEach(reveal => {
+                const windowHeight = window.innerHeight;
+                const elementTop = reveal.getBoundingClientRect().top;
+                const elementVisible = 150;
+                
+                if (elementTop < windowHeight - elementVisible) {
+                    reveal.classList.add('active');
+                    // Kích hoạt các phần tử con
+                    reveal.querySelectorAll('.card, .price-card, .step').forEach(item => {
+                        item.classList.add('active');
+                    });
+                }
+            });
+        }
+
+        window.addEventListener('scroll', reveal);
+        // Kích hoạt lần đầu để hiển thị các phần tử trong viewport
+        reveal();
+    </script>
+</body>
+</html>
+
