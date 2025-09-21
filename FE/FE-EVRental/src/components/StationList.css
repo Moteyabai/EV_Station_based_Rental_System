@@ -1,0 +1,7 @@
+.station-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+.station { background: linear-gradient(180deg,#071018,#0e1113); color: #fff; padding: 1rem; border-radius: 10px; transition: transform 200ms ease, box-shadow 200ms ease; }
+.station:hover { transform: translateY(-6px); box-shadow: 0 18px 40px rgba(2,6,23,0.6); }
+.station .meta { color: #9aa; font-size: 0.9rem; }
+.station .desc { font-size: 0.95rem; margin: 0.5rem 0; }
+.station-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+.station .btn { flex: 1 }

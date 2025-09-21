@@ -1,0 +1,107 @@
+.product-card {
+  background: linear-gradient(180deg,#071018,#0b1113);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all var(--transition-medium);
+  position: relative;
+  isolation: isolate;
+}
+
+.product-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 0%, rgba(45,200,150,0.03) 100%);
+  opacity: 0;
+  transition: opacity var(--transition-medium);
+  z-index: -1;
+}
+
+.product-card:hover {
+  transform: var(--hover-lift);
+  box-shadow: var(--shadow-lg);
+}
+
+.product-card:hover::before {
+  opacity: 1;
+}
+
+.product-thumb {
+  height: 200px;
+  background: linear-gradient(90deg,#133a46,#0a6b5a);
+  position: relative;
+  overflow: hidden;
+  transition: all var(--transition-medium);
+}
+
+.product-thumb::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,0.2),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.product-card:hover .product-thumb::after {
+  left: 150%;
+}
+
+.product-body {
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.product-body h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  transition: color var(--transition-fast);
+}
+
+.product-card:hover .product-body h3 {
+  color: #2dbf9a;
+}
+
+.product-body .short {
+  color: #9aa;
+  font-size: 0.95rem;
+  transition: color var(--transition-fast);
+}
+
+.product-card:hover .short {
+  color: #bcc;
+}
+
+.price {
+  font-weight: 700;
+  margin-top: auto;
+  font-size: 1.1rem;
+  color: #fff;
+}
+
+.actions {
+  display: flex;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.actions .btn {
+  flex: 1;
+  transition: all var(--transition-fast);
+}
+
+.actions .btn:hover {
+  transform: var(--hover-lift);
+  box-shadow: var(--hover-glow);
+}

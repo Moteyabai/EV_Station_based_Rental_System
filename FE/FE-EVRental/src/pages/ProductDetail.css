@@ -1,0 +1,115 @@
+.product-page {
+  padding: 32px 0;
+  animation: scaleIn var(--transition-slow);
+}
+
+.product-main {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 2rem;
+  align-items: start;
+}
+
+.product-media {
+  height: 360px;
+  background: linear-gradient(90deg,#123a3f,#0a6b5a);
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  transition: transform var(--transition-medium);
+}
+
+.product-media:hover {
+  transform: scale(1.02);
+}
+
+.product-media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(45,200,150,0.1),
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity var(--transition-medium);
+}
+
+.product-media:hover::after {
+  opacity: 1;
+}
+
+.product-info {
+  animation: slideIn var(--transition-medium);
+}
+
+.product-info h1 {
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1.2;
+  background: linear-gradient(90deg, #fff, #9fd2c2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition: all var(--transition-medium);
+}
+
+.product-info .price {
+  font-weight: 700;
+  font-size: 1.5rem;
+  margin: 1rem 0;
+  color: #2dbf9a;
+  display: inline-block;
+  position: relative;
+}
+
+.product-info .price::before {
+  content: '';
+  position: absolute;
+  left: -1rem;
+  right: -1rem;
+  top: 50%;
+  height: 4px;
+  background: linear-gradient(90deg,#2dbf9a,transparent);
+  transform: scaleX(0);
+  transition: transform var(--transition-medium);
+  z-index: -1;
+}
+
+.product-info:hover .price::before {
+  transform: scaleX(1);
+}
+
+.product-info .desc {
+  color: #d4e8e3;
+  line-height: 1.6;
+  margin: 1.5rem 0;
+  animation: fadeIn var(--transition-slow);
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.actions .btn {
+  min-width: 160px;
+  transition: all var(--transition-fast);
+}
+
+.actions .btn:hover {
+  transform: var(--hover-lift);
+  box-shadow: var(--hover-glow);
+}
+
+@media(max-width:900px) {
+  .product-main {
+    grid-template-columns: 1fr;
+  }
+  
+  .product-info {
+    padding: 0 1rem;
+  }
+}
