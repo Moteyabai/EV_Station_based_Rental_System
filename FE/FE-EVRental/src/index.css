@@ -11,6 +11,22 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Animation variables */
+  --transition-fast: 160ms ease;
+  --transition-medium: 260ms ease;
+  --transition-slow: 360ms cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Effects */
+  --hover-lift: translateY(-4px);
+  --hover-glow: 0 8px 24px rgba(45,200,150,0.15);
+  
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(2,6,23,0.2);
+  --shadow-md: 0 8px 24px rgba(2,6,23,0.3);
+  --shadow-lg: 0 16px 32px rgba(2,6,23,0.4);
+  
+  scroll-behavior: smooth;
 }
 
 a {
@@ -24,10 +40,11 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  display: block;
+  animation: fadeIn 260ms ease both;
 }
 
 h1 {
@@ -65,4 +82,9 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
