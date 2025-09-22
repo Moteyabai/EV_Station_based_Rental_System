@@ -1,6 +1,6 @@
 .template-root {
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-  color: #e6eef1;
+  font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  color: var(--text-primary);
   perspective: 1px;
   transform-style: preserve-3d;
   height: 100vh;
@@ -14,7 +14,7 @@
   display: flex;
   align-items: center;
   overflow: hidden;
-  background: linear-gradient(90deg,#06313a,#07101a);
+  background: linear-gradient(120deg, #f8f9fa, #e9ecef);
 }
 
 .parallax-bg {
@@ -23,7 +23,7 @@
   left: 0;
   right: 0;
   height: 100%;
-  background: radial-gradient(circle at 50% 50%, rgba(45,200,150,0.15), transparent 70%);
+  background: radial-gradient(circle at 50% 50%, rgba(77, 182, 172, 0.15), transparent 70%);
   transform: translateZ(-1px) scale(2);
   z-index: -1;
 }
@@ -53,7 +53,7 @@
 .hero-text h1 {
   font-size: 3.5rem;
   margin-bottom: 1.5rem;
-  background: linear-gradient(90deg, #fff, #9fd2c2);
+  background: linear-gradient(90deg, var(--primary-dark), var(--primary-color));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -61,7 +61,7 @@
 }
 
 .lead {
-  color: #cfe7e3;
+  color: var(--text-secondary);
   font-size: 1.15rem;
   margin-bottom: 1rem;
   opacity: 0.9;
@@ -85,12 +85,13 @@
 }
 
 .btn.primary {
-  background: linear-gradient(45deg, #2dc896, #34d5a4);
+  background: linear-gradient(45deg, var(--primary-color), var(--primary-dark));
 }
 
 .btn.float {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
+  background: rgba(77, 182, 172, 0.1);
+  color: var(--primary-dark);
+  border: 1px solid rgba(77, 182, 172, 0.3);
 }
 
 .btn.glow::after {

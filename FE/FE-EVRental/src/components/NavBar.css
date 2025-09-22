@@ -1,18 +1,17 @@
 .ev-nav {
-  background: rgba(10,12,16,0.85);
-  backdrop-filter: blur(8px);
-  color: white;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid rgba(255,255,255,0.03);
-  box-shadow: var(--shadow-md);
+  background: var(--background-light);
+  color: var(--text-primary);
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-sm);
   position: sticky;
   top: 0;
   z-index: 100;
-  transition: background-color var(--transition-medium);
+  transition: all var(--transition-medium);
 }
 
 .ev-nav:hover {
-  background: rgba(10,12,16,0.95);
+  box-shadow: var(--shadow-md);
 }
 
 .ev-container {
@@ -27,7 +26,7 @@
 .ev-nav .brand {
   font-weight: 800;
   font-size: 1.25rem;
-  color: #fff;
+  color: var(--primary-dark);
   text-decoration: none;
   letter-spacing: 0.3px;
   position: relative;
@@ -37,6 +36,7 @@
 
 .ev-nav .brand:hover {
   transform: scale(1.05);
+  color: var(--primary-color);
 }
 
 .ev-nav nav {
@@ -46,17 +46,18 @@
 }
 
 .ev-nav a {
-  color: #d8dbe0;
+  color: var(--text-secondary);
   text-decoration: none;
-  padding: 0.35rem 0.55rem;
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
   border-radius: 6px;
-  transition: all var(--transition-fast);
+  transition: all 0.2s ease;
   position: relative;
 }
 
 .ev-nav a:hover {
-  color: #fff;
-  background: rgba(255,255,255,0.05);
+  color: var(--primary-dark);
+  background-color: rgba(77, 182, 172, 0.1);
   transform: translateY(-1px);
 }
 
@@ -67,7 +68,7 @@
   left: 0.55rem;
   right: 0.55rem;
   height: 2px;
-  background: linear-gradient(90deg,#2dbf9a,#1aa37f);
+  background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
   transform: scaleX(0);
   transition: transform var(--transition-fast);
 }
@@ -77,26 +78,27 @@
 }
 
 .ev-user {
-  color: #9fd2c2;
+  color: var(--primary-dark);
   margin-right: 0.5rem;
   font-weight: 600;
   animation: slideIn var(--transition-medium);
 }
 
 .ev-logout {
-  background: linear-gradient(90deg,#1a1a1a,#0e2b25);
-  border: 1px solid rgba(255,255,255,0.06);
-  color: #fff;
+  background: var(--primary-color);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: white;
   padding: 0.35rem 0.8rem;
   border-radius: 8px;
   cursor: pointer;
+  font-weight: 500;
   transition: all var(--transition-fast);
 }
 
 .ev-logout:hover {
   transform: var(--hover-lift);
   box-shadow: var(--hover-glow);
-  border-color: rgba(45,200,150,0.3);
+  background: var(--primary-dark);
 }
 
 @media (max-width: 640px) {

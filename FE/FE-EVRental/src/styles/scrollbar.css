@@ -1,0 +1,52 @@
+/* 
+  Global scrollbar styles 
+  This ensures consistent scrollbar behavior across the application
+*/
+
+/* Hide scrollbars on all elements except html */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Hide webkit scrollbars on all elements except html */
+*::-webkit-scrollbar {
+  display: none;
+}
+
+/* Only show scrollbar on html element */
+html {
+  scrollbar-width: thin; /* Firefox */
+  -ms-overflow-style: auto; /* IE and Edge */
+}
+
+html::-webkit-scrollbar {
+  display: block;
+  width: 8px;
+}
+
+html::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+html::-webkit-scrollbar-thumb {
+  background-color: var(--primary-color);
+  border-radius: 4px;
+}
+
+html::-webkit-scrollbar-thumb:hover {
+  background-color: var(--primary-dark);
+}
+
+/* Ensure content areas with their own scroll are not affected */
+.scrollable-content {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  -ms-overflow-style: auto;
+}
+
+.scrollable-content::-webkit-scrollbar {
+  display: block;
+  width: 8px;
+}

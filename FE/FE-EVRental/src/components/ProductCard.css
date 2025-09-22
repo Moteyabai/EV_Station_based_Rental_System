@@ -34,6 +34,9 @@
   position: relative;
   overflow: hidden;
   transition: all var(--transition-medium);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .product-thumb::after {
@@ -48,6 +51,21 @@
     transparent,
     rgba(255,255,255,0.2),
     transparent
+  );
+  transition: left 0.5s;
+}
+
+@keyframes shine {
+  100% {
+    left: 150%;
+  }
+}
+
+.price-unit {
+  font-size: 0.8em;
+  opacity: 0.7;
+  font-weight: normal;
+}
   );
   transition: left 0.5s;
 }
