@@ -1,0 +1,116 @@
+.login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+  background: linear-gradient(135deg, #4db6ac 0%, #26a69a 100%);
+}
+
+.login-container {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 450px;
+  padding: 2.5rem;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.login-header h1 {
+  color: #333;
+  margin-bottom: 0.5rem;
+  font-size: 2rem;
+}
+
+.login-header p {
+  color: #666;
+  font-size: 1rem;
+}
+
+.login-form .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.login-form label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #555;
+  font-weight: 500;
+}
+
+.login-form input[type="email"],
+.login-form input[type="password"] {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.login-form input:focus {
+  border-color: #4db6ac;
+  outline: none;
+}
+
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.remember-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.remember-option input[type="checkbox"] {
+  accent-color: #4db6ac;
+}
+
+.forgot-password {
+  color: #4db6ac;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.login-button {
+  width: 100%;
+  padding: 0.8rem;
+  background-color: #4db6ac;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.login-button:hover {
+  background-color: #26a69a;
+}
+
+.login-footer {
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.login-footer a {
+  color: #4db6ac;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.login-footer a:hover {
+  text-decoration: underline;
+}

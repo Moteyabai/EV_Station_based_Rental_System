@@ -1,48 +1,58 @@
-import React from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import './App.css'
-import './index.css'
-import './styles/scrollbar.css'
-import { AuthProvider } from './contexts/AuthContext'
-import NavBar from './components/NavBar'
-import Home from './pages/Home'
-import Login from './pages/Login'
-import Register from './pages/Register'
-import VerificationPending from './pages/VerificationPending'
-import Stations from './pages/Stations'
-import StationDetail from './pages/StationDetail'
-import ProductList from './components/ProductList'
-import products from './data/products'
-import ProductDetail from './pages/ProductDetail'
-import VehiclePickup from './pages/VehiclePickup'
-import PickupSuccess from './pages/PickupSuccess'
-import VehicleReturn from './pages/VehicleReturn'
-import ReturnSuccess from './pages/ReturnSuccess'
-import UserHistory from './pages/UserHistory'
+﻿import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+
+// Components
+import NavBar from "./components/NavBar";
+
+// Pages
+import Home from "./pages/Home";
+import Vehicles from "./pages/Vehicles";
+import Stations from "./pages/Stations";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import ProductDetail from "./pages/ProductDetail";
+import StationDetail from "./pages/StationDetail";
+import UserHistory from "./pages/UserHistory";
+import VehiclePickup from "./pages/VehiclePickup";
+import VehicleReturn from "./pages/VehicleReturn";
+import PickupSuccess from "./pages/PickupSuccess";
+import ReturnSuccess from "./pages/ReturnSuccess";
+
+// Styles
+import "./App.css";
 
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <NavBar />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/verification-pending" element={<VerificationPending />} />
-          <Route path="/stations" element={<Stations />} />
-          <Route path="/stations/:id" element={<StationDetail />} />
-          <Route path="/products" element={<ProductList products={products} />} />
-          <Route path="/products/:id" element={<ProductDetail />} />
-          <Route path="/pickup/:bookingId" element={<VehiclePickup />} />
-          <Route path="/pickup-success/:bookingId" element={<PickupSuccess />} />
-          <Route path="/return/:bookingId" element={<VehicleReturn />} />
-          <Route path="/return-success/:bookingId" element={<ReturnSuccess />} />
-          <Route path="/history" element={<UserHistory />} />
-        </Routes>
-      </BrowserRouter>
+      <Router>
+        <div className="app-container">
+          <NavBar />
+          <main className="main-content">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/vehicles" element={<Vehicles />} />
+              <Route path="/vehicles/:id" element={<ProductDetail />} />
+              <Route path="/stations" element={<Stations />} />
+              <Route path="/stations/:id" element={<StationDetail />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/history" element={<UserHistory />} />
+              <Route path="/pickup/:vehicleId/:stationId" element={<VehiclePickup />} />
+              <Route path="/return/:vehicleId/:stationId" element={<VehicleReturn />} />
+              <Route path="/pickup-success" element={<PickupSuccess />} />
+              <Route path="/return-success" element={<ReturnSuccess />} />
+            </Routes>
+          </main>
+          <footer className="app-footer">
+            <div className="footer-content">
+              <p>&copy; 2025 EV Rental System. All rights reserved.</p>
+            </div>
+          </footer>
+        </div>
+      </Router>
     </AuthProvider>
-  )
+  );
 }
 
 export default App;

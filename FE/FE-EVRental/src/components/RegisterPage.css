@@ -1,0 +1,157 @@
+.register-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+  background: linear-gradient(135deg, #4db6ac 0%, #26a69a 100%);
+}
+
+.register-container {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 550px;
+  padding: 2.5rem;
+}
+
+.register-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.register-header h1 {
+  color: #333;
+  margin-bottom: 0.5rem;
+  font-size: 2rem;
+}
+
+.register-header p {
+  color: #666;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.register-form .form-step {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.register-form label {
+  color: #555;
+  font-weight: 500;
+}
+
+.register-form input[type="text"],
+.register-form input[type="email"],
+.register-form input[type="tel"],
+.register-form input[type="password"] {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.register-form input:focus {
+  border-color: #4db6ac;
+  outline: none;
+}
+
+.error {
+  color: #e53935;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.form-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.form-checkbox input[type="checkbox"] {
+  margin-top: 0.2rem;
+  accent-color: #4db6ac;
+}
+
+.form-checkbox label {
+  font-size: 0.9rem;
+}
+
+.form-checkbox a {
+  color: #4db6ac;
+  text-decoration: none;
+}
+
+.button-group {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.btn-next,
+.btn-register,
+.btn-prev {
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.btn-next,
+.btn-register {
+  background-color: #4db6ac;
+  color: white;
+  flex: 1;
+}
+
+.btn-prev {
+  background-color: #f0f0f0;
+  color: #555;
+}
+
+.btn-next:hover,
+.btn-register:hover {
+  background-color: #26a69a;
+  transform: translateY(-2px);
+}
+
+.btn-prev:hover {
+  background-color: #e0e0e0;
+}
+
+.register-footer {
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.register-footer a {
+  color: #4db6ac;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.register-footer a:hover {
+  text-decoration: underline;
+}

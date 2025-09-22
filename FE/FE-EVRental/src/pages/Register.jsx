@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import './Auth.css'
 
@@ -30,23 +30,53 @@ export default function Register() {
   const handleFileChange = (e) => {
     const { name, files } = e.target
     if (files && files[0]) {
+      const file = files[0]
+      
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+      if (!allowedTypes.includes(file.type)) {
+        setErrors(prev => ({
+          ...prev,
+          [name]: 'Chỉ chấp nhận file hình ảnh (JPG, PNG, WebP)'
+        }))
+        return
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors(prev => ({
+          ...prev,
+          [name]: 'Kích thước file không được vượt quá 5MB'
+        }))
+        return
+      }
+      
+      // Clear previous errors for this field
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }))
+      
       setFormData(prev => ({
         ...prev,
-        [name]: files[0]
+        [name]: file
       }))
     }
   }
 
   function validateStep1() {
     const newErrors = {}
-    if (!formData.firstName) newErrors.firstName = 'First name is required'
-    if (!formData.lastName) newErrors.lastName = 'Last name is required'
-    if (!formData.email) newErrors.email = 'Email is required'
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid'
-    if (!formData.password) newErrors.password = 'Password is required'
-    else if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters'
-    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match'
-    if (!formData.phone) newErrors.phone = 'Phone number is required'
+    if (!formData.firstName) newErrors.firstName = 'Họ là bắt buộc'
+    if (!formData.lastName) newErrors.lastName = 'Tên là bắt buộc'
+    if (!formData.email) newErrors.email = 'Email là bắt buộc'
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email không hợp lệ'
+    if (!formData.password) newErrors.password = 'Mật khẩu là bắt buộc'
+    else if (formData.password.length < 6) newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự'
+    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Mật khẩu xác nhận không khớp'
+    if (!formData.phone) newErrors.phone = 'Số điện thoại là bắt buộc'
+    else if (!/^[0-9]{10,11}$/.test(formData.phone.replace(/[\s\-\(\)]/g, ''))) {
+      newErrors.phone = 'Số điện thoại không hợp lệ'
+    }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -54,8 +84,8 @@ export default function Register() {
 
   function validateStep2() {
     const newErrors = {}
-    if (!formData.drivingLicense) newErrors.drivingLicense = 'Driving license is required'
-    if (!formData.idCard) newErrors.idCard = 'ID card is required'
+    if (!formData.drivingLicense) newErrors.drivingLicense = 'Bằng lái xe là bắt buộc'
+    if (!formData.idCard) newErrors.idCard = 'CMND/CCCD là bắt buộc'
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -179,60 +209,109 @@ export default function Register() {
           ) : (
             <>
               <div className="document-upload">
-                <h3>Document Verification</h3>
-                <p>Please upload clear photos of your documents for verification</p>
+                <h3>Xác Thực Giấy Tờ</h3>
+                <p>Vui lòng upload ảnh rõ nét của các giấy tờ để xác thực</p>
                 
                 <label className="file-upload">
-                  <span>Driver's License</span>
+                  <span>Bằng Lái Xe</span>
                   <input 
                     type="file" 
                     name="drivingLicense" 
-                    accept="image/*" 
+                    accept="image/jpeg,image/jpg,image/png,image/webp" 
                     onChange={handleFileChange} 
                     required 
                   />
                   <div className="upload-preview">
                     {formData.drivingLicense ? (
-                      <div className="file-name">{formData.drivingLicense.name}</div>
+                      <div className="file-preview">
+                        <img 
+                          src={URL.createObjectURL(formData.drivingLicense)} 
+                          alt="Driver's License Preview" 
+                          className="preview-image"
+                        />
+                        <div className="file-info">
+                          <span className="file-name">{formData.drivingLicense.name}</span>
+                          <span className="file-size">
+                            {(formData.drivingLicense.size / 1024 / 1024).toFixed(2)} MB
+                          </span>
+                        </div>
+                      </div>
                     ) : (
-                      <div className="upload-prompt">Click to upload</div>
+                      <div className="upload-prompt">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                          <polyline points="7,10 12,15 17,10"/>
+                          <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        <span>Nhấn để upload bằng lái xe</span>
+                        <small>JPG, PNG, WebP (tối đa 5MB)</small>
+                      </div>
                     )}
                   </div>
                   {errors.drivingLicense && <span className="error">{errors.drivingLicense}</span>}
                 </label>
 
                 <label className="file-upload">
-                  <span>ID Card (National ID/Passport)</span>
+                  <span>CMND/CCCD/Hộ Chiếu</span>
                   <input 
                     type="file" 
                     name="idCard" 
-                    accept="image/*" 
+                    accept="image/jpeg,image/jpg,image/png,image/webp" 
                     onChange={handleFileChange} 
                     required 
                   />
                   <div className="upload-preview">
                     {formData.idCard ? (
-                      <div className="file-name">{formData.idCard.name}</div>
+                      <div className="file-preview">
+                        <img 
+                          src={URL.createObjectURL(formData.idCard)} 
+                          alt="ID Card Preview" 
+                          className="preview-image"
+                        />
+                        <div className="file-info">
+                          <span className="file-name">{formData.idCard.name}</span>
+                          <span className="file-size">
+                            {(formData.idCard.size / 1024 / 1024).toFixed(2)} MB
+                          </span>
+                        </div>
+                      </div>
                     ) : (
-                      <div className="upload-prompt">Click to upload</div>
+                      <div className="upload-prompt">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                          <polyline points="7,10 12,15 17,10"/>
+                          <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        <span>Nhấn để upload CMND/CCCD</span>
+                        <small>JPG, PNG, WebP (tối đa 5MB)</small>
+                      </div>
                     )}
                   </div>
                   {errors.idCard && <span className="error">{errors.idCard}</span>}
                 </label>
 
                 <div className="document-info">
-                  <p>Your documents will be verified by our staff.</p>
-                  <p>You can complete verification at any rental location.</p>
+                  <h4>💡 Lưu ý quan trọng:</h4>
+                  <ul>
+                    <li>Đảm bảo ảnh rõ nét, không bị mờ hay lóa sáng</li>
+                    <li>Chụp toàn bộ giấy tờ, không cắt xén</li>
+                    <li>Giấy tờ phải còn hiệu lực và không bị hư hỏng</li>
+                    <li>Bạn có thể hoàn tất xác thực tại bất kỳ điểm thuê nào</li>
+                  </ul>
                 </div>
               </div>
 
               <div className="button-group">
-                <button type="button" className="btn secondary" onClick={prevStep}>Back</button>
-                <button type="submit" className="btn primary">Complete Registration</button>
+                <button type="button" className="btn secondary" onClick={prevStep}>Quay lại</button>
+                <button type="submit" className="btn primary">Hoàn tất đăng ký</button>
               </div>
             </>
           )}
         </form>
+        
+        <div className="auth-footer">
+          <p>Đã có tài khoản? <Link to="/login" className="auth-link">Đăng nhập ngay</Link></p>
+        </div>
       </div>
     </div>
   )

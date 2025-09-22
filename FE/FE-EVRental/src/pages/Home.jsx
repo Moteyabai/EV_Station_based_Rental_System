@@ -1,16 +1,17 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import './Home.css';
 import '../styles/media.css';
-import StationList from '../components/StationList';
 import VideoBackground from '../components/VideoBackground';
-import stationsData from '../data/stations';
+import stations from '../data/stations_new';
+import vehicles from '../data/vehicles';
 
-// Using placeholder images from a public CDN
+// Using placeholder images and direct links to product images
 const heroFallback = 'https://images.unsplash.com/photo-1622981515183-6f4d9e25e2a3?auto=format&fit=crop&w=1920&q=80';
-const bikeImg1 = 'https://images.unsplash.com/photo-1623750318869-4f8ab290c655?auto=format&fit=crop&w=800&q=80';
-const bikeImg2 = 'https://images.unsplash.com/photo-1571068316344-75bc76f77890?auto=format&fit=crop&w=800&q=80';
-const bikeImg3 = 'https://images.unsplash.com/photo-1598214015728-bc76b2e6e9f4?auto=format&fit=crop&w=800&q=80';
-const stationImg1 = 'https://images.unsplash.com/photo-1599593752325-ffa41031056e?auto=format&fit=crop&w=1200&q=80';
+const bikeImg1 = vehicles[0].image; // VinFast Klara S
+const bikeImg2 = vehicles[1].image; // VinFast Theon S
+const bikeImg3 = vehicles[3].image; // Datbike Weaver 200
+const stationImg = 'https://images.unsplash.com/photo-1599593752325-ffa41031056e?auto=format&fit=crop&w=1200&q=80';
 
 export default function Home() {
   // Add scroll reveal effect
@@ -29,6 +30,12 @@ export default function Home() {
     return () => observer.disconnect();
   }, []);
 
+  // Featured stations (just the first 3)
+  const featuredStations = stations.slice(0, 3);
+  
+  // Featured vehicles (first 3)
+  const featuredVehicles = vehicles.slice(0, 3);
+
   return (
     <div className="template-root">
       <section className="template-hero">
@@ -37,156 +44,160 @@ export default function Home() {
         <div className="bg-pattern"></div>
         <div className="hero-inner ev-container">
           <div className="hero-text scroll-reveal fade-up">
-            <h1>Electric bike rental for city explorers</h1>
-            <p className="lead">Quickly find a nearby station, reserve a bike and get moving — eco-friendly, affordable, and fun.</p>
+            <h1>Thuê xe máy điện - Khám phá thành phố</h1>
+            <p className="lead">Nhanh chóng tìm điểm thuê gần bạn, đặt xe và di chuyển — thân thiện với môi trường, giá cả phải chăng và thuận tiện.</p>
             <div className="hero-ctas">
-              <a className="btn primary glow" href="#stations">Browse Stations</a>
-              <a className="btn float" href="#pricing">Plans & Pricing</a>
+              <Link className="btn primary glow" to="/stations">Tìm điểm thuê</Link>
+              <Link className="btn float" to="/vehicles">Xem xe máy điện</Link>
             </div>
           </div>
           <div className="hero-visual scroll-reveal fade-left">
             <div className="bike-card floating">
-              <div className="bike-top">E-BIKE X1</div>
+              <div className="bike-top">VinFast Klara S</div>
               <div className="bike-img" style={{backgroundImage: `url(${bikeImg1})`}} />
-              <div className="bike-meta">Fast • 60km range • GPS</div>
+              <div className="bike-meta">Hiện đại • Phạm vi 120km • Tiện lợi</div>
               <div className="card-shine"></div>
             </div>
             <div className="floating-elements">
-              <div className="float-badge top">Premium Quality</div>
-              <div className="float-badge bottom">24/7 Support</div>
+              <div className="float-badge top">Chất lượng cao</div>
+              <div className="float-badge bottom">Hỗ trợ 24/7</div>
             </div>
           </div>
         </div>
         <div className="scroll-indicator">
           <div className="mouse"></div>
-          <span>Scroll to explore</span>
+          <span>Cuộn xuống để khám phá</span>
         </div>
       </section>
 
-      <section id="bikes-showcase" className="template-section">
+      <section id="vehicles-showcase" className="template-section">
         <div className="ev-container">
-          <h2 className="section-title scroll-reveal fade-up">Our Premium E-Bikes</h2>
-          <p className="section-sub scroll-reveal fade-up">Experience the future of urban mobility.</p>
+          <h2 className="section-title scroll-reveal fade-up">Xe máy điện cao cấp</h2>
+          <p className="section-sub scroll-reveal fade-up">Trải nghiệm tương lai của giao thông đô thị.</p>
           <div className="image-gallery">
-            <div className="gallery-item scroll-reveal fade-up">
-              <img src={bikeImg1} alt="Premium E-Bike Model X1" loading="lazy" />
-              <div className="gradient-overlay"></div>
-              <div className="gallery-content">
-                <h3>Model X1</h3>
-                <p>Premium city cruiser</p>
+            {featuredVehicles.map((vehicle, index) => (
+              <div key={vehicle.id} className="gallery-item scroll-reveal fade-up">
+                <img src={vehicle.image} alt={vehicle.name} loading="lazy" />
+                <div className="gradient-overlay"></div>
+                <div className="gallery-content">
+                  <h3>{vehicle.name}</h3>
+                  <p>{vehicle.short}</p>
+                </div>
               </div>
-            </div>
-            <div className="gallery-item scroll-reveal fade-up">
-              <img src={bikeImg2} alt="Sport E-Bike Model S2" loading="lazy" />
-              <div className="gradient-overlay"></div>
-              <div className="gallery-content">
-                <h3>Model S2</h3>
-                <p>Sport performance</p>
-              </div>
-            </div>
-            <div className="gallery-item scroll-reveal fade-up">
-              <img src={bikeImg3} alt="Comfort E-Bike Model C1" loading="lazy" />
-              <div className="gradient-overlay"></div>
-              <div className="gallery-content">
-                <h3>Model C1</h3>
-                <p>Ultimate comfort</p>
-              </div>
-            </div>
+            ))}
+          </div>
+          <div className="text-center mt-4">
+            <Link to="/vehicles" className="btn primary">Xem tất cả xe máy điện</Link>
           </div>
         </div>
       </section>
 
-      <section id="stations" className="template-section ev-container">
-        <h2>Nearby Stations</h2>
-        <p className="section-sub">Stations near you with real-time availability.</p>
-        <StationList stations={stationsData} />
-      </section>
-
-      <section id="features" className="template-section features">
+      <section id="features" className="template-section">
         <div className="ev-container">
-          <h2 className="section-title scroll-reveal fade-up">Why choose our e-bikes?</h2>
+          <h2 className="section-title scroll-reveal fade-up">Tại sao chọn EV Rental?</h2>
           <div className="features-grid">
-            <div className="feature" style={{backgroundImage: `url(${bikeImg1})`}}>
-              <div className="gradient-overlay"></div>
-              <div className="feature-content">
-                <h3>Convenient</h3>
-                <p>Pick up and drop off at any station across the city.</p>
-              </div>
+            <div className="feature scroll-reveal fade-up">
+              <div className="feature-icon">🔋</div>
+              <h3>Năng lượng xanh</h3>
+              <p>Xe điện không phát thải, góp phần bảo vệ môi trường và giảm ô nhiễm không khí.</p>
             </div>
-            <div className="feature" style={{backgroundImage: `url(${bikeImg2})`}}>
-              <div className="gradient-overlay"></div>
-              <div className="feature-content">
-                <h3>Affordable</h3>
-                <p>Cheap per-minute pricing and monthly passes.</p>
-              </div>
+            <div className="feature scroll-reveal fade-up">
+              <div className="feature-icon">💰</div>
+              <h3>Tiết kiệm chi phí</h3>
+              <p>Chi phí thuê hợp lý với nhiều gói dịch vụ linh hoạt phù hợp với nhu cầu của bạn.</p>
             </div>
-            <div className="feature" style={{backgroundImage: `url(${bikeImg3})`}}>
-              <div className="gradient-overlay"></div>
-              <div className="feature-content">
-                <h3>Green</h3>
-                <p>Zero emissions — a cleaner way to commute.</p>
-              </div>
+            <div className="feature scroll-reveal fade-up">
+              <div className="feature-icon">📍</div>
+              <h3>Nhiều điểm thuê</h3>
+              <p>Mạng lưới điểm thuê rộng khắp, dễ dàng tìm và trả xe tại các vị trí thuận tiện.</p>
+            </div>
+            <div className="feature scroll-reveal fade-up">
+              <div className="feature-icon">🔒</div>
+              <h3>An toàn & Bảo mật</h3>
+              <p>Hệ thống bảo mật cao cấp, bảo vệ thông tin cá nhân và giao dịch của bạn.</p>
+            </div>
+            <div className="feature scroll-reveal fade-up">
+              <div className="feature-icon">⚡</div>
+              <h3>Sạc nhanh</h3>
+              <p>Các trạm sạc nhanh tại mỗi điểm thuê giúp xe luôn sẵn sàng phục vụ bạn.</p>
+            </div>
+            <div className="feature scroll-reveal fade-up">
+              <div className="feature-icon">📱</div>
+              <h3>Đặt xe dễ dàng</h3>
+              <p>Đặt xe nhanh chóng thông qua website, không cần tải ứng dụng phức tạp.</p>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="pricing" className="template-section pricing ev-container">
-        <h2>Plans & Pricing</h2>
-        <div className="pricing-grid">
-          <div className="card plan">
-            <h3>Pay-as-you-go</h3>
-            <p className="price">$0.15 / min</p>
-            <ul>
-              <li>No commitment</li>
-              <li>Access to all bikes</li>
-            </ul>
-            <button className="btn primary">Start renting</button>
+      <section id="stations" className="template-section">
+        <div className="ev-container">
+          <h2 className="section-title scroll-reveal fade-up">Điểm thuê gần bạn</h2>
+          <p className="section-sub scroll-reveal fade-up">Tìm điểm thuê xe máy điện phù hợp với lịch trình của bạn.</p>
+          
+          <div className="stations-grid scroll-reveal fade-up">
+            {featuredStations.map(station => (
+              <div key={station.id} className="station-card">
+                <img src={station.image} alt={station.name} className="station-img" />
+                <div className="station-content">
+                  <h3>{station.name}</h3>
+                  <p className="station-address">{station.address}</p>
+                  <div className="station-meta">
+                    <span className="station-hours">{station.openingHours}</span>
+                    <span className="station-available">{station.availableVehicles} xe có sẵn</span>
+                  </div>
+                  <Link to={`/stations/${station.id}`} className="btn primary sm">Xem chi tiết</Link>
+                </div>
+              </div>
+            ))}
           </div>
-          <div className="card plan popular">
-            <div className="badge">Popular</div>
-            <h3>Monthly Pass</h3>
-            <p className="price">$29 / month</p>
-            <ul>
-              <li>Unlimited 30-min rides</li>
-              <li>Discounted extra time</li>
-            </ul>
-            <button className="btn primary">Get pass</button>
-          </div>
-          <div className="card plan">
-            <h3>Student</h3>
-            <p className="price">$9 / month</p>
-            <ul>
-              <li>Verified student discount</li>
-            </ul>
-            <button className="btn">Apply</button>
+          
+          <div className="text-center mt-4">
+            <Link to="/stations" className="btn primary">Xem tất cả điểm thuê</Link>
           </div>
         </div>
       </section>
 
-      <footer className="site-footer ev-container">
-        <div className="footer-grid">
-          <div>
-            <h4>EV Rental</h4>
-            <p>Ride clean. Ride fast. Explore more.</p>
-          </div>
-          <div>
-            <h4>Company</h4>
-            <ul>
-              <li>About</li>
-              <li>Careers</li>
-            </ul>
-          </div>
-          <div>
-            <h4>Support</h4>
-            <ul>
-              <li>Help Center</li>
-              <li>Contact</li>
-            </ul>
+      <section id="how-it-works" className="template-section bg-light">
+        <div className="ev-container">
+          <h2 className="section-title scroll-reveal fade-up">Cách thuê xe</h2>
+          <div className="steps-container">
+            <div className="step scroll-reveal fade-up">
+              <div className="step-number">1</div>
+              <h3>Tìm điểm thuê</h3>
+              <p>Tìm điểm thuê gần bạn thông qua bản đồ hoặc danh sách có sẵn.</p>
+            </div>
+            <div className="step scroll-reveal fade-up">
+              <div className="step-number">2</div>
+              <h3>Chọn xe</h3>
+              <p>Lựa chọn xe máy điện phù hợp với nhu cầu và thời gian của bạn.</p>
+            </div>
+            <div className="step scroll-reveal fade-up">
+              <div className="step-number">3</div>
+              <h3>Đặt xe</h3>
+              <p>Đăng nhập và xác nhận đặt xe, bạn sẽ nhận được mã QR.</p>
+            </div>
+            <div className="step scroll-reveal fade-up">
+              <div className="step-number">4</div>
+              <h3>Nhận xe</h3>
+              <p>Đến điểm thuê, quét mã QR và nhận xe để bắt đầu hành trình.</p>
+            </div>
           </div>
         </div>
-        <div className="footer-bottom">© {new Date().getFullYear()} EV Rental — All rights reserved</div>
-      </footer>
+      </section>
+
+      <section id="cta" className="template-section cta-section">
+        <div className="ev-container">
+          <div className="cta-container scroll-reveal fade-up">
+            <h2>Sẵn sàng cho hành trình xanh?</h2>
+            <p>Đăng ký ngay hôm nay để nhận ưu đãi đặc biệt dành cho thành viên mới.</p>
+            <div className="cta-buttons">
+              <Link to="/register" className="btn primary large">Đăng ký ngay</Link>
+              <Link to="/stations" className="btn outline large">Tìm điểm thuê</Link>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
-  )
+  );
 }

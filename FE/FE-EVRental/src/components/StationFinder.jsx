@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import stationsData from '../data/stations';
+import stationsData from '../data/stations_new';
 import '../styles/StationFinder.css';
 
 export default function StationFinder() {

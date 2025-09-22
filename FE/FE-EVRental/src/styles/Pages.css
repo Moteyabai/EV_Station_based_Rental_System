@@ -22,7 +22,96 @@
   color: var(--text-secondary);
   font-size: 1.1rem;
   max-width: 600px;
-  margin: 0 auto;
+  margin: 0 auto 1.5rem auto;
+}
+
+.view-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.toggle-btn {
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--primary-color);
+  background: transparent;
+  color: var(--primary-color);
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.toggle-btn:hover {
+  background: rgba(77, 182, 172, 0.1);
+}
+
+.toggle-btn.active {
+  background: var(--primary-color);
+  color: white;
+}
+
+.selected-station-info {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  border: 2px solid var(--primary-color);
+  max-width: 400px;
+  width: 90%;
+  z-index: 1000;
+  text-align: center;
+}
+
+.selected-station-info h3 {
+  margin: 0 0 0.5rem 0;
+  color: var(--primary-dark);
+}
+
+.selected-station-info p {
+  margin: 0 0 1rem 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.station-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.station-actions .btn {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  border: none;
+}
+
+.station-actions .btn.primary {
+  background: var(--primary-color);
+  color: white;
+}
+
+.station-actions .btn.primary:hover {
+  background: var(--primary-dark);
+}
+
+.station-actions .btn.secondary {
+  background: transparent;
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+}
+
+.station-actions .btn.secondary:hover {
+  background: rgba(77, 182, 172, 0.1);
 }
 
 .page-section {
@@ -48,6 +137,28 @@
 @media (max-width: 768px) {
   .page-header h1 {
     font-size: 2rem;
+  }
+  
+  .view-toggle {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .toggle-btn {
+    width: 200px;
+  }
+  
+  .selected-station-info {
+    bottom: 1rem;
+    left: 1rem;
+    right: 1rem;
+    transform: none;
+    width: auto;
+    max-width: none;
+  }
+  
+  .station-actions {
+    flex-direction: column;
   }
   
   .page-header p {

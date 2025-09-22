@@ -1,23 +1,77 @@
 // Danh sách các hình ảnh xe điện và trạm sạc
 export const vehicleImages = {
-  // Xe điện Tesla
+  // Tesla
   teslaModel3: {
-    front: "https://images.unsplash.com/photo-1560958089-b8a1929cea89?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8dGVzbGElMjBtb2RlbCUyMDN8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=800&q=60",
-    back: "https://images.unsplash.com/photo-1551952238-2940811b9aab?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjR8fHRlc2xhJTIwbW9kZWwlMjAzfGVufDB8fDB8fHww&auto=format&fit=crop&w=800&q=60",
-    interior: "https://images.unsplash.com/photo-1571987502227-9231b837d92a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTh8fHRlc2xhJTIwbW9kZWwlMjAzJTIwaW50ZXJpb3J8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=800&q=60",
-    thumbnail: "https://images.unsplash.com/photo-1619767886558-efdc259cde1a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fHRlc2xhJTIwbW9kZWwlMjAzfGVufDB8fDB8fHww&auto=format&fit=crop&w=800&q=60"
+    front: "https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&w=1000&q=80",
+    back: "https://images.unsplash.com/photo-1561580125-028ee3bd62eb?auto=format&fit=crop&w=1000&q=80",
+    interior: "https://images.unsplash.com/photo-1553260168-69b041873e65?auto=format&fit=crop&w=1000&q=80",
+    thumbnail: "https://images.unsplash.com/photo-1554744512-d6c603f27c54?auto=format&fit=crop&w=1000&q=80"
   },
-  teslaModelY: {
-    front: "https://images.unsplash.com/photo-1617704548623-340376564e68?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dGVzbGElMjBtb2RlbCUyMHl8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=800&q=60",
-    back: "https://images.unsplash.com/photo-1630129918656-2e240ea5feff?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fHRlc2xhJTIwbW9kZWwlMjB5fGVufDB8fDB8fHww&auto=format&fit=crop&w=800&q=60",
-    interior: "https://images.unsplash.com/photo-1620891549747-a5030ec0b10d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8dGVzbGElMjBtb2RlbCUyMHklMjBpbnRlcmlvcnxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=800&q=60",
-    thumbnail: "https://images.unsplash.com/photo-1650213986462-1917e609e6e4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8dGVzbGElMjBtb2RlbCUyMHl8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=800&q=60"
+  // Nissan
+  nissanLeaf: {
+    front: "https://images.unsplash.com/photo-1626668893632-6f3a4466d109?auto=format&fit=crop&w=1000&q=80",
+    back: "https://images.unsplash.com/photo-1626668924355-138fb9132f86?auto=format&fit=crop&w=1000&q=80",
+    interior: "https://images.unsplash.com/photo-1626668925727-a9313823be21?auto=format&fit=crop&w=1000&q=80",
+    thumbnail: "https://images.unsplash.com/photo-1626668926885-dfc2815b488d?auto=format&fit=crop&w=1000&q=80"
   },
-  teslaModelS: {
-    front: "https://images.unsplash.com/photo-1620891549747-a5030ec0b10d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8dGVzbGElMjBtb2RlbCUyMHN8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=800&q=60",
-    back: "https://images.unsplash.com/photo-1594950053254-f14e98d5b21f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8dGVzbGElMjBtb2RlbCUyMHN8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=800&q=60",
-    interior: "https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8dGVzbGElMjBtb2RlbCUyMHMlMjBpbnRlcmlvcnxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=800&q=60",
-    thumbnail: "https://images.unsplash.com/photo-1611599537848-d29754619846?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8dGVzbGElMjBtb2RlbCUyMHN8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=800&q=60"
+  // Chevrolet
+  chevroletBolt: {
+    front: "https://images.unsplash.com/photo-1589330695418-1441841bc9f3?auto=format&fit=crop&w=1000&q=80",
+    back: "https://images.unsplash.com/photo-1589331369086-39d9f3a3ffad?auto=format&fit=crop&w=1000&q=80",
+    interior: "https://images.unsplash.com/photo-1589331442955-56939f64e709?auto=format&fit=crop&w=1000&q=80",
+    thumbnail: "https://images.unsplash.com/photo-1589331441142-321fa85e3c2c?auto=format&fit=crop&w=1000&q=80"
+  },
+  // Audi
+  audiEtron: {
+    front: "https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?auto=format&fit=crop&w=1000&q=80",
+    back: "https://images.unsplash.com/photo-1603584173277-7740d7b82af6?auto=format&fit=crop&w=1000&q=80",
+    interior: "https://images.unsplash.com/photo-1603584423108-d80e482c07ac?auto=format&fit=crop&w=1000&q=80",
+    thumbnail: "https://images.unsplash.com/photo-1603584292314-6c2548b9d70d?auto=format&fit=crop&w=1000&q=80"
+  },
+  // Hyundai
+  hyundaiKona: {
+    front: "https://images.unsplash.com/photo-1626073682525-61b7a728f785?auto=format&fit=crop&w=1000&q=80",
+    back: "https://images.unsplash.com/photo-1626073683097-93aacc1bc1d1?auto=format&fit=crop&w=1000&q=80",
+    interior: "https://images.unsplash.com/photo-1626073683225-153c0bc63d95?auto=format&fit=crop&w=1000&q=80",
+    thumbnail: "https://images.unsplash.com/photo-1626073683338-72a26a2c4007?auto=format&fit=crop&w=1000&q=80"
+  },
+  // Datbike
+  datbikeWeaver: {
+    front: "https://datbike.com/cdn/shop/files/dat-bike-weaver-70.jpg",
+    back: "https://datbike.com/cdn/shop/files/dat-bike-weaver-2.jpg",
+    interior: "https://datbike.com/cdn/shop/files/dat-bike-weaver-3.jpg",
+    thumbnail: "https://datbike.com/cdn/shop/files/dat-bike-weaver.jpg"
+  },
+  datbikeWeaver200: {
+    front: "https://datbike.com/cdn/shop/files/dat-bike-weaver-200-1.jpg",
+    back: "https://datbike.com/cdn/shop/files/dat-bike-weaver-200-2.jpg",
+    interior: "https://datbike.com/cdn/shop/files/dat-bike-weaver-200-3.jpg",
+    thumbnail: "https://datbike.com/cdn/shop/files/dat-bike-weaver-200-4.jpg"
+  },
+  // Xe điện VinFast
+  vinfastVF8: {
+    front: "https://cdn.motor1.com/images/mgl/BXXqlm/s1/vinfast-vf-8-front-view.jpg",
+    back: "https://cdn.motor1.com/images/mgl/xqGXg/s1/vinfast-vf-8-rear-view.jpg",
+    interior: "https://cdn.motor1.com/images/mgl/6ZZoJO/s1/vinfast-vf-8-interior.jpg",
+    thumbnail: "https://cdn.motor1.com/images/mgl/P33J6L/s3/vinfast-vf-8.jpg"
+  },
+  vinfastVF9: {
+    front: "https://cdn.motor1.com/images/mgl/VA0AZ/s1/vinfast-vf-9-front-view.jpg",
+    back: "https://cdn.motor1.com/images/mgl/GMgwr/s1/vinfast-vf-9-rear-view.jpg",
+    interior: "https://cdn.motor1.com/images/mgl/LwqXv/s1/vinfast-vf-9-interior.jpg",
+    thumbnail: "https://cdn.motor1.com/images/mgl/Z2Pjz/s3/vinfast-vf-9.jpg"
+  },
+  vinfastVF5: {
+    front: "https://giaxehoi.vn/uploads/images/2022/05/18/VF-5Plus-1-giaxehoi-vn-1652853233.jpg",
+    back: "https://giaxehoi.vn/uploads/images/2022/05/18/VF-5Plus-2-giaxehoi-vn-1652853233.jpg",
+    interior: "https://giaxehoi.vn/uploads/images/2022/05/18/VF-5Plus-noi-that-giaxehoi-vn-1652853233.jpg",
+    thumbnail: "https://giaxehoi.vn/uploads/images/2022/05/18/VF-5Plus-mau-xanh-giaxehoi-vn-1652853233.jpg"
+  },
+  vinfastVF6: {
+    front: "https://vcdn-vnexpress.vnecdn.net/2022/07/09/vf6-1657358266-1657358281-7566-1657358348.jpg",
+    back: "https://vcdn-vnexpress.vnecdn.net/2022/07/09/vf6-1-1657358267-1657358281-9755-1657358348.jpg",
+    interior: "https://vcdn-vnexpress.vnecdn.net/2022/07/09/vf6-2-1657358267-1657358281-7368-1657358348.jpg",
+    thumbnail: "https://vcdn-vnexpress.vnecdn.net/2022/07/09/vf6-3-1657358267-1657358281-7081-1657358348.jpg"
   },
 
   // Xe điện Nissan
@@ -50,6 +104,26 @@ export const vehicleImages = {
     back: "https://images.unsplash.com/photo-1638618164682-12b85cc76f8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8aHl1bmRhaSUyMGtvbmElMjBlbGVjdHJpY3xlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=800&q=60",
     interior: "https://images.unsplash.com/photo-1638618164829-95a3b407e0c6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8aHl1bmRhaSUyMGtvbmElMjBlbGVjdHJpY3xlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=800&q=60",
     thumbnail: "https://images.unsplash.com/photo-1636483329509-d2d8e4a7e307?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8aHl1bmRhaSUyMGtvbmElMjBlbGVjdHJpY3xlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=800&q=60"
+  },
+  
+  // Xe máy điện DatBike
+  datbikeTecla: {
+    front: "https://storage.googleapis.com/datbike-blog/2022/06/1ea54c61-image-61.png",
+    back: "https://storage.googleapis.com/datbike-blog/2022/06/0e63adb4-image-62.png",
+    interior: "https://storage.googleapis.com/datbike-blog/2022/06/a8c51c83-image-63.png",
+    thumbnail: "https://storage.googleapis.com/datbike-blog/2022/06/4bb45c35-image-59.png"
+  },
+  datbikeWeaver: {
+    front: "https://storage.googleapis.com/datbike-blog/2022/05/4b2da92c-image-1.png",
+    back: "https://storage.googleapis.com/datbike-blog/2022/05/a20f9a52-image-5.png",
+    interior: "https://storage.googleapis.com/datbike-blog/2022/05/9d2e118d-image-6.png",
+    thumbnail: "https://storage.googleapis.com/datbike-blog/2022/05/ef6a4b8e-image-4.png"
+  },
+  datbikeWeaver200: {
+    front: "https://storage.googleapis.com/datbike-blog/2022/06/62ec4af7-image-3.png",
+    back: "https://storage.googleapis.com/datbike-blog/2022/06/6e1abd2e-image-2.png",
+    interior: "https://storage.googleapis.com/datbike-blog/2022/06/9e8e3db9-image-1.png",
+    thumbnail: "https://storage.googleapis.com/datbike-blog/2022/06/f44d2307-image-5.png"
   },
   
   // Xe điện BMW
