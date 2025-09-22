@@ -1,21 +1,20 @@
-.ev-nav {
-  background: rgba(10,12,16,0.85);
-  backdrop-filter: blur(8px);
-  color: white;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid rgba(255,255,255,0.03);
-  box-shadow: var(--shadow-md);
+.navbar {
+  background: var(--background-light, #ffffff);
+  color: var(--text-primary, #333333);
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   position: sticky;
   top: 0;
   z-index: 100;
-  transition: background-color var(--transition-medium);
+  transition: all 0.3s ease;
 }
 
-.ev-nav:hover {
-  background: rgba(10,12,16,0.95);
+.navbar:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
 }
 
-.ev-container {
+.navbar-container {
   max-width: 1280px;
   margin: 0 auto;
   padding: 0 1rem;
@@ -24,82 +23,138 @@
   justify-content: space-between;
 }
 
-.ev-nav .brand {
+.navbar-logo a {
   font-weight: 800;
   font-size: 1.25rem;
-  color: #fff;
+  color: var(--primary-dark, #3c9f85);
   text-decoration: none;
   letter-spacing: 0.3px;
-  position: relative;
   padding: 0.35rem 0;
-  transition: transform var(--transition-fast);
+  transition: transform 0.2s ease;
 }
 
-.ev-nav .brand:hover {
+.navbar-logo span {
+  color: var(--primary-color, #4db6ac);
+}
+
+.navbar-logo a:hover {
   transform: scale(1.05);
 }
 
-.ev-nav nav {
+.navbar-nav {
   display: flex;
   gap: 1.2rem;
   align-items: center;
 }
 
-.ev-nav a {
-  color: #d8dbe0;
+.nav-link {
+  color: var(--text-secondary, #555555);
   text-decoration: none;
-  padding: 0.35rem 0.55rem;
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
   border-radius: 6px;
-  transition: all var(--transition-fast);
+  transition: all 0.2s ease;
   position: relative;
 }
 
-.ev-nav a:hover {
-  color: #fff;
-  background: rgba(255,255,255,0.05);
+.nav-link:hover, .nav-link.active {
+  color: var(--primary-dark, #3c9f85);
+  background-color: rgba(77, 182, 172, 0.1);
   transform: translateY(-1px);
 }
 
-.ev-nav a::after {
+.nav-link::after {
   content: '';
   position: absolute;
   bottom: 0;
   left: 0.55rem;
   right: 0.55rem;
   height: 2px;
-  background: linear-gradient(90deg,#2dbf9a,#1aa37f);
+  background: linear-gradient(90deg, var(--primary-color, #4db6ac), var(--primary-dark, #3c9f85));
   transform: scaleX(0);
-  transition: transform var(--transition-fast);
+  transition: transform 0.2s ease;
 }
 
-.ev-nav a:hover::after {
+.nav-link:hover::after, .nav-link.active::after {
   transform: scaleX(1);
 }
 
-.ev-user {
-  color: #9fd2c2;
-  margin-right: 0.5rem;
-  font-weight: 600;
-  animation: slideIn var(--transition-medium);
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-.ev-logout {
-  background: linear-gradient(90deg,#1a1a1a,#0e2b25);
-  border: 1px solid rgba(255,255,255,0.06);
-  color: #fff;
+.user-info {
+  color: var(--primary-dark, #3c9f85);
+  margin-right: 0.5rem;
+  font-weight: 600;
+}
+
+.logout-btn {
+  background: var(--primary-color, #4db6ac);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: white;
   padding: 0.35rem 0.8rem;
   border-radius: 8px;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
-.ev-logout:hover {
-  transform: var(--hover-lift);
-  box-shadow: var(--hover-glow);
-  border-color: rgba(45,200,150,0.3);
+.logout-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(77, 182, 172, 0.3);
 }
 
-@media (max-width: 640px) {
-	.ev-nav nav { gap: 0.5rem; }
-	.ev-nav .brand { font-size: 1rem }
+.login-btn, .register-btn {
+  text-decoration: none;
+  padding: 0.35rem 0.8rem;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.login-btn {
+  color: var(--primary-dark, #3c9f85);
+  border: 1px solid var(--primary-color, #4db6ac);
+}
+
+.register-btn {
+  background: var(--primary-color, #4db6ac);
+  color: white;
+  border: 1px solid var(--primary-color, #4db6ac);
+}
+
+.login-btn:hover, .register-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(77, 182, 172, 0.3);
+}
+
+@media (max-width: 768px) {
+  .navbar-container {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+  }
+  
+  .navbar-nav {
+    gap: 0.5rem;
+  }
+  
+  .nav-link {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-nav {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .navbar-actions {
+    margin-top: 0.5rem;
+  }
 }
