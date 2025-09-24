@@ -1,14 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace BusinessObject.Models
+namespace BusinessObject.Models.DTOs
 {
-    public class Account
+    public class AccountRegisterDTO
     {
-        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int AccountId { get; set; }
-
-        [Required]
+        [Required(ErrorMessage = "Full Name is required.")]
         public string FullName { get; set; }
 
         [EmailAddress(ErrorMessage = "Vui lòng nhập đúng định dạng mail")]
@@ -24,13 +20,7 @@ namespace BusinessObject.Models
         [Required]
         public string Phone { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Role is required.")]
         public int RoleID { get; set; }
-
-        public int Status { get; set; } = 1; // 1: Active, 0: Inactive
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
-        public DateTime UpdatedAt { get; set; } = DateTime.Now;
-
-        public virtual Role Role { get; set; }
     }
 }

@@ -24,6 +24,7 @@ namespace Repositories.DBContext
         }
 
         public DbSet<Account> Accounts { get; set; }
+        public DbSet<Role> Roles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -36,6 +37,20 @@ namespace Repositories.DBContext
                 entity.Property(e => e.Email).IsRequired();
                 entity.Property(e => e.Password).IsRequired();
                 entity.Property(e => e.FullName).IsRequired();
+            });
+
+            // Configure Role entity
+            modelBuilder.Entity<Role>(entity =>
+            {
+                entity.HasKey(e => e.RoleId);
+                entity.Property(e => e.RoleName).IsRequired();
+
+                // Seed data for roles
+                entity.HasData(
+                    new Role { RoleId = 1, RoleName = "Renter" },
+                    new Role { RoleId = 2, RoleName = "StationStaff" },
+                    new Role { RoleId = 3, RoleName = "Admin" }
+                );
             });
         }
     }
