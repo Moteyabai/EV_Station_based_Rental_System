@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import vehicles from '../data/vehicles';
-import './Vehicles.css';
+import '../styles/Vehicles.css';
 
 export default function Vehicles() {
   const [filterType, setFilterType] = useState('all');

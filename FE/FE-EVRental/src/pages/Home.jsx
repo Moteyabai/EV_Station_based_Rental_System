@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import './Home.css';
+import '../styles/Home.css';
 import '../styles/media.css';
 import VideoBackground from '../components/VideoBackground';
 import stations from '../data/stations_new';

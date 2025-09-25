@@ -8,70 +8,31 @@ export default function StationFinder() {
   const [loading, setLoading] = useState(true);
   const [selectedStation, setSelectedStation] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [mapInitialized, setMapInitialized] = useState(false);
-  const [mapObject, setMapObject] = useState(null);
-  const [markers, setMarkers] = useState([]);
+  const [error, setError] = useState(null);
   
-  // Initialize map when component mounts
+  // Load stations data
   useEffect(() => {
-    setStations(stationsData);
-    setLoading(false);
-    
-    // In a real application, you would load a map library like Google Maps or Leaflet
-    // For this demo, we'll simulate a map with a placeholder
-    setTimeout(() => {
-      initializeMap();
-    }, 500);
-  }, []);
-  
-  // Update map markers when stations change
-  useEffect(() => {
-    if (mapObject && stations.length > 0) {
-      addMarkersToMap();
+    try {
+      setLoading(true);
+      // Simulate loading delay
+      setTimeout(() => {
+        if (stationsData && Array.isArray(stationsData)) {
+          setStations(stationsData);
+          setError(null);
+        } else {
+          setError('Dữ liệu trạm không hợp lệ');
+        }
+        setLoading(false);
+      }, 500);
+    } catch (err) {
+      setError('Không thể tải dữ liệu trạm: ' + err.message);
+      setLoading(false);
     }
-  }, [mapObject, stations]);
-  
-  // Initialize map (simulation)
-  const initializeMap = () => {
-    // This would be replaced with actual map initialization code
-    const mockMapObject = {
-      setCenter: (lat, lng) => console.log(`Map centered at ${lat}, ${lng}`),
-      setZoom: (zoom) => console.log(`Map zoom set to ${zoom}`),
-    };
-    
-    setMapObject(mockMapObject);
-    setMapInitialized(true);
-  };
-  
-  // Add markers to map (simulation)
-  const addMarkersToMap = () => {
-    // Clear existing markers
-    markers.forEach(marker => {
-      // In a real app: marker.setMap(null);
-    });
-    
-    // Create new markers
-    const newMarkers = stations.map(station => {
-      // In a real app: create actual map markers
-      return {
-        id: station.id,
-        position: { lat: station.location.lat, lng: station.location.lng },
-        onClick: () => handleStationSelect(station)
-      };
-    });
-    
-    setMarkers(newMarkers);
-  };
+  }, []);
   
   // Handle station selection
   const handleStationSelect = (station) => {
     setSelectedStation(station);
-    
-    // In a real app: center the map on the selected station
-    if (mapObject) {
-      // mapObject.setCenter(station.location.lat, station.location.lng);
-      // mapObject.setZoom(15);
-    }
   };
   
   // Filter stations based on search query
@@ -80,85 +41,128 @@ export default function StationFinder() {
     station.address.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  if (loading) {
+    return (
+      <div className="station-finder-container">
+        <div className="loading-message">
+          <p>🔄 Đang tải danh sách trạm thuê xe...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="station-finder-container">
+        <div className="error-message">
+          <h3>❌ Có lỗi xảy ra</h3>
+          <p>{error}</p>
+          <button 
+            className="btn primary" 
+            onClick={() => window.location.reload()}
+          >
+            🔄 Thử lại
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="station-finder-container">
-      <h2 className="section-title">Find Rental Stations</h2>
+      <div className="station-finder-header">
+        <h2>🚗 Tìm Điểm Thuê Xe</h2>
+        <p>Khám phá {stations.length} điểm thuê xe điện gần bạn</p>
+      </div>
       
-      <div className="station-search-container">
-        <div className="search-box">
-          <input
-            type="text"
-            placeholder="Search by station name or address..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="station-search-input"
-          />
-        </div>
+      <div className="search-form">
+        <input
+          type="text"
+          placeholder="🔍 Tìm theo tên trạm hoặc địa chỉ..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="search-input"
+        />
       </div>
       
       <div className="station-finder-content">
-        <div className="station-list">
-          <h3>Available Stations ({filteredStations.length})</h3>
+        <div className="stations-list">
+          <h3>📍 Danh sách trạm ({filteredStations.length})</h3>
           
-          {loading ? (
-            <div className="loading-indicator">Loading stations...</div>
+          {filteredStations.length === 0 ? (
+            <div className="no-results">
+              <p>😔 Không tìm thấy trạm nào phù hợp với từ khóa "{searchQuery}"</p>
+            </div>
           ) : (
-            <div className="station-items">
-              {filteredStations.map(station => (
+            <div className="station-cards">
+              {filteredStations.map((station) => (
                 <div 
                   key={station.id} 
-                  className={`station-item ${selectedStation?.id === station.id ? 'selected' : ''}`}
+                  className={`station-card ${selectedStation?.id === station.id ? 'selected' : ''}`}
                   onClick={() => handleStationSelect(station)}
                 >
-                  <div className="station-name">{station.name}</div>
-                  <div className="station-address">{station.address}</div>
-                  <div className="station-details">
-                    <div className="station-availability">
-                      <span className="label">Available EVs:</span> 
-                      <span className="value">{station.availableVehicles}</span>
-                    </div>
-                    <div className="station-charging">
-                      <span className="label">Charging Spots:</span> 
-                      <span className="value">{station.chargingStations}</span>
+                  <div className="station-image">
+                    <img src={station.image} alt={station.name} />
+                    <div className="available-badge">
+                      {station.availableVehicles} xe có sẵn
                     </div>
                   </div>
-                  <Link to={`/stations/${station.id}`} className="btn primary btn-sm">View Details</Link>
+                  
+                  <div className="station-info">
+                    <h4>{station.name}</h4>
+                    <p className="address">📍 {station.address}</p>
+                    <p className="hours">🕒 {station.openingHours}</p>
+                    <p className="contact">📞 {station.contactNumber}</p>
+                    
+                    <div className="station-rating">
+                      ⭐ {station.rating} ({station.reviews} đánh giá)
+                    </div>
+                    
+                    <div className="amenities">
+                      {station.amenities.map((amenity, index) => (
+                        <span key={index} className="amenity-tag">
+                          {amenity}
+                        </span>
+                      ))}
+                    </div>
+                    
+                    <div className="station-actions">
+                      <Link 
+                        to={`/stations/${station.id}`} 
+                        className="btn primary"
+                      >
+                        Xem chi tiết
+                      </Link>
+                      <button className="btn secondary">
+                        Đặt xe ngay
+                      </button>
+                    </div>
+                  </div>
                 </div>
               ))}
-              
-              {filteredStations.length === 0 && (
-                <div className="no-stations">
-                  No stations match your search criteria.
-                </div>
-              )}
             </div>
           )}
         </div>
         
+        {/* Map placeholder */}
         <div className="map-container">
-          {!mapInitialized ? (
-            <div className="map-loading">Loading map...</div>
-          ) : (
-            <div className="map-placeholder">
-              <div className="map-overlay">
-                <div className="map-message">
-                  <p>Interactive Map</p>
-                  <p className="map-note">(This is a placeholder for the actual map implementation)</p>
-                </div>
-                
-                {/* Show selected station info if any */}
-                {selectedStation && (
-                  <div className="selected-station-info">
-                    <h4>{selectedStation.name}</h4>
-                    <p>{selectedStation.address}</p>
-                    <Link to={`/stations/${selectedStation.id}`} className="btn primary">
-                      View Details
-                    </Link>
-                  </div>
-                )}
-              </div>
+          <div className="map-placeholder">
+            <div className="map-message">
+              <h4>🗺️ Bản đồ tương tác</h4>
+              <p>Hiển thị vị trí các trạm thuê xe</p>
+              <small>(Tính năng sẽ được cập nhật trong phiên bản tiếp theo)</small>
             </div>
-          )}
+            
+            {selectedStation && (
+              <div className="selected-station-overlay">
+                <div className="selected-info">
+                  <h4>📍 {selectedStation.name}</h4>
+                  <p>{selectedStation.address}</p>
+                  <p>🚗 {selectedStation.availableVehicles} xe có sẵn</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

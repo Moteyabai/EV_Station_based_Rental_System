@@ -1,12 +1,55 @@
 /* Station Finder Styles */
 .station-finder-container {
-  padding: 2rem 0;
+  padding: 2rem 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-.station-search-container {
+.station-finder-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.station-finder-header h2 {
+  font-size: 2.2rem;
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+}
+
+.station-finder-header p {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+.search-form {
   margin-bottom: 2rem;
   max-width: 600px;
   margin: 0 auto 2rem;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.loading-message, .error-message {
+  text-align: center;
+  padding: 3rem 2rem;
+}
+
+.error-message h3 {
+  color: #dc3545;
+  margin-bottom: 1rem;
 }
 
 .search-box {
@@ -31,11 +74,208 @@
 
 .station-finder-content {
   display: grid;
-  grid-template-columns: 1fr 1.5fr;
+  grid-template-columns: 1fr 1fr;
   gap: 2rem;
   margin-top: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
+}
+
+.stations-list h3 {
+  margin-bottom: 1rem;
+  color: var(--primary-color);
+  font-size: 1.3rem;
+}
+
+.station-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.station-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.station-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  transform: translateY(-2px);
+}
+
+.station-card.selected {
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 16px rgba(0, 123, 255, 0.3);
+}
+
+.station-image {
+  position: relative;
+  height: 150px;
+  overflow: hidden;
+}
+
+.station-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.available-badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: var(--success-color);
+  color: white;
+  padding: 0.3rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.station-info {
+  padding: 1rem;
+}
+
+.station-info h4 {
+  margin-bottom: 0.5rem;
+  color: var(--primary-color);
+  font-size: 1.1rem;
+}
+
+.station-info p {
+  margin-bottom: 0.3rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.station-rating {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+  color: #ffa500;
+}
+
+.amenities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0.5rem 0;
+}
+
+.amenity-tag {
+  background: #e3f2fd;
+  color: var(--primary-color);
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+}
+
+.station-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+}
+
+.map-container {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  height: 600px;
+  position: relative;
+}
+
+.map-placeholder {
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  text-align: center;
+  position: relative;
+}
+
+.map-message {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2rem;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.map-message h4 {
+  margin-bottom: 0.5rem;
+  font-size: 1.3rem;
+}
+
+.map-message p {
+  margin-bottom: 0.5rem;
+}
+
+.map-message small {
+  opacity: 0.8;
+  font-size: 0.8rem;
+}
+
+.selected-station-overlay {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  right: 1rem;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  padding: 1rem;
+  border-radius: 8px;
+  color: var(--text-primary);
+}
+
+.selected-info h4 {
+  margin-bottom: 0.3rem;
+  color: var(--primary-color);
+}
+
+.selected-info p {
+  margin-bottom: 0.2rem;
+  font-size: 0.9rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .station-finder-container {
+    padding: 1rem 0.5rem;
+  }
+  
+  .station-finder-content {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .map-container {
+    height: 300px;
+  }
+  
+  .station-finder-header h2 {
+    font-size: 1.8rem;
+  }
+  
+  .station-card {
+    margin-bottom: 1rem;
+  }
+  
+  .station-actions {
+    flex-direction: column;
+  }
+}
+
+
+.no-results {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
 }
 
 .station-list {
