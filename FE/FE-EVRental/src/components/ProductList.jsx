@@ -1,6 +1,6 @@
 import React from 'react'
 import ProductCard from './ProductCard'
-import './ProductList.css'
+import '../styles/ProductList.css'
 
 export default function ProductList({ products }) {
   return (

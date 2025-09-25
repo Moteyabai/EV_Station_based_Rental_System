@@ -21,6 +21,7 @@ import ReturnSuccess from "./pages/ReturnSuccess";
 
 // Styles
 import "./App.css";
+import "./styles/scrollbar.css";
 
 function App() {
   return (
