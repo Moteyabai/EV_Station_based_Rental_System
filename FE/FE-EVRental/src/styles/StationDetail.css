@@ -275,6 +275,18 @@
   font-weight: 500;
 }
 
+.vehicle-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.vehicle-actions .btn {
+  flex: 1;
+  padding: 0.5rem;
+  font-size: 0.85rem;
+}
+
 .btn-select {
   width: 100%;
   text-align: center;

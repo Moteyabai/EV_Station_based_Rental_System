@@ -1,20 +1,22 @@
-import React from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
-import '../styles/NavBar.css'
+import React from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { useCart } from "../contexts/CartContext";
+import "../styles/NavBar.css";
 
 export default function NavBar() {
-  const { user, logout } = useAuth()
-  const navigate = useNavigate()
-  const location = useLocation()
-  
+  const { user, logout } = useAuth();
+  const { getItemCount } = useCart();
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const isActive = (path) => {
-    return location.pathname === path ? 'active' : '';
+    return location.pathname === path ? "active" : "";
   };
 
   function handleLogout() {
-    logout()
-    navigate('/')
+    logout();
+    navigate("/");
   }
 
   return (
@@ -25,28 +27,49 @@ export default function NavBar() {
             <span>EV</span> Rental
           </Link>
         </div>
-        
+
         <nav className="navbar-nav">
-          <Link to="/" className={`nav-link ${isActive('/')}`}>Trang chủ</Link>
-          <Link to="/vehicles" className={`nav-link ${isActive('/vehicles')}`}>Xe máy điện</Link>
-          <Link to="/stations" className={`nav-link ${isActive('/stations')}`}>Điểm thuê</Link>
-          <Link to="/about" className={`nav-link ${isActive('/about')}`}>Giới thiệu</Link>
+          <Link to="/" className={`nav-link ${isActive("/")}`}>
+            Trang chủ
+          </Link>
+          <Link to="/vehicles" className={`nav-link ${isActive("/vehicles")}`}>
+            Xe máy điện
+          </Link>
+          <Link to="/stations" className={`nav-link ${isActive("/stations")}`}>
+            Điểm thuê
+          </Link>
+          <Link to="/about" className={`nav-link ${isActive("/about")}`}>
+            Giới thiệu
+          </Link>
         </nav>
-        
+
         <div className="navbar-actions">
+          <Link to="/cart" className="cart-link">
+            🛒 Giỏ hàng
+            {getItemCount() > 0 && (
+              <span className="cart-badge">{getItemCount()}</span>
+            )}
+          </Link>
+
           {user ? (
             <>
               <span className="user-info">{user.email}</span>
-              <button className="logout-btn" onClick={handleLogout}>Đăng xuất</button>
+              <button className="logout-btn" onClick={handleLogout}>
+                Đăng xuất
+              </button>
             </>
           ) : (
             <>
-              <Link to="/login" className="login-btn">Đăng nhập</Link>
-              <Link to="/register" className="register-btn">Đăng ký</Link>
+              <Link to="/login" className="login-btn">
+                Đăng nhập
+              </Link>
+              <Link to="/register" className="register-btn">
+                Đăng ký
+              </Link>
             </>
           )}
         </div>
       </div>
     </header>
-  )
+  );
 }

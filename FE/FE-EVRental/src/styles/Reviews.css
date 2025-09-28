@@ -1,0 +1,15 @@
+/* Phần đánh giá trong trang chi tiết sản phẩm */
+.product-reviews {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid #eaeaea;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.review-section-title {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #333;
+}

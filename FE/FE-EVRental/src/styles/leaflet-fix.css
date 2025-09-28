@@ -1,0 +1,33 @@
+/* Fix Leaflet CSS issues */
+
+/* Fix Leaflet icon paths */
+.leaflet-default-icon-path {
+  background-image: url("https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png");
+}
+
+.leaflet-default-shadow-path {
+  background-image: url("https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png");
+}
+
+/* Make sure popup is above markers */
+.leaflet-popup {
+  z-index: 1000 !important;
+}
+
+/* Fix map container rendering */
+.leaflet-container {
+  width: 100%;
+  height: 500px;
+  z-index: 1;
+}
+
+/* Fix popup styles */
+.leaflet-popup-content {
+  margin: 10px;
+  min-width: 200px;
+}
+
+/* Fix markers */
+.leaflet-marker-icon {
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.3));
+}

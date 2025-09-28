@@ -30,6 +30,55 @@
   justify-content: center;
   gap: 0.5rem;
   margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.station-filters {
+  background: #f9f9f9;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem auto;
+  max-width: 800px;
+}
+
+.filter-section {
+  margin-bottom: 1rem;
+}
+
+.filter-section h3 {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.amenity-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.amenity-filter-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.amenity-filter-item input {
+  accent-color: var(--primary-color);
+}
+
+.filter-value {
+  font-weight: 600;
+  margin-left: 0.5rem;
+  color: var(--primary-color);
+}
+
+.stations-count {
+  text-align: center;
+  font-weight: 600;
+  margin-top: 1rem;
+  color: var(--text-secondary);
 }
 
 .toggle-btn {
@@ -62,21 +111,70 @@
   border-radius: 12px;
   box-shadow: var(--shadow-lg);
   border: 2px solid var(--primary-color);
-  max-width: 400px;
+  max-width: 500px;
   width: 90%;
   z-index: 1000;
-  text-align: center;
+  text-align: left;
 }
 
 .selected-station-info h3 {
   margin: 0 0 0.5rem 0;
   color: var(--primary-dark);
+  text-align: center;
 }
 
 .selected-station-info p {
   margin: 0 0 1rem 0;
   color: var(--text-secondary);
   font-size: 0.9rem;
+  text-align: center;
+}
+
+.station-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.detail-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.station-amenities {
+  margin-bottom: 1rem;
+}
+
+.station-amenities h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.amenity-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.amenity-tag {
+  background: #f1f8f7;
+  color: var(--primary-dark);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
 }
 
 .station-actions {

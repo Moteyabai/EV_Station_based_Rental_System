@@ -22,31 +22,31 @@ const stations = [
     vehicles: [
       {
         id: 'v1',
-        name: 'Tesla Model 3',
-        type: 'Sedan',
-        batteryCapacity: '75 kWh',
-        range: '350 km',
-        price: 75,
+        name: 'VinFast Klara S',
+        type: 'Xe máy điện cao cấp',
+        batteryCapacity: '1.2 kWh',
+        range: '60 km',
+        price: 50,
         available: true,
-        image: vehicleImages?.teslaModel3?.thumbnail || null
+        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60'
       },
       {
         id: 'v2',
-        name: 'Nissan Leaf',
-        type: 'Hatchback',
-        batteryCapacity: '40 kWh',
-        range: '240 km',
-        price: 50,
+        name: 'DatBike Weaver 200',
+        type: 'Xe máy điện thể thao',
+        batteryCapacity: '2.5 kWh',
+        range: '120 km',
+        price: 65,
         available: true,
-        image: vehicleImages?.nissanLeaf?.thumbnail || null
+        image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=60'
       },
       {
         id: 'v3',
-        name: 'Hyundai Kona Electric',
-        type: 'SUV',
-        batteryCapacity: '64 kWh',
-        range: '415 km',
-        price: 65,
+        name: 'VinFast Feliz S',
+        type: 'Xe máy điện nhỏ gọn',
+        batteryCapacity: '0.9 kWh',
+        range: '50 km',
+        price: 40,
         available: true,
         image: vehicleImages?.hyundaiKona?.thumbnail || null
       }
@@ -72,34 +72,34 @@ const stations = [
     },
     vehicles: [
       {
-        id: 'v4',
-        name: 'Tesla Model Y',
-        type: 'SUV',
-        batteryCapacity: '82 kWh',
-        range: '505 km',
-        price: 85,
+        id: 'v1',
+        name: 'VinFast Klara S',
+        type: 'Xe máy điện cao cấp',
+        batteryCapacity: '1.2 kWh',
+        range: '60 km',
+        price: 50,
         available: true,
-        image: vehicleImages?.teslaModelY?.thumbnail || null
+        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60'
       },
       {
-        id: 'v5',
-        name: 'BMW i4',
-        type: 'Sedan',
-        batteryCapacity: '83.9 kWh',
-        range: '520 km',
-        price: 90,
+        id: 'v2',
+        name: 'DatBike Weaver 200',
+        type: 'Xe máy điện thể thao',
+        batteryCapacity: '2.5 kWh',
+        range: '120 km',
+        price: 65,
         available: true,
-        image: vehicleImages?.bmwI4?.thumbnail || null
+        image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=60'
       },
       {
-        id: 'v6',
-        name: 'Volkswagen ID.4',
-        type: 'SUV',
-        batteryCapacity: '77 kWh',
-        range: '400 km',
-        price: 70,
-        available: false,
-        image: vehicleImages?.volkswagenID4?.thumbnail || null
+        id: 'v3',
+        name: 'VinFast Feliz S',
+        type: 'Xe máy điện nhỏ gọn',
+        batteryCapacity: '0.9 kWh',
+        range: '50 km',
+        price: 40,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?auto=format&fit=crop&w=800&q=60'
       }
     ]
   },
@@ -123,34 +123,34 @@ const stations = [
     },
     vehicles: [
       {
-        id: 'v7',
-        name: 'Audi e-tron',
-        type: 'SUV',
-        batteryCapacity: '95 kWh',
-        range: '360 km',
-        price: 95,
+        id: 'v1',
+        name: 'VinFast Klara S',
+        type: 'Xe máy điện cao cấp',
+        batteryCapacity: '1.2 kWh',
+        range: '60 km',
+        price: 50,
         available: true,
-        image: vehicleImages?.audiEtron?.thumbnail || null
+        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60'
       },
       {
-        id: 'v8',
-        name: 'Polestar 2',
-        type: 'Fastback',
-        batteryCapacity: '78 kWh',
-        range: '400 km',
-        price: 80,
+        id: 'v2',
+        name: 'DatBike Weaver 200',
+        type: 'Xe máy điện thể thao',
+        batteryCapacity: '2.5 kWh',
+        range: '120 km',
+        price: 65,
         available: true,
-        image: vehicleImages?.polestar2?.thumbnail || null
+        image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=60'
       },
       {
-        id: 'v9',
-        name: 'Kia EV6',
-        type: 'Crossover',
-        batteryCapacity: '77.4 kWh',
-        range: '450 km',
-        price: 75,
+        id: 'v3',
+        name: 'VinFast Feliz S',
+        type: 'Xe máy điện nhỏ gọn',
+        batteryCapacity: '0.9 kWh',
+        range: '50 km',
+        price: 40,
         available: true,
-        image: vehicleImages?.kiaEV6?.thumbnail || null
+        image: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?auto=format&fit=crop&w=800&q=60'
       }
     ]
   },
@@ -174,24 +174,24 @@ const stations = [
     },
     vehicles: [
       {
-        id: 'v10',
-        name: 'Rivian R1T',
-        type: 'Pickup Truck',
-        batteryCapacity: '135 kWh',
-        range: '500 km',
-        price: 110,
+        id: 'v1',
+        name: 'VinFast Klara S',
+        type: 'Xe máy điện cao cấp',
+        batteryCapacity: '1.2 kWh',
+        range: '60 km',
+        price: 50,
         available: true,
-        image: vehicleImages?.rivianR1T?.thumbnail || null
+        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60'
       },
       {
-        id: 'v11',
-        name: 'Lucid Air',
-        type: 'Luxury Sedan',
-        batteryCapacity: '112 kWh',
-        range: '830 km',
-        price: 130,
+        id: 'v2',
+        name: 'DatBike Weaver 200',
+        type: 'Xe máy điện thể thao',
+        batteryCapacity: '2.5 kWh',
+        range: '120 km',
+        price: 65,
         available: true,
-        image: vehicleImages?.lucidAir?.thumbnail || null
+        image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=60'
       }
     ]
   },
@@ -215,34 +215,34 @@ const stations = [
     },
     vehicles: [
       {
-        id: 'v12',
-        name: 'Tesla Model S',
-        type: 'Luxury Sedan',
-        batteryCapacity: '100 kWh',
-        range: '650 km',
-        price: 120,
+        id: 'v1',
+        name: 'VinFast Klara S',
+        type: 'Xe máy điện cao cấp',
+        batteryCapacity: '1.2 kWh',
+        range: '60 km',
+        price: 50,
         available: true,
-        image: vehicleImages?.teslaModelS?.thumbnail || null
+        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60'
       },
       {
-        id: 'v13',
-        name: 'Mercedes-Benz EQS',
-        type: 'Luxury Sedan',
-        batteryCapacity: '107.8 kWh',
-        range: '770 km',
-        price: 135,
+        id: 'v2',
+        name: 'DatBike Weaver 200',
+        type: 'Xe máy điện thể thao',
+        batteryCapacity: '2.5 kWh',
+        range: '120 km',
+        price: 65,
         available: true,
-        image: vehicleImages?.mercedesEQS?.thumbnail || null
+        image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=60'
       },
       {
-        id: 'v14',
-        name: 'Chevrolet Bolt EV',
-        type: 'Compact',
-        batteryCapacity: '65 kWh',
-        range: '420 km',
-        price: 60,
+        id: 'v3',
+        name: 'VinFast Feliz S',
+        type: 'Xe máy điện nhỏ gọn',
+        batteryCapacity: '0.9 kWh',
+        range: '50 km',
+        price: 40,
         available: true,
-        image: vehicleImages?.chevroletBolt?.thumbnail || null
+        image: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?auto=format&fit=crop&w=800&q=60'
       }
     ]
   }
