@@ -2,108 +2,57 @@ const vehicles = [
   {
     id: 'v1',
     name: 'VinFast Klara S',
-    price: 100000,
-    priceUnit: 'VND per day',
-    short: 'Sang trọng & Tiện lợi',
-    description: 'VinFast Klara S là mẫu xe máy điện thời trang với thiết kế hiện đại và phạm vi hoạt động ấn tượng.',
-    image: 'https://product.hstatic.net/1000289385/product/klara-s-mau-xanh_c5fe7cdb6e8442bca32a9d74bc60c1ae.jpg',
+    price: 50,
+    priceUnit: 'k/ngày',
+    short: 'Premium Electric Scooter',
+    description: 'VinFast Klara S là xe máy điện thông minh với thiết kế hiện đại và công nghệ IoT tiên tiến. Pin lithium có thể tháo rời, màn hình LCD thông minh và hệ thống định vị GPS.',
+    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60',
     category: 'scooter',
     brand: 'VinFast',
     specs: {
-      range: '120 km',
-      maxSpeed: '60 km/h',
-      chargingTime: '6 hours',
-      weight: '95 kg'
+      battery: '1.2 kWh (có thể tháo rời)',
+      range: '60 km',
+      maxSpeed: '50 km/h',
+      chargingTime: '3 giờ (sạc đầy)',
+      weight: '85 kg'
     },
     available: true
   },
   {
     id: 'v2',
-    name: 'VinFast Theon S',
-    price: 120000,
-    priceUnit: 'VND per day',
-    short: 'Mạnh mẽ & Thanh lịch',
-    description: 'VinFast Theon S là mẫu xe máy điện hiệu suất cao với các tính năng cao cấp và chất lượng vượt trội.',
-    image: 'https://bizweb.dktcdn.net/100/440/231/products/xe-may-dien-vinfast-theon-s-mau-do.jpg',
+    name: 'DatBike Weaver 200',
+    price: 65,
+    priceUnit: 'k/ngày',
+    short: 'High-Performance Scooter',
+    description: 'DatBike Weaver 200 là xe máy điện hiệu suất cao với động cơ mạnh mẽ và thiết kế thể thao. Pin có thể hoán đổi nhanh chóng và hệ thống phanh ABS an toàn.',
+    image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=60',
     category: 'scooter',
-    brand: 'VinFast',
+    brand: 'DatBike',
     specs: {
-      range: '150 km',
-      maxSpeed: '90 km/h',
-      chargingTime: '5 hours',
-      weight: '115 kg'
+      battery: '2.5 kWh (có thể hoán đổi)',
+      range: '120 km',
+      maxSpeed: '85 km/h',
+      chargingTime: '4 giờ (sạc đầy)',
+      weight: '95 kg'
     },
     available: true
   },
   {
     id: 'v3',
     name: 'VinFast Feliz S',
-    price: 110000,
-    priceUnit: 'VND per day',
-    short: 'Tiết kiệm & Bền bỉ',
-    description: 'VinFast Feliz S là mẫu xe máy điện lý tưởng cho đi lại hàng ngày với thiết kế đẹp mắt và khả năng tiết kiệm chi phí.',
-    image: 'https://shop.vinfastauto.com/on/demandware.static/-/Sites-app_vinfast_vn-Library/default/dw56e2059e/images/feliz/color-banner.png',
+    price: 40,
+    priceUnit: 'k/ngày',
+    short: 'Compact Electric Scooter',
+    description: 'VinFast Feliz S là xe máy điện compact tiết kiệm với thiết kế trẻ trung và hiện đại. Phù hợp cho học sinh, sinh viên với giá thuê phải chăng và vận hành êm ái.',
+    image: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?auto=format&fit=crop&w=800&q=60',
     category: 'scooter',
     brand: 'VinFast',
     specs: {
-      range: '110 km',
-      maxSpeed: '70 km/h',
-      chargingTime: '6 hours',
-      weight: '100 kg'
-    },
-    available: true
-  },
-  {
-    id: 'v4',
-    name: 'Datbike Weaver',
-    price: 110000,
-    priceUnit: 'VND per day',
-    short: 'Hiện đại & Đáng tin cậy',
-    description: 'Datbike Weaver là mẫu xe máy điện hiện đại được thiết kế và sản xuất tại Việt Nam.',
-    image: 'https://datbike.com/cdn/shop/files/dat-bike-weaver-200-4.jpg',
-    category: 'scooter',
-    brand: 'Datbike',
-    specs: {
-      range: '100 km',
-      maxSpeed: '80 km/h',
-      chargingTime: '4 hours',
-      weight: '105 kg'
-    },
-    available: true
-  },
-  {
-    id: 'v5',
-    name: 'Datbike Weaver 200',
-    price: 150000,
-    priceUnit: 'VND per day',
-    short: 'Cao cấp & Mạnh mẽ',
-    description: 'Datbike Weaver 200 là phiên bản cao cấp của Weaver với hiệu suất và tính năng nâng cao.',
-    image: 'https://datbike.com/cdn/shop/files/dat-bike-weaver-200-2.jpg',
-    category: 'scooter',
-    brand: 'Datbike',
-    specs: {
-      range: '130 km',
-      maxSpeed: '90 km/h',
-      chargingTime: '3.5 hours',
-      weight: '110 kg'
-    },
-    available: true
-  },
-  {
-    id: 'v6',
-    name: 'Datbike Quantum',
-    price: 140000,
-    priceUnit: 'VND per day',
-    short: 'Thông minh & Thể thao',
-    description: 'Datbike Quantum là mẫu xe máy điện thông minh với thiết kế thể thao và công nghệ tiên tiến.',
-    image: 'https://datbike.com/cdn/shop/files/dat-bike-weaver-70.jpg',
-    category: 'scooter',
-    brand: 'Datbike',
-    specs: {
-      range: '120 km',
-      maxSpeed: '85 km/h',
-      chargingTime: '4 hours',
-      weight: '108 kg'
+      battery: '0.9 kWh (có thể tháo rời)',
+      range: '50 km',
+      maxSpeed: '40 km/h',
+      chargingTime: '2.5 giờ (sạc đầy)',
+      weight: '75 kg'
     },
     available: true
   }
