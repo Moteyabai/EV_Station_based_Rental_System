@@ -1,10 +1,8 @@
-import { vehicleImages } from '../assets/images/imageData';
-
 const products = [
   {
     id: 'p1',
     name: 'VinFast Klara S',
-    price: 50,
+    price: 120,
     priceUnit: 'k/ngày',
     short: 'Premium Electric Scooter',
     description: 'VinFast Klara S là xe máy điện thông minh với thiết kế hiện đại và công nghệ IoT tiên tiến. Pin lithium có thể tháo rời, màn hình LCD thông minh và hệ thống định vị GPS.',
@@ -27,7 +25,7 @@ const products = [
   {
     id: 'p2',
     name: 'DatBike Weaver 200',
-    price: 65,
+    price: 150,
     priceUnit: 'k/ngày', 
     short: 'High-Performance Scooter',
     description: 'DatBike Weaver 200 là xe máy điện hiệu suất cao với động cơ mạnh mẽ và thiết kế thể thao. Pin có thể hoán đổi nhanh chóng và hệ thống phanh ABS an toàn.',
@@ -50,7 +48,7 @@ const products = [
   {
     id: 'p3',
     name: 'VinFast Feliz S',
-    price: 40,
+    price: 100,
     priceUnit: 'k/ngày',
     short: 'Compact Electric Scooter',
     description: 'VinFast Feliz S là xe máy điện compact tiết kiệm với thiết kế trẻ trung và hiện đại. Phù hợp cho học sinh, sinh viên với giá thuê phải chăng và vận hành êm ái.',

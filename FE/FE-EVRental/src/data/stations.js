@@ -1,5 +1,3 @@
-import { vehicleImages, stationImages } from '../assets/images/imageData';
-
 const stations = [
   {
     id: 's1',
@@ -15,9 +13,9 @@ const stations = [
     openingHours: '24/7',
     amenities: ['Restrooms', 'Cafe', 'Waiting Lounge', 'WiFi'],
     images: {
-      exterior: stationImages.central.exterior,
-      chargers: stationImages.central.chargers,
-      thumbnail: stationImages.central.thumbnail
+      exterior: "https://images.unsplash.com/photo-1593941707285-aae966bad0cf?auto=format&fit=crop&w=800&q=60",
+      chargers: "https://images.unsplash.com/photo-1635418421745-5e29b738d8e6?auto=format&fit=crop&w=800&q=60",
+      thumbnail: "https://images.unsplash.com/photo-1647531257138-ff6ce2547643?auto=format&fit=crop&w=800&q=60"
     },
     vehicles: [
       {
@@ -26,7 +24,7 @@ const stations = [
         type: 'Xe máy điện cao cấp',
         batteryCapacity: '1.2 kWh',
         range: '60 km',
-        price: 50,
+        price: 120,
         available: true,
         image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60'
       },
@@ -36,7 +34,7 @@ const stations = [
         type: 'Xe máy điện thể thao',
         batteryCapacity: '2.5 kWh',
         range: '120 km',
-        price: 65,
+        price: 150,
         available: true,
         image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=60'
       },
@@ -46,9 +44,9 @@ const stations = [
         type: 'Xe máy điện nhỏ gọn',
         batteryCapacity: '0.9 kWh',
         range: '50 km',
-        price: 40,
+        price: 100,
         available: true,
-        image: vehicleImages?.hyundaiKona?.thumbnail || null
+        image: "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?auto=format&fit=crop&w=800&q=60"
       }
     ]
   },
@@ -66,9 +64,9 @@ const stations = [
     openingHours: '7:00 AM - 10:00 PM',
     amenities: ['Restrooms', 'Convenience Store', 'WiFi'],
     images: {
-      exterior: stationImages.riverside.exterior,
-      chargers: stationImages.riverside.chargers,
-      thumbnail: stationImages.riverside.thumbnail
+      exterior: "https://images.unsplash.com/photo-1594818379496-da1e345b812a?auto=format&fit=crop&w=800&q=60",
+      chargers: "https://images.unsplash.com/photo-1637596331299-aa86e822f7bb?auto=format&fit=crop&w=800&q=60",
+      thumbnail: "https://images.unsplash.com/photo-1683009427479-c7e36bbb7bca?auto=format&fit=crop&w=800&q=60"
     },
     vehicles: [
       {
@@ -77,7 +75,7 @@ const stations = [
         type: 'Xe máy điện cao cấp',
         batteryCapacity: '1.2 kWh',
         range: '60 km',
-        price: 50,
+        price: 120,
         available: true,
         image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60'
       },
@@ -87,7 +85,7 @@ const stations = [
         type: 'Xe máy điện thể thao',
         batteryCapacity: '2.5 kWh',
         range: '120 km',
-        price: 65,
+        price: 150,
         available: true,
         image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=60'
       },
@@ -97,7 +95,7 @@ const stations = [
         type: 'Xe máy điện nhỏ gọn',
         batteryCapacity: '0.9 kWh',
         range: '50 km',
-        price: 40,
+        price: 100,
         available: true,
         image: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?auto=format&fit=crop&w=800&q=60'
       }
@@ -117,9 +115,9 @@ const stations = [
     openingHours: '6:00 AM - 12:00 AM',
     amenities: ['Restrooms', 'Business Center', 'Coffee Shop', 'WiFi'],
     images: {
-      exterior: stationImages.downtown.exterior,
-      chargers: stationImages.downtown.chargers,
-      thumbnail: stationImages.downtown.thumbnail
+      exterior: "https://images.unsplash.com/photo-1593941707882-a5bfb6f5343d?auto=format&fit=crop&w=800&q=60",
+      chargers: "https://images.unsplash.com/photo-1662982592268-5b1f19359b99?auto=format&fit=crop&w=800&q=60", 
+      thumbnail: "https://images.unsplash.com/photo-1647531257173-8c74b4c0093b?auto=format&fit=crop&w=800&q=60"
     },
     vehicles: [
       {
@@ -128,7 +126,7 @@ const stations = [
         type: 'Xe máy điện cao cấp',
         batteryCapacity: '1.2 kWh',
         range: '60 km',
-        price: 50,
+        price: 120,
         available: true,
         image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60'
       },
@@ -138,7 +136,7 @@ const stations = [
         type: 'Xe máy điện thể thao',
         batteryCapacity: '2.5 kWh',
         range: '120 km',
-        price: 65,
+        price: 150,
         available: true,
         image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=60'
       },
@@ -148,7 +146,7 @@ const stations = [
         type: 'Xe máy điện nhỏ gọn',
         batteryCapacity: '0.9 kWh',
         range: '50 km',
-        price: 40,
+        price: 100,
         available: true,
         image: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?auto=format&fit=crop&w=800&q=60'
       }
@@ -168,9 +166,9 @@ const stations = [
     openingHours: '24/7',
     amenities: ['Restrooms', 'Coworking Space', 'Coffee Bar', 'WiFi'],
     images: {
-      exterior: stationImages.techDistrict.exterior,
-      chargers: stationImages.techDistrict.chargers,
-      thumbnail: stationImages.techDistrict.thumbnail
+      exterior: "https://images.unsplash.com/photo-1635769398371-78d717a1c06b?auto=format&fit=crop&w=800&q=60",
+      chargers: "https://images.unsplash.com/photo-1580275266003-bfb5703a0376?auto=format&fit=crop&w=800&q=60",
+      thumbnail: "https://images.unsplash.com/photo-1605627079912-97c3810a11a9?auto=format&fit=crop&w=800&q=60"
     },
     vehicles: [
       {
@@ -179,7 +177,7 @@ const stations = [
         type: 'Xe máy điện cao cấp',
         batteryCapacity: '1.2 kWh',
         range: '60 km',
-        price: 50,
+        price: 120,
         available: true,
         image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60'
       },
@@ -189,7 +187,7 @@ const stations = [
         type: 'Xe máy điện thể thao',
         batteryCapacity: '2.5 kWh',
         range: '120 km',
-        price: 65,
+        price: 150,
         available: true,
         image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=60'
       }
@@ -209,9 +207,9 @@ const stations = [
     openingHours: '24/7',
     amenities: ['Restrooms', 'Luggage Storage', 'Shuttle Service', 'WiFi'],
     images: {
-      exterior: stationImages.airport.exterior,
-      chargers: stationImages.airport.chargers,
-      thumbnail: stationImages.airport.thumbnail
+      exterior: "https://images.unsplash.com/photo-1620494697507-606467e30056?auto=format&fit=crop&w=800&q=60",
+      chargers: "https://images.unsplash.com/photo-1591770184880-0adc4b59a381?auto=format&fit=crop&w=800&q=60",
+      thumbnail: "https://images.unsplash.com/photo-1635053419037-c3f6dab301b9?auto=format&fit=crop&w=800&q=60"
     },
     vehicles: [
       {
@@ -220,7 +218,7 @@ const stations = [
         type: 'Xe máy điện cao cấp',
         batteryCapacity: '1.2 kWh',
         range: '60 km',
-        price: 50,
+        price: 120,
         available: true,
         image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60'
       },
@@ -230,7 +228,7 @@ const stations = [
         type: 'Xe máy điện thể thao',
         batteryCapacity: '2.5 kWh',
         range: '120 km',
-        price: 65,
+        price: 150,
         available: true,
         image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=60'
       },
@@ -240,7 +238,7 @@ const stations = [
         type: 'Xe máy điện nhỏ gọn',
         batteryCapacity: '0.9 kWh',
         range: '50 km',
-        price: 40,
+        price: 100,
         available: true,
         image: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?auto=format&fit=crop&w=800&q=60'
       }
