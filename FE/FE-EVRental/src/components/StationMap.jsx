@@ -80,10 +80,17 @@ export default function StationMap({
   stations,
   onStationSelect,
   selectedStation,
+  userLocation,
 }) {
-  const [userLocation, setUserLocation] = useState(null);
   const [stationsWithDistance, setStationsWithDistance] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [mapCenter, setMapCenter] = useState({ lat: 10.762622, lng: 106.660172 }); // Default TPHCM
+
+  // Set map center when user location is available
+  useEffect(() => {
+    if (userLocation) {
+      setMapCenter(userLocation);
+    }
+  }, [userLocation]);
 
   // Calculate stations with distance when user location is available
   useEffect(() => {
@@ -112,6 +119,9 @@ export default function StationMap({
       // Sort by distance
       stationsWithDist.sort((a, b) => a.distance - b.distance);
       setStationsWithDistance(stationsWithDist);
+    } else if (stations) {
+      // If no user location, just use stations as is
+      setStationsWithDistance(stations);
     }
   }, [userLocation, stations]);
 
@@ -146,28 +156,21 @@ export default function StationMap({
     }
   };
 
-  const handleLocationFound = (position) => {
-    setUserLocation(position);
-    setLoading(false);
-  };
-
   if (!stations || stations.length === 0) {
     return <div className="no-stations">Không tìm thấy trạm nào.</div>;
   }
-
-  const defaultCenter = { lat: 21.0285, lng: 105.8542 }; // Default to Hanoi
 
   return (
     <div className="station-map-container">
       <div className="map-header">
         <h3>🗺️ Bản đồ điểm thuê xe điện</h3>
-        {loading && <p>Đang xác định vị trí của bạn...</p>}
+        {userLocation && <p>📍 Đã xác định vị trí của bạn</p>}
       </div>
 
       <div className="map-wrapper">
         <MapContainer
-          center={defaultCenter}
-          zoom={13}
+          center={mapCenter}
+          zoom={userLocation ? 14 : 12}
           style={{ height: "500px", width: "100%" }}
           zoomControl={false}
           className="leaflet-map"
@@ -178,7 +181,13 @@ export default function StationMap({
           />
 
           <ZoomControl position="bottomright" />
-          <LocationMarker onLocationFound={handleLocationFound} />
+          
+          {/* Hiển thị vị trí người dùng nếu có */}
+          {userLocation && (
+            <Marker position={[userLocation.lat, userLocation.lng]} icon={blueIcon}>
+              <Popup>📍 Vị trí hiện tại của bạn</Popup>
+            </Marker>
+          )}
 
           {stations.map((station) => {
             const lat =
@@ -221,10 +230,10 @@ export default function StationMap({
       </div>
 
       <div className="nearby-stations">
-        <h3>Trạm gần bạn</h3>
+        <h3>{userLocation ? '🎯 Trạm gần bạn' : '📍 Danh sách các trạm'}</h3>
         <div className="stations-list">
           {stationsWithDistance.length > 0 ? (
-            stationsWithDistance.map((station) => (
+            stationsWithDistance.slice(0, 8).map((station) => (
               <div
                 key={station.id}
                 className={`station-item ${
@@ -236,10 +245,14 @@ export default function StationMap({
                   <h4>{station.name}</h4>
                   <p className="station-address">{station.address}</p>
                   <div className="station-metrics">
-                    <span className="distance">
-                      🚗 {station.distance.toFixed(1)} km
-                    </span>
-                    <span className="time">⏱️ {station.estimatedTime}</span>
+                    {station.distance && (
+                      <span className="distance">
+                        � {station.distance.toFixed(1)} km
+                      </span>
+                    )}
+                    {station.estimatedTime && (
+                      <span className="time">⏱️ {station.estimatedTime}</span>
+                    )}
                   </div>
                   <div className="station-availability">
                     <span
@@ -250,21 +263,23 @@ export default function StationMap({
                       }`}
                     >
                       {station.availableVehicles > 0
-                        ? `${station.availableVehicles} xe có sẵn`
-                        : "Hết xe"}
+                        ? `🚗 ${station.availableVehicles} xe có sẵn`
+                        : "❌ Hết xe"}
                     </span>
                   </div>
                 </div>
                 <div className="station-actions-map">
                   <Link to={`/stations/${station.id}`} className="btn-view">
-                    Xem chi tiết
+                    Chi tiết
                   </Link>
                   <button
                     className="btn-navigate"
                     onClick={(e) => {
                       e.stopPropagation();
+                      const lat = station.location?.latitude || station.coordinates?.lat;
+                      const lng = station.location?.longitude || station.coordinates?.lng;
                       window.open(
-                        `https://www.google.com/maps/dir/?api=1&destination=${station.coordinates.lat},${station.coordinates.lng}`,
+                        `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
                         "_blank"
                       );
                     }}
@@ -275,7 +290,7 @@ export default function StationMap({
               </div>
             ))
           ) : (
-            <p>Đang xác định vị trí của bạn...</p>
+            <p>Không có trạm nào để hiển thị.</p>
           )}
         </div>
       </div>
