@@ -33,6 +33,146 @@
   margin-bottom: 1rem;
 }
 
+/* Location Info Styles */
+.location-info {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 1rem auto;
+  max-width: 800px;
+  border: 1px solid #0ea5e9;
+}
+
+.user-location-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.location-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #0369a1;
+  background: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  box-shadow: 0 2px 8px rgba(3, 105, 161, 0.1);
+}
+
+.quick-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn.primary-outline {
+  background: transparent;
+  color: #0369a1;
+  border: 2px solid #0369a1;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn.primary-outline:hover {
+  background: #0369a1;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(3, 105, 161, 0.3);
+}
+
+.nearby-stations {
+  margin-bottom: 1rem;
+}
+
+.nearby-stations h3 {
+  color: #0369a1;
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.nearby-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .location-info {
+    padding: 1rem;
+    margin: 0.5rem;
+  }
+  
+  .nearby-list {
+    grid-template-columns: 1fr;
+  }
+  
+  .quick-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .user-location-section {
+    gap: 0.75rem;
+  }
+  
+  .location-status {
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+  }
+}
+
+.nearby-station-card {
+  background: white;
+  border-radius: 10px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.nearby-station-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border-color: #0ea5e9;
+}
+
+.nearby-station-card .station-name {
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 0.25rem;
+}
+
+.nearby-station-card .station-distance {
+  color: #0369a1;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.nearby-station-card .station-vehicles {
+  color: #059669;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.stations-count {
+  text-align: center;
+  font-size: 1rem;
+  color: #64748b;
+  font-weight: 500;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
 .station-filters {
   background: #f9f9f9;
   padding: 1rem;

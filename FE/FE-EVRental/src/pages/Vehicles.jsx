@@ -132,10 +132,18 @@ export default function Vehicles() {
             <div className="vehicles-grid">
               {filteredVehicles.map((vehicle) => (
                 <div key={vehicle.id} className="vehicle-card">
-                  <div
-                    className="vehicle-thumb"
-                    style={{ backgroundImage: `url(${vehicle.image})` }}
-                  ></div>
+                  <div className="vehicle-image-container">
+                    <img
+                      src={vehicle.image}
+                      alt={vehicle.name}
+                      className="vehicle-image"
+                      onError={(e) => {
+                        console.log(`Failed to load image for vehicle: ${vehicle.name}`);
+                        e.target.src = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60';
+                      }}
+                    />
+                    <div className="vehicle-badge">{vehicle.brand}</div>
+                  </div>
                   <div className="vehicle-info">
                     <h3>{vehicle.name}</h3>
                     <p className="vehicle-short">{vehicle.short}</p>
@@ -148,7 +156,7 @@ export default function Vehicles() {
                       </span>
                     </div>
                     <div className="vehicle-price">
-                      {vehicle.price}
+                      {vehicle.price.toLocaleString('vi-VN')}
                       <span className="price-unit">{vehicle.priceUnit}</span>
                     </div>
                     <div className="vehicle-specs">

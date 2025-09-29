@@ -333,7 +333,14 @@
 .station-address {
   color: var(--text-secondary);
   font-size: 0.9rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.distance {
+  color: #0369a1;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
 }
 
 .station-details {

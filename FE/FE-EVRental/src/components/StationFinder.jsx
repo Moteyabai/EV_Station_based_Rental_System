@@ -124,6 +124,9 @@ export default function StationFinder({ stations: stationsProp }) {
                   <div className="station-info">
                     <h4>{station.name}</h4>
                     <p className="address">📍 {station.address}</p>
+                    {station.distance && (
+                      <p className="distance">📏 Cách bạn {station.distance.toFixed(1)} km</p>
+                    )}
                     <p className="hours">🕒 {station.openingHours}</p>
                     <p className="contact">📞 {station.contactNumber}</p>
 
