@@ -23,11 +23,14 @@ namespace BusinessObject.Models
         ErrorMessage = "Vui lòng nhập đúng định dạng số điện thoại Việt Nam")]
         [Required]
         public string Phone { get; set; }
-
+        [Required]
+        public int TotalRental { get; set; } = 0;
+        [Required]
+        public decimal TotalSpent { get; set; } = 0;
         [Required]
         public int RoleID { get; set; }
 
-        public int Status { get; set; } = 1; // 1: Active, 0: Inactive
+        public int Status { get; set; } = 1;
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
