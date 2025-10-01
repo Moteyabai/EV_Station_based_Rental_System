@@ -25,6 +25,9 @@ namespace Repositories.DBContext
 
         public DbSet<Account> Accounts { get; set; }
         public DbSet<Role> Roles { get; set; }
+        public DbSet<Station> Stations { get; set; }
+        public DbSet<EVBike> EVBikes { get; set; }
+        public DbSet<Brand> Brands { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

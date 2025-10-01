@@ -26,13 +26,6 @@ namespace Repositories
             _passwordHasher = new PasswordHasher<Account>();
         }
 
-        /*
-                public AccountRepository(IPasswordHasher<Account> passwordHasher)
-                {
-                    _jwtConfig = GetJwtConfig();
-                    _passwordHasher = passwordHasher;
-                }*/
-
         public static AccountRepository Instance
         {
             get
