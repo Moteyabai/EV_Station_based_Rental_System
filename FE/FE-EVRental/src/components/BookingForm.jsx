@@ -384,7 +384,7 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
 
         {/* Thông tin thuê xe */}
         <div className="form-section">
-          <h4>🚗 Thông Tin Thuê Xe</h4>
+          <h4>🏍️ Thông Tin Thuê Xe</h4>
 
           <div className="form-row">
             <div className="form-group">

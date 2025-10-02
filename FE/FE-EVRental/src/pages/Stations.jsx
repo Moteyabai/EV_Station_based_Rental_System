@@ -10,9 +10,12 @@ export default function Stations() {
   const [stations, setStations] = useState(stationsData);
   const [userLocation, setUserLocation] = useState(null);
   const [nearbyStations, setNearbyStations] = useState([]);
+  const [locationPermission, setLocationPermission] = useState('pending'); // 'pending', 'granted', 'denied'
+  const [isRequestingLocation, setIsRequestingLocation] = useState(false);
 
-  // Lấy vị trí hiện tại của người dùng
-  useEffect(() => {
+  // Yêu cầu quyền truy cập vị trí từ người dùng
+  const requestLocationPermission = () => {
+    setIsRequestingLocation(true);
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -21,6 +24,8 @@ export default function Stations() {
             lng: position.coords.longitude,
           };
           setUserLocation(location);
+          setLocationPermission('granted');
+          setIsRequestingLocation(false);
           
           // Tính khoảng cách và sắp xếp trạm theo khoảng cách gần nhất
           const stationsWithDistance = stationsData.map(station => {
@@ -38,6 +43,8 @@ export default function Stations() {
         },
         (error) => {
           console.error("Lỗi khi lấy vị trí:", error);
+          setLocationPermission('denied');
+          setIsRequestingLocation(false);
           // Mặc định là vị trí TPHCM
           const defaultLocation = { lat: 10.762622, lng: 106.660172 };
           setUserLocation(defaultLocation);
@@ -46,11 +53,13 @@ export default function Stations() {
       );
     } else {
       // Trình duyệt không hỗ trợ geolocation
+      setLocationPermission('denied');
+      setIsRequestingLocation(false);
       const defaultLocation = { lat: 10.762622, lng: 106.660172 };
       setUserLocation(defaultLocation);
       setStations(stationsData);
     }
-  }, []);
+  };
 
   // Hàm tính khoảng cách giữa 2 điểm (công thức Haversine)
   const calculateDistance = (lat1, lng1, lat2, lng2) => {
@@ -84,10 +93,51 @@ export default function Stations() {
   };
 
   return (
-    <div className="page-container">
+    <div className="page-container stations-page">
       <div className="page-header">
-        <h1>🚗 Điểm Thuê Xe Điện</h1>
-        <p>Tìm điểm thuê gần nhất để bắt đầu hành trình xanh của bạn</p>
+        <div className="header-content">
+          <div className="header-icon">🏍️</div>
+          <h1>Điểm Thuê Xe Điện</h1>
+          <p>Tìm điểm thuê gần nhất để bắt đầu hành trình xanh của bạn</p>
+        </div>
+
+        {/* Location Permission Request */}
+        {locationPermission === 'pending' && (
+          <div className="location-request-banner">
+            <div className="banner-content">
+              <div className="banner-icon">📍</div>
+              <div className="banner-text">
+                <h3>Cho phép truy cập vị trí</h3>
+                <p>Chúng tôi cần quyền truy cập vị trí để hiển thị các trạm gần bạn nhất</p>
+              </div>
+              <button 
+                className="btn btn-primary location-btn"
+                onClick={requestLocationPermission}
+                disabled={isRequestingLocation}
+              >
+                {isRequestingLocation ? '⏳ Đang xử lý...' : '📍 Chia sẻ vị trí'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {locationPermission === 'denied' && (
+          <div className="location-denied-banner">
+            <div className="banner-content">
+              <div className="banner-icon">⚠️</div>
+              <div className="banner-text">
+                <h3>Không có quyền truy cập vị trí</h3>
+                <p>Bạn có thể bật lại quyền truy cập vị trí trong cài đặt trình duyệt</p>
+              </div>
+              <button 
+                className="btn btn-outline"
+                onClick={requestLocationPermission}
+              >
+                🔄 Thử lại
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="view-toggle">
           <button
@@ -105,50 +155,72 @@ export default function Stations() {
         </div>
 
         {/* Thông tin vị trí và trạm gần nhất */}
-        <div className="location-info">
-          {userLocation && (
+        {locationPermission === 'granted' && (
+          <div className="location-info location-success">
             <div className="user-location-section">
-              <div className="location-status">
-                📍 Vị trí của bạn đã được xác định
+              <div className="location-status success">
+                <span className="status-icon">✅</span>
+                <span className="status-text">Vị trí đã được xác định</span>
               </div>
               <div className="quick-actions">
                 <button
-                  className="btn primary-outline"
+                  className="btn btn-primary-outline"
                   onClick={findNearestStation}
                 >
                   🎯 Tìm trạm gần nhất
                 </button>
               </div>
             </div>
-          )}
 
-          {nearbyStations.length > 0 && (
-            <div className="nearby-stations">
-              <h3>🚀 Trạm gần bạn nhất:</h3>
-              <div className="nearby-list">
-                {nearbyStations.slice(0, 3).map((station) => (
-                  <div
-                    key={station.id}
-                    className="nearby-station-card"
-                    onClick={() => handleStationSelect(station)}
-                  >
-                    <div className="station-name">{station.name}</div>
-                    <div className="station-distance">
-                      📏 {station.distance?.toFixed(1)} km
+            {nearbyStations.length > 0 && (
+              <div className="nearby-stations-section">
+                <h3 className="section-title">
+                  <span className="title-icon">🚀</span>
+                  Trạm gần bạn nhất
+                </h3>
+                <div className="nearby-grid">
+                  {nearbyStations.slice(0, 3).map((station, index) => (
+                    <div
+                      key={station.id}
+                      className={`nearby-card ${index === 0 ? 'featured' : ''}`}
+                      onClick={() => handleStationSelect(station)}
+                    >
+                      {index === 0 && <div className="featured-badge">Gần nhất</div>}
+                      <div className="card-header">
+                        <h4>{station.name}</h4>
+                        <div className="distance-badge">
+                          {station.distance?.toFixed(1)} km
+                        </div>
+                      </div>
+                      <div className="card-body">
+                        <div className="card-info">
+                          <span className="info-icon">📍</span>
+                          <span className="info-text">{station.address}</span>
+                        </div>
+                        <div className="card-info">
+                          <span className="info-icon">🏍️</span>
+                          <span className="info-text">{station.availableVehicles} xe có sẵn</span>
+                        </div>
+                        <div className="card-info">
+                          <span className="info-icon">⭐</span>
+                          <span className="info-text">{station.rating} ({station.reviews} đánh giá)</span>
+                        </div>
+                      </div>
+                      <button className="card-action-btn">
+                        Xem chi tiết →
+                      </button>
                     </div>
-                    <div className="station-vehicles">
-                      🚗 {station.availableVehicles} xe có sẵn
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <div className="stations-count">
-            📊 Tổng cộng: {stations.length} điểm thuê
+            <div className="stations-count-badge">
+              <span className="count-icon">📊</span>
+              <span className="count-text">Tổng cộng: <strong>{stations.length}</strong> điểm thuê</span>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {viewMode === "map" ? (

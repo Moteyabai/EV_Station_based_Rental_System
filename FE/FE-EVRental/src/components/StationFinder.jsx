@@ -80,7 +80,7 @@ export default function StationFinder({ stations: stationsProp }) {
   return (
     <div className="station-finder-container">
       <div className="station-finder-header">
-        <h2>🚗 Tìm Điểm Thuê Xe</h2>
+        <h2>🏍️ Tìm Điểm Thuê Xe</h2>
         <p>Khám phá {stations.length} điểm thuê xe điện gần bạn</p>
       </div>
 
