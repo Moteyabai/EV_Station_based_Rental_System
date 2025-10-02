@@ -125,15 +125,15 @@ export default function Register() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <h2>Register</h2>
-        <p className="step-indicator">Step {step} of 2</p>
+        <h2>Đăng ký</h2>
+        <p className="step-indicator">Bước {step} / 2</p>
 
         <form onSubmit={handleSubmit} className="auth-form">
           {step === 1 ? (
             <>
               <div className="form-row">
                 <label>
-                  First Name
+                  Họ
                   <input 
                     type="text" 
                     name="firstName" 
@@ -144,7 +144,7 @@ export default function Register() {
                   {errors.firstName && <span className="error">{errors.firstName}</span>}
                 </label>
                 <label>
-                  Last Name
+                  Tên
                   <input 
                     type="text" 
                     name="lastName" 
@@ -169,7 +169,7 @@ export default function Register() {
               </label>
 
               <label>
-                Phone Number
+                Số điện thoại
                 <input 
                   type="tel" 
                   name="phone" 
@@ -181,7 +181,7 @@ export default function Register() {
               </label>
 
               <label>
-                Password
+                Mật khẩu
                 <input 
                   type="password" 
                   name="password" 
@@ -193,7 +193,7 @@ export default function Register() {
               </label>
 
               <label>
-                Confirm Password
+                Xác nhận mật khẩu
                 <input 
                   type="password" 
                   name="confirmPassword" 
@@ -204,7 +204,7 @@ export default function Register() {
                 {errors.confirmPassword && <span className="error">{errors.confirmPassword}</span>}
               </label>
 
-              <button type="button" className="btn primary" onClick={nextStep}>Next</button>
+              <button type="button" className="btn primary" onClick={nextStep}>Tiếp theo</button>
             </>
           ) : (
             <>

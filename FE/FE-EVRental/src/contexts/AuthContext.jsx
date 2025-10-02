@@ -32,18 +32,24 @@ export function AuthProvider({ children }) {
   }, [verificationStatus])
 
   function login({ email, password }) {
-    // placeholder: in real app call API to validate credentials
-    // For demo, we'll check if the user exists in localStorage
+    // placeholder: trong ứng dụng thực sẽ call API để xác thực thông tin đăng nhập
+    // Cho demo, chúng ta sẽ kiểm tra xem user có tồn tại trong localStorage không
     setUser({ 
       email,
-      isAuthenticated: true
+      isAuthenticated: true,
+      fullName: 'Nguyễn Văn An',
+      phone: '0123456789',
+      address: '123 Đường ABC, Quận 1, TP.HCM',
+      dateOfBirth: '1990-01-15',
+      citizenId: '001234567890',
+      driverLicense: 'B1-123456789'
     })
     
-    // In a real app, we would fetch verification status from the server
+    // Trong ứng dụng thực, chúng ta sẽ lấy trạng thái xác minh từ server
     setVerificationStatus({
       documentsSubmitted: true,
       documentsVerified: false,
-      verificationMessage: 'Your documents are pending verification. Visit any rental location to complete verification.',
+      verificationMessage: 'Giấy tờ của bạn đang chờ xác minh. Vui lòng đến bất kỳ điểm thuê nào để hoàn tất xác minh.',
     })
   }
 
@@ -52,20 +58,20 @@ export function AuthProvider({ children }) {
   }
 
   function register(userData) {
-    // In a real app, this would make an API call to register the user
-    // and handle document uploads
+    // Trong ứng dụng thực, đây sẽ là API call để đăng ký user
+    // và xử lý upload tài liệu
     
-    // For demo purposes, we'll simulate a successful registration
+    // Cho mục đích demo, chúng ta sẽ mô phỏng đăng ký thành công
     setUser({
       ...userData,
       isAuthenticated: true,
     })
     
-    // Set initial verification status
+    // Thiết lập trạng thái xác minh ban đầu
     setVerificationStatus({
       documentsSubmitted: true,
       documentsVerified: false,
-      verificationMessage: 'Your account has been created. Please visit any rental location to complete verification.',
+      verificationMessage: 'Tài khoản của bạn đã được tạo. Vui lòng đến bất kỳ điểm thuê nào để hoàn tất xác minh.',
     })
   }
   

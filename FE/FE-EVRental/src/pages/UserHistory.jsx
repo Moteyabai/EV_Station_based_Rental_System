@@ -3,13 +3,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import '../styles/UserHistory.css';
 
-// Mock booking history data
+// Mock dữ liệu lịch sử thuê xe
 const mockRentalHistory = [
   {
     id: 'BK100001',
     vehicleName: 'Tesla Model 3',
     vehicleType: 'Sedan',
-    stationName: 'Central Park EV Station',
+    stationName: 'Trạm EV Công viên Trung tâm',
     pickupDate: '2025-08-15',
     pickupTime: '10:00',
     returnDate: '2025-08-17',
@@ -23,7 +23,7 @@ const mockRentalHistory = [
     id: 'BK100002',
     vehicleName: 'Nissan Leaf',
     vehicleType: 'Hatchback',
-    stationName: 'Downtown EV Center',
+    stationName: 'Trung tâm EV Thành phố',
     pickupDate: '2025-09-05',
     pickupTime: '09:30',
     returnDate: '2025-09-06',
@@ -37,7 +37,7 @@ const mockRentalHistory = [
     id: 'BK100003',
     vehicleName: 'Chevrolet Bolt',
     vehicleType: 'Hatchback',
-    stationName: 'Riverside EV Hub',
+    stationName: 'Trung tâm EV Riverside',
     pickupDate: '2025-09-22',
     pickupTime: '14:00',
     returnDate: '2025-09-24',
@@ -67,11 +67,11 @@ export default function UserHistory() {
   });
   
   useEffect(() => {
-    // In a real app, fetch user rental history from API
+    // Trong ứng dụng thực, lấy lịch sử thuê xe từ API
     setTimeout(() => {
       setRentalHistory(mockRentalHistory);
       
-      // Calculate analytics
+      // Tính toán phân tích
       const completed = mockRentalHistory.filter(rental => rental.status === 'completed');
       
       if (completed.length > 0) {
@@ -79,7 +79,7 @@ export default function UserHistory() {
         const totalSpent = completed.reduce((sum, rental) => sum + rental.totalAmount, 0);
         const avgBatteryUsage = completed.reduce((sum, rental) => sum + rental.avgBatteryUsage, 0) / completed.length;
         
-        // Find favorite vehicle and station
+        // Tìm xe và trạm yêu thích
         const vehicleCounts = {};
         const stationCounts = {};
         
@@ -108,13 +108,13 @@ export default function UserHistory() {
     }, 1000);
   }, []);
   
-  // Filter rentals based on selected filter
+  // Lọc lịch sử thuê theo bộ lọc đã chọn
   const filteredRentals = rentalHistory.filter(rental => {
     if (filter === 'all') return true;
     return rental.status === filter;
   });
   
-  // Sort rentals based on selected sort
+  // Sắp xếp lịch sử thuê theo tiêu chí đã chọn
   const sortedRentals = [...filteredRentals].sort((a, b) => {
     if (sort === 'date-desc') {
       return new Date(b.pickupDate) - new Date(a.pickupDate);
@@ -132,7 +132,7 @@ export default function UserHistory() {
     return (
       <div className="history-container">
         <div className="loading-container">
-          Loading rental history...
+          Đang tải lịch sử thuê xe...
         </div>
       </div>
     );
@@ -140,18 +140,18 @@ export default function UserHistory() {
   
   return (
     <div className="history-container">
-      <h1>My Rental History</h1>
+      <h1>Lịch sử thuê xe của tôi</h1>
       
-      {/* Analytics Dashboard */}
+      {/* Bảng điều khiển phân tích */}
       <div className="analytics-dashboard">
-        <h2>Your Rental Analytics</h2>
+        <h2>Phân tích thuê xe của bạn</h2>
         
         <div className="analytics-grid">
           <div className="analytics-card">
             <div className="analytics-icon">🚗</div>
             <div className="analytics-content">
               <div className="analytics-value">{analytics.totalRentals}</div>
-              <div className="analytics-label">Total Rentals</div>
+              <div className="analytics-label">Tổng lần thuê</div>
             </div>
           </div>
           
@@ -159,7 +159,7 @@ export default function UserHistory() {
             <div className="analytics-icon">💰</div>
             <div className="analytics-content">
               <div className="analytics-value">${analytics.totalSpent}</div>
-              <div className="analytics-label">Total Spent</div>
+              <div className="analytics-label">Tổng chi tiêu</div>
             </div>
           </div>
           
@@ -167,7 +167,7 @@ export default function UserHistory() {
             <div className="analytics-icon">🛣️</div>
             <div className="analytics-content">
               <div className="analytics-value">{analytics.totalDistance} km</div>
-              <div className="analytics-label">Total Distance</div>
+              <div className="analytics-label">Tổng quãng đường</div>
             </div>
           </div>
           
@@ -175,63 +175,63 @@ export default function UserHistory() {
             <div className="analytics-icon">🔋</div>
             <div className="analytics-content">
               <div className="analytics-value">{analytics.avgBatteryUsage.toFixed(1)}%</div>
-              <div className="analytics-label">Avg. Battery Usage</div>
+              <div className="analytics-label">TB. sử dụng pin</div>
             </div>
           </div>
           
           <div className="analytics-card">
             <div className="analytics-icon">❤️</div>
             <div className="analytics-content">
-              <div className="analytics-value">{analytics.favoriteVehicle || 'N/A'}</div>
-              <div className="analytics-label">Favorite Vehicle</div>
+              <div className="analytics-value">{analytics.favoriteVehicle || 'Chưa có'}</div>
+              <div className="analytics-label">Xe yêu thích</div>
             </div>
           </div>
           
           <div className="analytics-card">
             <div className="analytics-icon">📍</div>
             <div className="analytics-content">
-              <div className="analytics-value">{analytics.favoriteStation || 'N/A'}</div>
-              <div className="analytics-label">Favorite Station</div>
+              <div className="analytics-value">{analytics.favoriteStation || 'Chưa có'}</div>
+              <div className="analytics-label">Trạm yêu thích</div>
             </div>
           </div>
         </div>
       </div>
       
-      {/* Filters and Sorting */}
+      {/* Bộ lọc và Sắp xếp */}
       <div className="history-controls">
         <div className="filter-group">
-          <label>Filter:</label>
+          <label>Lọc:</label>
           <select value={filter} onChange={(e) => setFilter(e.target.value)}>
-            <option value="all">All Rentals</option>
-            <option value="active">Active Rentals</option>
-            <option value="completed">Completed Rentals</option>
+            <option value="all">Tất cả lịch thuê</option>
+            <option value="active">Đang thuê</option>
+            <option value="completed">Đã hoàn thành</option>
           </select>
         </div>
         
         <div className="filter-group">
-          <label>Sort By:</label>
+          <label>Sắp xếp theo:</label>
           <select value={sort} onChange={(e) => setSort(e.target.value)}>
-            <option value="date-desc">Date (Newest First)</option>
-            <option value="date-asc">Date (Oldest First)</option>
-            <option value="price-desc">Price (Highest First)</option>
-            <option value="price-asc">Price (Lowest First)</option>
+            <option value="date-desc">Ngày (Mới nhất trước)</option>
+            <option value="date-asc">Ngày (Cũ nhất trước)</option>
+            <option value="price-desc">Giá (Cao nhất trước)</option>
+            <option value="price-asc">Giá (Thấp nhất trước)</option>
           </select>
         </div>
       </div>
       
-      {/* Rental History List */}
+      {/* Danh sách lịch sử thuê */}
       <div className="rental-history-list">
         {sortedRentals.length === 0 ? (
           <div className="empty-history">
-            <p>No rental history found with the selected filter.</p>
+            <p>Không tìm thấy lịch sử thuê nào với bộ lọc đã chọn.</p>
           </div>
         ) : (
           sortedRentals.map(rental => (
             <div key={rental.id} className={`rental-card ${rental.status}`}>
               <div className="rental-header">
-                <div className="rental-id">Booking #{rental.id}</div>
+                <div className="rental-id">Đặt xe #{rental.id}</div>
                 <div className={`rental-status ${rental.status}`}>
-                  {rental.status === 'completed' ? 'Completed' : 'Active'}
+                  {rental.status === 'completed' ? 'Hoàn thành' : 'Đang thuê'}
                 </div>
               </div>
               
@@ -244,43 +244,43 @@ export default function UserHistory() {
                   
                   <div className="rental-dates">
                     <div className="date-group">
-                      <div className="date-label">Pickup</div>
+                      <div className="date-label">Nhận xe</div>
                       <div className="date-value">
-                        {new Date(rental.pickupDate).toLocaleDateString()} at {rental.pickupTime}
+                        {new Date(rental.pickupDate).toLocaleDateString('vi-VN')} lúc {rental.pickupTime}
                       </div>
                     </div>
                     
                     <div className="date-connector"></div>
                     
                     <div className="date-group">
-                      <div className="date-label">Return</div>
+                      <div className="date-label">Trả xe</div>
                       <div className="date-value">
-                        {new Date(rental.returnDate).toLocaleDateString()} at {rental.returnTime}
+                        {new Date(rental.returnDate).toLocaleDateString('vi-VN')} lúc {rental.returnTime}
                       </div>
                     </div>
                   </div>
                   
                   <div className="rental-station">
-                    <div className="station-label">Location</div>
+                    <div className="station-label">Địa điểm</div>
                     <div className="station-value">{rental.stationName}</div>
                   </div>
                 </div>
                 
                 <div className="rental-metrics">
                   <div className="metric">
-                    <div className="metric-label">Total</div>
+                    <div className="metric-label">Tổng tiền</div>
                     <div className="metric-value">${rental.totalAmount}</div>
                   </div>
                   
                   {rental.status === 'completed' && (
                     <>
                       <div className="metric">
-                        <div className="metric-label">Distance</div>
+                        <div className="metric-label">Quãng đường</div>
                         <div className="metric-value">{rental.distanceTraveled} km</div>
                       </div>
                       
                       <div className="metric">
-                        <div className="metric-label">Battery Used</div>
+                        <div className="metric-label">Pin đã dùng</div>
                         <div className="metric-value">{rental.avgBatteryUsage}%</div>
                       </div>
                     </>
@@ -291,13 +291,13 @@ export default function UserHistory() {
               <div className="rental-actions">
                 {rental.status === 'active' ? (
                   <>
-                    <Link to={`/bookings/${rental.id}`} className="btn btn-secondary">View Details</Link>
-                    <Link to={`/return/${rental.id}`} className="btn btn-primary">Return Vehicle</Link>
+                    <Link to={`/bookings/${rental.id}`} className="btn btn-secondary">Xem chi tiết</Link>
+                    <Link to={`/return/${rental.id}`} className="btn btn-primary">Trả xe</Link>
                   </>
                 ) : (
                   <>
-                    <Link to={`/bookings/${rental.id}`} className="btn btn-secondary">View Receipt</Link>
-                    <Link to={`/book/${rental.vehicleType}`} className="btn btn-primary">Book Similar</Link>
+                    <Link to={`/bookings/${rental.id}`} className="btn btn-secondary">Xem hóa đơn</Link>
+                    <Link to={`/book/${rental.vehicleType}`} className="btn btn-primary">Thuê tương tự</Link>
                   </>
                 )}
               </div>
@@ -306,16 +306,16 @@ export default function UserHistory() {
         )}
       </div>
       
-      {/* Booking History Pagination */}
+      {/* Phân trang lịch sử đặt xe */}
       <div className="pagination">
-        <button className="pagination-button" disabled>{/* < */}Prev</button>
-        <div className="pagination-info">Page 1 of 1</div>
-        <button className="pagination-button" disabled>Next{/* > */}</button>
+        <button className="pagination-button" disabled>{/* < */}Trước</button>
+        <div className="pagination-info">Trang 1 / 1</div>
+        <button className="pagination-button" disabled>Sau{/* > */}</button>
       </div>
       
-      {/* Additional Action */}
+      {/* Hành động bổ sung */}
       <div className="history-actions">
-        <Link to="/book" className="btn btn-primary">Book New Rental</Link>
+        <Link to="/vehicles" className="btn btn-primary">Thuê xe mới</Link>
       </div>
     </div>
   );
