@@ -19,7 +19,7 @@ export default function Cart() {
           <h3>Giỏ hàng của bạn đang trống</h3>
           <p>Hãy khám phá các xe điện và thêm vào giỏ hàng để thuê xe!</p>
           <Link to="/vehicles" className="btn primary">
-            🚗 Xem Danh Sách Xe
+            🏍️ Xem Danh Sách Xe
           </Link>
         </div>
       </div>

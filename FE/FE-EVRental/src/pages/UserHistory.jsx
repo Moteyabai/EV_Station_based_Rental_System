@@ -148,7 +148,7 @@ export default function UserHistory() {
         
         <div className="analytics-grid">
           <div className="analytics-card">
-            <div className="analytics-icon">🚗</div>
+            <div className="analytics-icon">🏍️</div>
             <div className="analytics-content">
               <div className="analytics-value">{analytics.totalRentals}</div>
               <div className="analytics-label">Tổng lần thuê</div>

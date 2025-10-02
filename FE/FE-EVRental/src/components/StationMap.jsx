@@ -161,13 +161,14 @@ export default function StationMap({
   }
 
   return (
-    <div className="station-map-container">
-      <div className="map-header">
-        <h3>🗺️ Bản đồ điểm thuê xe điện</h3>
-        {userLocation && <p>📍 Đã xác định vị trí của bạn</p>}
+    <>
+      <div className="map-title-section">
+        <h2 className="map-main-title">🗺️ Bản đồ điểm thuê xe điện</h2>
+        {userLocation && <p className="map-subtitle">📍 Đã xác định vị trí của bạn</p>}
       </div>
 
-      <div className="map-wrapper">
+      <div className="station-map-container">
+        <div className="map-wrapper">
         <MapContainer
           center={mapCenter}
           zoom={userLocation ? 14 : 12}
@@ -263,7 +264,7 @@ export default function StationMap({
                       }`}
                     >
                       {station.availableVehicles > 0
-                        ? `🚗 ${station.availableVehicles} xe có sẵn`
+                        ? `🏍️ ${station.availableVehicles} xe có sẵn`
                         : "❌ Hết xe"}
                     </span>
                   </div>
@@ -295,5 +296,6 @@ export default function StationMap({
         </div>
       </div>
     </div>
+    </>
   );
 }

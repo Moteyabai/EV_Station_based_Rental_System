@@ -87,7 +87,7 @@ export default function BookingSuccess() {
           </div>
 
           <div className="vehicles-booked">
-            <h3>🚗 Chi tiết xe đã đặt</h3>
+            <h3>🏍️ Chi tiết xe đã đặt</h3>
             {booking.items.map((item, index) => (
               <div key={index} className="vehicle-item">
                 <div className="vehicle-image">
@@ -237,7 +237,7 @@ export default function BookingSuccess() {
           </button>
 
           <Link to="/vehicles" className="btn primary">
-            🚗 Thuê thêm xe
+            🏍️ Thuê thêm xe
           </Link>
 
           <Link to="/history" className="btn secondary">
