@@ -7,22 +7,61 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setError('');
+    setLoading(true);
     
     try {
-      // Trong ứng dụng thực, đây sẽ xác thực thông qua API
-      login({ email, password });
+      // Gọi API backend để đăng nhập
+      const response = await fetch('http://localhost:5168/api/Account/Login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Xử lý lỗi từ backend
+        throw new Error(data.error || 'Đăng nhập thất bại');
+      }
+
+      // Lưu thông tin user vào context
+      login({
+        accountID: data.accountID,
+        fullName: data.fullName,
+        email: data.email,
+        roleID: data.roleID,
+        roleName: data.roleName,
+        token: data.token
+      });
+
+      // Lưu token vào localStorage
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify({
+        accountID: data.accountID,
+        fullName: data.fullName,
+        email: data.email,
+        roleID: data.roleID,
+        roleName: data.roleName
+      }));
       
-      // Chuyển hướng dựa trên trạng thái xác minh
-      // Cho demo, chúng ta sẽ về trang chủ
+      // Chuyển hướng về trang chủ
       navigate('/');
     } catch (err) {
-      setError('Thông tin đăng nhập không hợp lệ. Vui lòng thử lại.');
+      setError(err.message || 'Thông tin đăng nhập không hợp lệ. Vui lòng thử lại.');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -56,7 +95,9 @@ export default function Login() {
             />
           </label>
           
-          <button type="submit" className="btn primary">Đăng nhập</button>
+          <button type="submit" className="btn primary" disabled={loading}>
+            {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+          </button>
         </form>
         
         <div className="auth-footer">
