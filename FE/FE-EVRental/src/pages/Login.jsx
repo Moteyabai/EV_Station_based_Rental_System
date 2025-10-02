@@ -15,21 +15,21 @@ export default function Login() {
     setError('');
     
     try {
-      // In a real app, this would validate against an API
+      // Trong ứng dụng thực, đây sẽ xác thực thông qua API
       login({ email, password });
       
-      // Redirect based on verification status
-      // For demo, we'll go to home
+      // Chuyển hướng dựa trên trạng thái xác minh
+      // Cho demo, chúng ta sẽ về trang chủ
       navigate('/');
     } catch (err) {
-      setError('Invalid login credentials. Please try again.');
+      setError('Thông tin đăng nhập không hợp lệ. Vui lòng thử lại.');
     }
   }
 
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <h2>Login to EV Rental</h2>
+        <h2>Đăng nhập EV Rental</h2>
         
         {error && <div className="error-message">{error}</div>}
         
@@ -40,27 +40,27 @@ export default function Login() {
               type="email" 
               value={email} 
               onChange={(e) => setEmail(e.target.value)} 
-              placeholder="your.email@example.com"
+              placeholder="email.cua.ban@example.com"
               required 
             />
           </label>
           
           <label>
-            Password
+            Mật khẩu
             <input 
               type="password" 
               value={password} 
               onChange={(e) => setPassword(e.target.value)} 
-              placeholder="Your password"
+              placeholder="Mật khẩu của bạn"
               required 
             />
           </label>
           
-          <button type="submit" className="btn primary">Login</button>
+          <button type="submit" className="btn primary">Đăng nhập</button>
         </form>
         
         <div className="auth-footer">
-          <p>Don't have an account? <Link to="/register" className="auth-link">Register now</Link></p>
+          <p>Chưa có tài khoản? <Link to="/register" className="auth-link">Đăng ký ngay</Link></p>
         </div>
       </div>
     </div>

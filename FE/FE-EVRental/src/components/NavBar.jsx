@@ -53,10 +53,20 @@ export default function NavBar() {
 
           {user ? (
             <>
-              <span className="user-info">{user.email}</span>
-              <button className="logout-btn" onClick={handleLogout}>
-                Đăng xuất
-              </button>
+              <div className="user-menu">
+                <span className="user-info">{user.email}</span>
+                <div className="user-dropdown">
+                  <Link to="/profile" className="dropdown-item">
+                    👤 Hồ sơ
+                  </Link>
+                  <Link to="/history" className="dropdown-item">
+                    📋 Lịch sử thuê
+                  </Link>
+                  <button className="dropdown-item logout-btn" onClick={handleLogout}>
+                    🚪 Đăng xuất
+                  </button>
+                </div>
+              </div>
             </>
           ) : (
             <>

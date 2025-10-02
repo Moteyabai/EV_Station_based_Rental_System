@@ -26,6 +26,7 @@ import ReturnSuccess from "./pages/ReturnSuccess";
 import RentalForm from "./pages/RentalForm";
 import Checkout from "./pages/Checkout";
 import BookingSuccess from "./pages/BookingSuccess";
+import UserProfile from "./pages/UserProfile";
 
 // Styles
 import "./App.css";
@@ -48,6 +49,7 @@ function App() {
                 <Route path="/stations/:id" element={<StationDetail />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/profile" element={<UserProfile />} />
                 <Route path="/history" element={<UserHistory />} />
                 <Route
                   path="/pickup/:vehicleId/:stationId"
