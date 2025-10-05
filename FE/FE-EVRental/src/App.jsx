@@ -40,55 +40,60 @@ function App() {
       <CartProvider>
         <ReviewProvider>
           <Router>
-          <div className="app-container">
-            <NavBar />
-            <main className="main-content">
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/vehicles" element={<Vehicles />} />
-                <Route path="/vehicles/:id" element={<ProductDetail />} />
-                <Route path="/stations" element={<Stations />} />
-                <Route path="/stations/:id" element={<StationDetail />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/profile" element={<UserProfile />} />
-                <Route path="/history" element={<UserHistory />} />
-                
-                {/* Protected Staff Route - Chỉ cho Staff (roleID = 2) */}
-                <Route 
-                  path="/staff" 
-                  element={
-                    <ProtectedRoute allowedRoles={2}>
-                      <Staff />
-                    </ProtectedRoute>
-                  } 
-                />
-                
-                <Route
-                  path="/pickup/:vehicleId/:stationId"
-                  element={<VehiclePickup />}
-                />
-                <Route
-                  path="/return/:vehicleId/:stationId"
-                  element={<VehicleReturn />}
-                />
-                <Route path="/pickup-success" element={<PickupSuccess />} />
-                <Route path="/return-success" element={<ReturnSuccess />} />
-                <Route path="/cart" element={<Cart />} />
-                <Route path="/rental-form" element={<RentalForm />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route
-                  path="/booking-success/:bookingId"
-                  element={<BookingSuccess />}
-                />
-              </Routes>
-            </main>
-            <footer className="app-footer">
-              <div className="footer-content">
-                <p>&copy; 2025 EV Rental System. All rights reserved.</p>
-              </div>
-            </footer>
-          </div>
+            <Routes>
+              {/* Staff Route - Layout riêng không có NavBar/Footer */}
+              <Route 
+                path="/staff" 
+                element={
+                  <ProtectedRoute allowedRoles={2}>
+                    <Staff />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* User Routes - Layout có NavBar/Footer */}
+              <Route path="*" element={
+                <div className="app-container">
+                  <NavBar />
+                  <main className="main-content">
+                    <Routes>
+                      <Route path="/" element={<Home />} />
+                      <Route path="/vehicles" element={<Vehicles />} />
+                      <Route path="/vehicles/:id" element={<ProductDetail />} />
+                      <Route path="/stations" element={<Stations />} />
+                      <Route path="/stations/:id" element={<StationDetail />} />
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/register" element={<Register />} />
+                      <Route path="/profile" element={<UserProfile />} />
+                      <Route path="/history" element={<UserHistory />} />
+                      
+                      <Route
+                        path="/pickup/:vehicleId/:stationId"
+                        element={<VehiclePickup />}
+                      />
+                      <Route
+                        path="/return/:vehicleId/:stationId"
+                        element={<VehicleReturn />}
+                      />
+                      <Route path="/pickup-success" element={<PickupSuccess />} />
+                      <Route path="/return-success" element={<ReturnSuccess />} />
+                      <Route path="/cart" element={<Cart />} />
+                      <Route path="/rental-form" element={<RentalForm />} />
+                      <Route path="/checkout" element={<Checkout />} />
+                      <Route
+                        path="/booking-success/:bookingId"
+                        element={<BookingSuccess />}
+                      />
+                    </Routes>
+                  </main>
+                  <footer className="app-footer">
+                    <div className="footer-content">
+                      <p>&copy; 2025 EV Rental System. All rights reserved.</p>
+                    </div>
+                  </footer>
+                </div>
+              } />
+            </Routes>
           </Router>
         </ReviewProvider>
       </CartProvider>
