@@ -5,7 +5,7 @@ const AuthContext = createContext()
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     try {
-      const raw = localStorage.getItem('ev_user')
+      const raw = localStorage.getItem('user')
       return raw ? JSON.parse(raw) : null
     } catch {
       return null
@@ -22,8 +22,8 @@ export function AuthProvider({ children }) {
   })
 
   useEffect(() => {
-    if (user) localStorage.setItem('ev_user', JSON.stringify(user))
-    else localStorage.removeItem('ev_user')
+    if (user) localStorage.setItem('user', JSON.stringify(user))
+    else localStorage.removeItem('user')
   }, [user])
 
   useEffect(() => {
@@ -31,25 +31,11 @@ export function AuthProvider({ children }) {
     else localStorage.removeItem('ev_verification_status')
   }, [verificationStatus])
 
-  function login({ email, password }) {
-    // placeholder: trong ứng dụng thực sẽ call API để xác thực thông tin đăng nhập
-    // Cho demo, chúng ta sẽ kiểm tra xem user có tồn tại trong localStorage không
-    setUser({ 
-      email,
-      isAuthenticated: true,
-      fullName: 'Nguyễn Văn An',
-      phone: '0123456789',
-      address: '123 Đường ABC, Quận 1, TP.HCM',
-      dateOfBirth: '1990-01-15',
-      citizenId: '001234567890',
-      driverLicense: 'B1-123456789'
-    })
-    
-    // Trong ứng dụng thực, chúng ta sẽ lấy trạng thái xác minh từ server
-    setVerificationStatus({
-      documentsSubmitted: true,
-      documentsVerified: false,
-      verificationMessage: 'Giấy tờ của bạn đang chờ xác minh. Vui lòng đến bất kỳ điểm thuê nào để hoàn tất xác minh.',
+  function login(userData) {
+    // Nhận data từ API và set vào user state
+    setUser({
+      ...userData,
+      isAuthenticated: true
     })
   }
 

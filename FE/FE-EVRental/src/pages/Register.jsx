@@ -1,22 +1,60 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
 import '../styles/Auth.css'
+
+// Component hiển thị preview file
+function FilePreview({ file, label }) {
+  if (file) {
+    return (
+      <div className="upload-preview">
+        <div className="file-preview">
+          <img 
+            src={URL.createObjectURL(file)} 
+            alt={`${label} Preview`} 
+            className="preview-image"
+          />
+          <div className="file-info">
+            <span className="file-name">{file.name}</span>
+            <span className="file-size">
+              {(file.size / 1024 / 1024).toFixed(2)} MB
+            </span>
+          </div>
+        </div>
+      </div>
+    )
+  }
+  
+  return (
+    <div className="upload-preview">
+      <div className="upload-prompt">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7,10 12,15 17,10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        <span>Nhấn để upload {label}</span>
+        <small>JPG, PNG, WebP (tối đa 5MB)</small>
+      </div>
+    </div>
+  )
+}
 
 export default function Register() {
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    fullName: '',
     email: '',
     password: '',
     confirmPassword: '',
     phone: '',
-    drivingLicense: null,
-    idCard: null
+    avatarPicture: null,
+    idCardFront: null,
+    idCardBack: null,
+    licenseCardFront: null,
+    licenseCardBack: null
   })
   const [step, setStep] = useState(1)
   const [errors, setErrors] = useState({})
-  const { register } = useAuth()
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
   const handleChange = (e) => {
@@ -66,16 +104,31 @@ export default function Register() {
 
   function validateStep1() {
     const newErrors = {}
-    if (!formData.firstName) newErrors.firstName = 'Họ là bắt buộc'
-    if (!formData.lastName) newErrors.lastName = 'Tên là bắt buộc'
-    if (!formData.email) newErrors.email = 'Email là bắt buộc'
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email không hợp lệ'
-    if (!formData.password) newErrors.password = 'Mật khẩu là bắt buộc'
-    else if (formData.password.length < 6) newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự'
-    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Mật khẩu xác nhận không khớp'
-    if (!formData.phone) newErrors.phone = 'Số điện thoại là bắt buộc'
-    else if (!/^[0-9]{10,11}$/.test(formData.phone.replace(/[\s\-\(\)]/g, ''))) {
-      newErrors.phone = 'Số điện thoại không hợp lệ'
+    
+    if (!formData.fullName) {
+      newErrors.fullName = 'Họ tên đầy đủ là bắt buộc'
+    }
+    
+    if (!formData.email) {
+      newErrors.email = 'Email là bắt buộc'
+    } else if (!/^[a-zA-Z0-9._%+-]+@(gmail\.com|yahoo\.com|yahoomail\.com)$/.test(formData.email)) {
+      newErrors.email = 'Hệ thống chỉ hỗ trợ gmail và yahoomail'
+    }
+    
+    if (!formData.password) {
+      newErrors.password = 'Mật khẩu là bắt buộc'
+    } else if (!/^(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{6,}$/.test(formData.password)) {
+      newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự, 1 chữ hoa và 1 ký tự đặc biệt'
+    }
+    
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Mật khẩu xác nhận không khớp'
+    }
+    
+    if (!formData.phone) {
+      newErrors.phone = 'Số điện thoại là bắt buộc'
+    } else if (!/^(\+84|84|0)(3[2-9]|5[6|8|9]|7[0|6-9]|8[1-6|8-9]|9[0-9])[0-9]{7}$/.test(formData.phone)) {
+      newErrors.phone = 'Vui lòng nhập đúng định dạng số điện thoại Việt Nam'
     }
 
     setErrors(newErrors)
@@ -84,8 +137,11 @@ export default function Register() {
 
   function validateStep2() {
     const newErrors = {}
-    if (!formData.drivingLicense) newErrors.drivingLicense = 'Bằng lái xe là bắt buộc'
-    if (!formData.idCard) newErrors.idCard = 'CMND/CCCD là bắt buộc'
+    if (!formData.avatarPicture) newErrors.avatarPicture = 'Ảnh đại diện là bắt buộc'
+    if (!formData.idCardFront) newErrors.idCardFront = 'Ảnh CMND/CCCD mặt trước là bắt buộc'
+    if (!formData.idCardBack) newErrors.idCardBack = 'Ảnh CMND/CCCD mặt sau là bắt buộc'
+    if (!formData.licenseCardFront) newErrors.licenseCardFront = 'Ảnh GPLX mặt trước là bắt buộc'
+    if (!formData.licenseCardBack) newErrors.licenseCardBack = 'Ảnh GPLX mặt sau là bắt buộc'
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -104,21 +160,105 @@ export default function Register() {
   function handleSubmit(e) {
     e.preventDefault()
     if (step === 2 && validateStep2()) {
-      // In a real app, you would create a FormData object to send files
-      const userData = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phone: formData.phone,
-        // We're not sending actual files in this demo
-        documentsUploaded: true
+      registerAccount()
+    }
+  }
+
+  async function registerAccount() {
+    setLoading(true)
+    setErrors({})
+    
+    try {
+      // Tạo FormData để gửi file
+      const formDataToSend = new FormData()
+      formDataToSend.append('FullName', formData.fullName)
+      formDataToSend.append('Email', formData.email)
+      formDataToSend.append('Password', formData.password)
+      formDataToSend.append('Phone', formData.phone)
+      formDataToSend.append('AvatarPicture', formData.avatarPicture)
+      formDataToSend.append('IDCardFront', formData.idCardFront)
+      formDataToSend.append('IDCardBack', formData.idCardBack)
+      formDataToSend.append('LicenseCardFront', formData.licenseCardFront)
+      formDataToSend.append('LicenseCardBack', formData.licenseCardBack)
+
+      // Gọi API backend
+      const response = await fetch('http://localhost:5168/api/Account/Register', {
+        method: 'POST',
+        body: formDataToSend
+        // Không set Content-Type header, browser sẽ tự động set với boundary cho multipart/form-data
+      })
+
+      // Kiểm tra response có phải JSON không
+      const contentType = response.headers.get('content-type')
+      let data = null
+      
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json()
+      } else {
+        const text = await response.text()
+        console.error('=== DEBUG: Non-JSON Response ===')
+        console.error('Status:', response.status, response.statusText)
+        console.error('Content-Type:', contentType)
+        console.error('Response Body:', text)
+        console.error('================================')
+        
+        // Nếu là HTML error page
+        if (text.includes('<html') || text.includes('<!DOCTYPE')) {
+          throw new Error('Server đang gặp lỗi hoặc endpoint không tồn tại. Vui lòng kiểm tra backend.')
+        }
+        
+        throw new Error('Server trả về định dạng không hợp lệ. Vui lòng liên hệ quản trị viên.')
+      }
+
+      if (!response.ok) {
+        // Xử lý các loại lỗi từ backend
+        let errorMessage = 'Đăng ký thất bại'
+        
+        if (data.error || data.Error) {
+          errorMessage = data.error || data.Error
+        } else if (data.message || data.Message) {
+          errorMessage = data.message || data.Message
+        } else if (data.errors) {
+          // Xử lý validation errors từ .NET
+          const validationErrors = Object.values(data.errors).flat()
+          errorMessage = validationErrors.join(', ')
+        } else if (typeof data === 'string') {
+          errorMessage = data
+        }
+        
+        throw new Error(errorMessage)
+      }
+
+      // Đăng ký thành công
+      alert('✅ Đăng ký thành công! Vui lòng đăng nhập để tiếp tục.')
+      navigate('/login')
+      
+    } catch (err) {
+      console.error('=== Register Error ===')
+      console.error('Error:', err)
+      console.error('Error message:', err.message)
+      console.error('====================')
+      
+      // Hiển thị thông báo lỗi chi tiết cho người dùng
+      let errorMessage = 'Đã xảy ra lỗi không xác định. Vui lòng thử lại.'
+      
+      if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+        errorMessage = '❌ Không thể kết nối đến server. Vui lòng kiểm tra:\n' +
+                      '• Backend có đang chạy tại localhost:5168?\n' +
+                      '• Có bật CORS trên backend chưa?\n' +
+                      '• Kiểm tra firewall/antivirus'
+      } else if (err.message.includes('Server đang gặp lỗi')) {
+        errorMessage = '❌ ' + err.message + '\n\nGợi ý:\n' +
+                      '• Kiểm tra Console backend có lỗi gì không\n' +
+                      '• Đảm bảo endpoint /api/Account/Register tồn tại\n' +
+                      '• Xem logs của ASP.NET'
+      } else if (err.message) {
+        errorMessage = '❌ ' + err.message
       }
       
-      // Register the user
-      register(userData)
-      
-      // Navigate to verification pending page
-      navigate('/verification-pending')
+      setErrors({ submit: errorMessage })
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -131,30 +271,18 @@ export default function Register() {
         <form onSubmit={handleSubmit} className="auth-form">
           {step === 1 ? (
             <>
-              <div className="form-row">
-                <label>
-                  Họ
-                  <input 
-                    type="text" 
-                    name="firstName" 
-                    value={formData.firstName} 
-                    onChange={handleChange} 
-                    required 
-                  />
-                  {errors.firstName && <span className="error">{errors.firstName}</span>}
-                </label>
-                <label>
-                  Tên
-                  <input 
-                    type="text" 
-                    name="lastName" 
-                    value={formData.lastName} 
-                    onChange={handleChange} 
-                    required 
-                  />
-                  {errors.lastName && <span className="error">{errors.lastName}</span>}
-                </label>
-              </div>
+              <label>
+                Họ và tên đầy đủ
+                <input 
+                  type="text" 
+                  name="fullName" 
+                  value={formData.fullName} 
+                  onChange={handleChange}
+                  placeholder="Nguyễn Văn A"
+                  required 
+                />
+                {errors.fullName && <span className="error">{errors.fullName}</span>}
+              </label>
 
               <label>
                 Email
@@ -162,10 +290,12 @@ export default function Register() {
                   type="email" 
                   name="email" 
                   value={formData.email} 
-                  onChange={handleChange} 
+                  onChange={handleChange}
+                  placeholder="example@gmail.com"
                   required 
                 />
                 {errors.email && <span className="error">{errors.email}</span>}
+                <small style={{color: '#64748b', fontSize: '0.85rem'}}>Chỉ hỗ trợ gmail và yahoomail</small>
               </label>
 
               <label>
@@ -174,7 +304,8 @@ export default function Register() {
                   type="tel" 
                   name="phone" 
                   value={formData.phone} 
-                  onChange={handleChange} 
+                  onChange={handleChange}
+                  placeholder="0901234567"
                   required 
                 />
                 {errors.phone && <span className="error">{errors.phone}</span>}
@@ -186,7 +317,8 @@ export default function Register() {
                   type="password" 
                   name="password" 
                   value={formData.password} 
-                  onChange={handleChange} 
+                  onChange={handleChange}
+                  placeholder="Ít nhất 6 ký tự, 1 chữ hoa, 1 ký tự đặc biệt"
                   required 
                 />
                 {errors.password && <span className="error">{errors.password}</span>}
@@ -198,7 +330,8 @@ export default function Register() {
                   type="password" 
                   name="confirmPassword" 
                   value={formData.confirmPassword} 
-                  onChange={handleChange} 
+                  onChange={handleChange}
+                  placeholder="Nhập lại mật khẩu"
                   required 
                 />
                 {errors.confirmPassword && <span className="error">{errors.confirmPassword}</span>}
@@ -212,82 +345,74 @@ export default function Register() {
                 <h3>Xác Thực Giấy Tờ</h3>
                 <p>Vui lòng upload ảnh rõ nét của các giấy tờ để xác thực</p>
                 
+                {/* Ảnh đại diện */}
                 <label className="file-upload">
-                  <span>Bằng Lái Xe</span>
+                  <span>📸 Ảnh đại diện</span>
                   <input 
                     type="file" 
-                    name="drivingLicense" 
+                    name="avatarPicture" 
                     accept="image/jpeg,image/jpg,image/png,image/webp" 
                     onChange={handleFileChange} 
                     required 
                   />
-                  <div className="upload-preview">
-                    {formData.drivingLicense ? (
-                      <div className="file-preview">
-                        <img 
-                          src={URL.createObjectURL(formData.drivingLicense)} 
-                          alt="Driver's License Preview" 
-                          className="preview-image"
-                        />
-                        <div className="file-info">
-                          <span className="file-name">{formData.drivingLicense.name}</span>
-                          <span className="file-size">
-                            {(formData.drivingLicense.size / 1024 / 1024).toFixed(2)} MB
-                          </span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="upload-prompt">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                          <polyline points="7,10 12,15 17,10"/>
-                          <line x1="12" y1="15" x2="12" y2="3"/>
-                        </svg>
-                        <span>Nhấn để upload bằng lái xe</span>
-                        <small>JPG, PNG, WebP (tối đa 5MB)</small>
-                      </div>
-                    )}
-                  </div>
-                  {errors.drivingLicense && <span className="error">{errors.drivingLicense}</span>}
+                  <FilePreview file={formData.avatarPicture} label="ảnh đại diện" />
+                  {errors.avatarPicture && <span className="error">{errors.avatarPicture}</span>}
                 </label>
 
+                {/* CMND/CCCD mặt trước */}
                 <label className="file-upload">
-                  <span>CMND/CCCD/Hộ Chiếu</span>
+                  <span>🆔 CMND/CCCD - Mặt trước</span>
                   <input 
                     type="file" 
-                    name="idCard" 
+                    name="idCardFront" 
                     accept="image/jpeg,image/jpg,image/png,image/webp" 
                     onChange={handleFileChange} 
                     required 
                   />
-                  <div className="upload-preview">
-                    {formData.idCard ? (
-                      <div className="file-preview">
-                        <img 
-                          src={URL.createObjectURL(formData.idCard)} 
-                          alt="ID Card Preview" 
-                          className="preview-image"
-                        />
-                        <div className="file-info">
-                          <span className="file-name">{formData.idCard.name}</span>
-                          <span className="file-size">
-                            {(formData.idCard.size / 1024 / 1024).toFixed(2)} MB
-                          </span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="upload-prompt">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                          <polyline points="7,10 12,15 17,10"/>
-                          <line x1="12" y1="15" x2="12" y2="3"/>
-                        </svg>
-                        <span>Nhấn để upload CMND/CCCD</span>
-                        <small>JPG, PNG, WebP (tối đa 5MB)</small>
-                      </div>
-                    )}
-                  </div>
-                  {errors.idCard && <span className="error">{errors.idCard}</span>}
+                  <FilePreview file={formData.idCardFront} label="CMND/CCCD mặt trước" />
+                  {errors.idCardFront && <span className="error">{errors.idCardFront}</span>}
+                </label>
+
+                {/* CMND/CCCD mặt sau */}
+                <label className="file-upload">
+                  <span>🆔 CMND/CCCD - Mặt sau</span>
+                  <input 
+                    type="file" 
+                    name="idCardBack" 
+                    accept="image/jpeg,image/jpg,image/png,image/webp" 
+                    onChange={handleFileChange} 
+                    required 
+                  />
+                  <FilePreview file={formData.idCardBack} label="CMND/CCCD mặt sau" />
+                  {errors.idCardBack && <span className="error">{errors.idCardBack}</span>}
+                </label>
+
+                {/* GPLX mặt trước */}
+                <label className="file-upload">
+                  <span>🪪 Giấy phép lái xe - Mặt trước</span>
+                  <input 
+                    type="file" 
+                    name="licenseCardFront" 
+                    accept="image/jpeg,image/jpg,image/png,image/webp" 
+                    onChange={handleFileChange} 
+                    required 
+                  />
+                  <FilePreview file={formData.licenseCardFront} label="GPLX mặt trước" />
+                  {errors.licenseCardFront && <span className="error">{errors.licenseCardFront}</span>}
+                </label>
+
+                {/* GPLX mặt sau */}
+                <label className="file-upload">
+                  <span>🪪 Giấy phép lái xe - Mặt sau</span>
+                  <input 
+                    type="file" 
+                    name="licenseCardBack" 
+                    accept="image/jpeg,image/jpg,image/png,image/webp" 
+                    onChange={handleFileChange} 
+                    required 
+                  />
+                  <FilePreview file={formData.licenseCardBack} label="GPLX mặt sau" />
+                  {errors.licenseCardBack && <span className="error">{errors.licenseCardBack}</span>}
                 </label>
 
                 <div className="document-info">
@@ -296,14 +421,34 @@ export default function Register() {
                     <li>Đảm bảo ảnh rõ nét, không bị mờ hay lóa sáng</li>
                     <li>Chụp toàn bộ giấy tờ, không cắt xén</li>
                     <li>Giấy tờ phải còn hiệu lực và không bị hư hỏng</li>
-                    <li>Bạn có thể hoàn tất xác thực tại bất kỳ điểm thuê nào</li>
+                    <li>Tất cả ảnh đều là bắt buộc để hoàn tất đăng ký</li>
                   </ul>
                 </div>
               </div>
 
+              {errors.submit && (
+                <div className="error-message" style={{
+                  padding: '0.75rem 1rem',
+                  marginBottom: '1rem',
+                  backgroundColor: '#fee',
+                  border: '1px solid #fcc',
+                  borderRadius: '8px',
+                  color: '#c33',
+                  fontSize: '0.9rem',
+                  lineHeight: '1.5',
+                  whiteSpace: 'pre-line'
+                }}>
+                  {errors.submit}
+                </div>
+              )}
+
               <div className="button-group">
-                <button type="button" className="btn secondary" onClick={prevStep}>Quay lại</button>
-                <button type="submit" className="btn primary">Hoàn tất đăng ký</button>
+                <button type="button" className="btn secondary" onClick={prevStep} disabled={loading}>
+                  Quay lại
+                </button>
+                <button type="submit" className="btn primary" disabled={loading}>
+                  {loading ? 'Đang đăng ký...' : 'Hoàn tất đăng ký'}
+                </button>
               </div>
             </>
           )}

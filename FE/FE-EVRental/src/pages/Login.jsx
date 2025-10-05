@@ -38,26 +38,42 @@ export default function Login() {
 
       // Lưu thông tin user vào context
       login({
-        accountID: data.accountID,
-        fullName: data.fullName,
-        email: data.email,
-        roleID: data.roleID,
-        roleName: data.roleName,
-        token: data.token
+        accountID: data.accountID || data.AccountID,
+        fullName: data.fullName || data.FullName,
+        email: data.email || data.Email,
+        roleID: data.roleID || data.RoleID,
+        roleName: data.roleName || data.RoleName,
+        token: data.token || data.Token
       });
 
       // Lưu token vào localStorage
-      localStorage.setItem('token', data.token);
+      localStorage.setItem('token', data.token || data.Token);
       localStorage.setItem('user', JSON.stringify({
-        accountID: data.accountID,
-        fullName: data.fullName,
-        email: data.email,
-        roleID: data.roleID,
-        roleName: data.roleName
+        accountID: data.accountID || data.AccountID,
+        fullName: data.fullName || data.FullName,
+        email: data.email || data.Email,
+        roleID: data.roleID || data.RoleID,
+        roleName: data.roleName || data.RoleName
       }));
       
-      // Chuyển hướng về trang chủ
-      navigate('/');
+      // Chuyển hướng dựa trên role
+      // roleID: 1 - Customer, 2 - Staff, 3 - Admin
+      const roleId = data.roleID || data.RoleID;
+      console.log('Login successful! RoleID:', roleId); // Debug log
+      
+      if (roleId === 2) {
+        // Nếu là staff, chuyển đến trang staff
+        console.log('Redirecting to /staff'); // Debug log
+        navigate('/staff');
+      } else if (roleId === 3) {
+        // Nếu là admin, chuyển đến trang admin (tạo sau)
+        console.log('Redirecting to /admin'); // Debug log
+        navigate('/admin');
+      } else {
+        // Nếu là customer, chuyển về trang chủ
+        console.log('Redirecting to /'); // Debug log
+        navigate('/');
+      }
     } catch (err) {
       setError(err.message || 'Thông tin đăng nhập không hợp lệ. Vui lòng thử lại.');
     } finally {
