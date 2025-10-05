@@ -3,17 +3,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 0;
-  position: absolute;
-  z-index: 1;
+  justify-content: flex-start;
+  padding: 2rem 1rem;
   width: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
   background-image: linear-gradient(to right, rgba(255, 255, 255, 0.9), rgba(77, 182, 172, 0.15));
+  overflow-y: auto;
 }
 
 .auth-hero {
@@ -47,16 +41,11 @@
   border-radius: 12px; 
   color: var(--text-primary); 
   box-shadow: var(--shadow-md); 
-  transform: translateY(0); 
   animation: cardIn 260ms ease both; 
   border: 1px solid rgba(255, 255, 255, 0.4);
   position: relative;
   z-index: 1;
-  margin: 0 auto;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  position: absolute;
+  margin: 2rem auto;
 }
 
 .auth-form { 
@@ -201,11 +190,11 @@
 @keyframes cardIn { 
   from { 
     opacity: 0; 
-    transform: translate(-50%, calc(-50% + 8px)); 
+    transform: translateY(20px); 
   } 
   to { 
     opacity: 1; 
-    transform: translate(-50%, -50%); 
+    transform: translateY(0); 
   } 
 }
 
@@ -408,4 +397,72 @@
 .auth-link:hover {
   color: var(--primary-dark);
   text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-height: 800px) {
+  .auth-page {
+    justify-content: flex-start;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+  
+  .auth-card {
+    margin: 1rem auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .auth-page {
+    padding: 1rem 0.5rem;
+  }
+  
+  .auth-card {
+    padding: 1.5rem;
+    margin: 1rem auto;
+    max-width: 100%;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .document-upload {
+    padding: 1rem;
+  }
+  
+  .upload-preview {
+    padding: 1rem;
+  }
+  
+  .file-preview {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .preview-image {
+    width: 100%;
+    height: auto;
+    max-height: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 1rem;
+    border-radius: 8px;
+  }
+  
+  .auth-title {
+    font-size: 2rem;
+  }
+  
+  .button-group {
+    flex-direction: column;
+  }
+  
+  .btn.secondary,
+  .auth-form button {
+    width: 100%;
+  }
 }

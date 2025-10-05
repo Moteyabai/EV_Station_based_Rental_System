@@ -9,6 +9,7 @@ import './styles/leaflet-fix.css';
 // Components
 import NavBar from "./components/NavBar";
 import Cart from "./components/Cart";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // Pages
 import Home from "./pages/Home";
@@ -27,6 +28,7 @@ import RentalForm from "./pages/RentalForm";
 import Checkout from "./pages/Checkout";
 import BookingSuccess from "./pages/BookingSuccess";
 import UserProfile from "./pages/UserProfile";
+import Staff from "./pages/Staff";
 
 // Styles
 import "./App.css";
@@ -51,6 +53,17 @@ function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/profile" element={<UserProfile />} />
                 <Route path="/history" element={<UserHistory />} />
+                
+                {/* Protected Staff Route - Chỉ cho Staff (roleID = 2) */}
+                <Route 
+                  path="/staff" 
+                  element={
+                    <ProtectedRoute allowedRoles={2}>
+                      <Staff />
+                    </ProtectedRoute>
+                  } 
+                />
+                
                 <Route
                   path="/pickup/:vehicleId/:stationId"
                   element={<VehiclePickup />}
