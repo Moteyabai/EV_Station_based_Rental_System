@@ -49,18 +49,18 @@ namespace API.Controllers
             var permission = User.FindFirst(UserClaimTypes.RoleID).Value;
             if (permission != "3")
             {
-                var error = new ErrorDTO();
-                error.Error = "Không có quyền truy cập!";
-                return Unauthorized(error);
+                var res = new ResponseDTO();
+                res.Message = "Không có quyền truy cập!";
+                return Unauthorized(res);
             }
             try
             {
                 var accounts = await _accountService.GetAllAsync();
                 if (accounts == null || !accounts.Any())
                 {
-                    var error = new ErrorDTO();
-                    error.Error = "Danh sách trống";
-                    return NotFound(error);
+                    var res = new ResponseDTO();
+                    res.Message = "Danh sách trống";
+                    return NotFound(res);
                 }
 
                 return Ok(accounts);
@@ -79,9 +79,9 @@ namespace API.Controllers
             {
                 if (model.Email == null || string.IsNullOrEmpty(model.Email) || string.IsNullOrEmpty(model.Password))
                 {
-                    var error = new ErrorDTO();
-                    error.Error = "Nhập đầy đủ email và mật khẩu!";
-                    return BadRequest(error);
+                    var res = new ResponseDTO();
+                    res.Message = "Nhập đầy đủ email và mật khẩu!";
+                    return BadRequest(res);
                 }
                 var account = await _accountService.Login(model);
 
@@ -89,9 +89,9 @@ namespace API.Controllers
             }
             catch (Exception ex)
             {
-                var error = new ErrorDTO();
-                error.Error = ex.Message;
-                return BadRequest(error);
+                var res = new ResponseDTO();
+                res.Message = ex.Message;
+                return BadRequest(res);
             }
         }
 
@@ -101,19 +101,18 @@ namespace API.Controllers
         {
             try
             {
+                var res = new ResponseDTO();
                 var acc = _mapper.Map<BusinessObject.Models.Account>(accountRegisterDTO);
                 if (acc == null)
                 {
-                    var error = new ErrorDTO();
-                    error.Error = "Dữ liệu đăng ký không phù hợp!";
-                    return BadRequest(error);
+                    res.Message = "Dữ liệu đăng ký không phù hợp!";
+                    return BadRequest(res);
                 }
                 var checkEmail = await _accountService.CheckEmail(acc.Email);
                 if (checkEmail)
                 {
-                    var error = new ErrorDTO();
-                    error.Error = "Email đã tồn tại!";
-                    return Conflict(error);
+                    res.Message = "Email đã tồn tại!";
+                    return Conflict(res);
                 }
 
                 var storage = new Storage(_appWriteClient);
@@ -224,7 +223,8 @@ namespace API.Controllers
 
                 await _idDocumentService.AddAsync(id);
 
-                return Ok("Tạo tài khoản thành công! Vui lòng chờ xác nhận giấy tờ trước khi đặt xe!");
+                res.Message = "Đăng ký thành công! Vui lòng đợi xác nhận giấy tờ trước khi đặt xe!";
+                return Ok(res);
             }
             catch (Exception ex)
             {

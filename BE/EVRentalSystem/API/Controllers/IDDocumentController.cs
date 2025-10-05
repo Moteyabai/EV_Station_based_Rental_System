@@ -25,18 +25,18 @@ namespace API.Controllers
             var permission = User.FindFirst(UserClaimTypes.RoleID).Value;
             if (permission != "3")
             {
-                var error = new ErrorDTO();
-                error.Error = "Không có quyền truy cập!";
-                return Unauthorized(error);
+                var res = new ResponseDTO();
+                res.Message = "Không có quyền truy cập!";
+                return Unauthorized(res);
             }
             try
             {
                 var docs = await _IDDocumentService.GetAllAsync();
                 if (docs == null || !docs.Any())
                 {
-                    var error = new ErrorDTO();
-                    error.Error = "Danh sách trống";
-                    return NotFound(error);
+                    var res = new ResponseDTO();
+                    res.Message = "Danh sách trống";
+                    return NotFound(res);
                 }
 
                 return Ok(docs);
