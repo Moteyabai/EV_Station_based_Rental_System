@@ -1,15 +1,22 @@
 /* Staff Page Container */
 .staff-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  width: 100vw;
+  background: linear-gradient(135deg, #a8e6cf 0%, #7fd8be 100%);
   padding-bottom: 2rem;
+  position: relative;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
 }
 
 /* Header */
 .staff-header {
-  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  background: linear-gradient(135deg, #56ab91 0%, #66c9a9 100%);
   padding: 1.5rem 2rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  margin: 0;
 }
 
 .staff-header-content {
@@ -106,10 +113,10 @@
 }
 
 .nav-tab.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #66c9a9 0%, #56ab91 100%);
   color: white;
   border-color: transparent;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(102, 201, 169, 0.4);
 }
 
 /* Main Content */
@@ -164,7 +171,7 @@
 }
 
 .stat-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #66c9a9 0%, #56ab91 100%);
   padding: 1rem 1.5rem;
   border-radius: 8px;
   display: flex;
@@ -172,7 +179,7 @@
   align-items: center;
   gap: 0.25rem;
   min-width: 100px;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(102, 201, 169, 0.3);
 }
 
 .stat-number {
@@ -188,7 +195,7 @@
 }
 
 .btn-add, .btn-export {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #66c9a9 0%, #56ab91 100%);
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -196,12 +203,12 @@
   cursor: pointer;
   font-weight: 500;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(102, 201, 169, 0.3);
 }
 
 .btn-add:hover, .btn-export:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 16px rgba(102, 201, 169, 0.4);
 }
 
 /* Table Container */
@@ -218,7 +225,7 @@
 }
 
 .data-table thead {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #66c9a9 0%, #56ab91 100%);
   color: white;
 }
 
@@ -453,7 +460,7 @@
 
 .station-icon {
   font-size: 2.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #66c9a9 0%, #56ab91 100%);
   width: 60px;
   height: 60px;
   display: flex;
@@ -503,19 +510,19 @@
 }
 
 .stat-card-large {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #66c9a9 0%, #56ab91 100%);
   border-radius: 12px;
   padding: 1.5rem;
   display: flex;
   align-items: center;
   gap: 1rem;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(102, 201, 169, 0.3);
   transition: all 0.3s ease;
 }
 
 .stat-card-large:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 20px rgba(102, 201, 169, 0.4);
 }
 
 .stat-icon {
@@ -602,12 +609,12 @@
 }
 
 .filter-btn:hover {
-  border-color: #667eea;
-  color: #667eea;
+  border-color: #66c9a9;
+  color: #66c9a9;
 }
 
 .filter-btn.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #66c9a9 0%, #56ab91 100%);
   color: white;
   border-color: transparent;
 }
@@ -771,7 +778,7 @@
   align-items: center;
   padding: 1.5rem;
   border-bottom: 2px solid #e2e8f0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #66c9a9 0%, #56ab91 100%);
   color: white;
   border-radius: 16px 16px 0 0;
 }
@@ -820,7 +827,7 @@
   padding: 1rem;
   border-radius: 8px;
   margin-bottom: 1.5rem;
-  border-left: 4px solid #667eea;
+  border-left: 4px solid #66c9a9;
 }
 
 .vehicle-info-box h3,
@@ -951,8 +958,8 @@
 
 .signature-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #66c9a9;
+  box-shadow: 0 0 0 3px rgba(102, 201, 169, 0.1);
 }
 
 .signature-note {
@@ -1119,8 +1126,8 @@
 
 .search-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #66c9a9;
+  box-shadow: 0 0 0 3px rgba(102, 201, 169, 0.1);
 }
 
 .customer-list {
@@ -1410,8 +1417,8 @@
 
 .notes-section textarea:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #66c9a9;
+  box-shadow: 0 0 0 3px rgba(102, 201, 169, 0.1);
 }
 
 .photo-item {
@@ -1442,7 +1449,7 @@
   padding: 0.5rem 1rem;
   background: #f8fafc;
   border-radius: 8px;
-  border-left: 3px solid #667eea;
+  border-left: 3px solid #66c9a9;
 }
 
 .stat-mini .stat-icon {
@@ -1639,7 +1646,7 @@
   appearance: none;
   width: 20px;
   height: 20px;
-  background: #667eea;
+  background: #66c9a9;
   border-radius: 50%;
   cursor: pointer;
 }
@@ -1647,7 +1654,7 @@
 .battery-slider::-moz-range-thumb {
   width: 20px;
   height: 20px;
-  background: #667eea;
+  background: #66c9a9;
   border-radius: 50%;
   cursor: pointer;
   border: none;
@@ -1676,8 +1683,8 @@
 .issue-select:focus,
 .severity-select:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #66c9a9;
+  box-shadow: 0 0 0 3px rgba(102, 201, 169, 0.1);
 }
 
 .mileage-input {
@@ -1690,8 +1697,8 @@
 
 .mileage-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #66c9a9;
+  box-shadow: 0 0 0 3px rgba(102, 201, 169, 0.1);
 }
 
 .form-group textarea {
@@ -1706,7 +1713,7 @@
 
 .form-group textarea:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #66c9a9;
+  box-shadow: 0 0 0 3px rgba(102, 201, 169, 0.1);
 }
 
