@@ -19,6 +19,8 @@ namespace API.CustomServices
 
             services.AddScoped<AccountRepository>();
             services.AddScoped<AccountService>();
+            services.AddScoped<IDDocumentRepository>();
+            services.AddScoped<IDDocumentService>();
 
             services.AddAuthentication(options =>
             {

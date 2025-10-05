@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Http;
+using System.ComponentModel.DataAnnotations;
 
 namespace BusinessObject.Models.DTOs
 {
@@ -8,6 +9,8 @@ namespace BusinessObject.Models.DTOs
         public string FullName { get; set; }
 
         [EmailAddress(ErrorMessage = "Vui lòng nhập đúng định dạng mail")]
+        [RegularExpression(@"^[a-zA-Z0-9._%+-]+@(gmail\.com|yahoo\.com|yahoomail\.com)$",
+        ErrorMessage = "Hệ thống chỉ hỗ trợ gmail và yahoomail")]
         [Required]
         public string Email { get; set; }
 
@@ -20,7 +23,19 @@ namespace BusinessObject.Models.DTOs
         [Required]
         public string Phone { get; set; }
 
-        [Required(ErrorMessage = "Role is required.")]
-        public int RoleID { get; set; }
+        [Required(ErrorMessage = "Avatar is required.")]
+        public IFormFile AvatarPicture { get; set; }
+
+        [Required(ErrorMessage = "IDCardFront  is required.")]
+        public IFormFile IDCardFront { get; set; }
+
+        [Required(ErrorMessage = "IDCardBack is required.")]
+        public IFormFile IDCardBack { get; set; }
+
+        [Required(ErrorMessage = "LicenseCardFront  is required.")]
+        public IFormFile LicenseCardFront { get; set; }
+
+        [Required(ErrorMessage = "LicenseCardBack is required.")]
+        public IFormFile LicenseCardBack { get; set; }
     }
 }
