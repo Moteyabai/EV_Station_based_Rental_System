@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BusinessObject.Models
 {
@@ -24,11 +19,11 @@ namespace BusinessObject.Models
         [StringLength(500)]
         public string Description { get; set; }
 
-/*        [Required]
-        public decimal Latitude { get; set; }
+        /*        [Required]
+                public decimal Latitude { get; set; }
 
-        [Required]
-        public decimal Longitude { get; set; }*/
+                [Required]
+                public decimal Longitude { get; set; }*/
 
         [Required]
         public int Capacity { get; set; }
@@ -61,6 +56,5 @@ namespace BusinessObject.Models
         public virtual ICollection<Account> StaffMembers { get; set; }
 
         public virtual ICollection<EVBike> EVBikes { get; set; }
-
     }
 }
