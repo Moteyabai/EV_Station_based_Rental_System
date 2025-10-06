@@ -1,8 +1,20 @@
 import React from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Layout, Menu, Badge, Dropdown, Avatar, Space, Button } from "antd";
+import {
+  HomeOutlined,
+  CarOutlined,
+  EnvironmentOutlined,
+  InfoCircleOutlined,
+  ShoppingCartOutlined,
+  UserOutlined,
+  LogoutOutlined,
+  HistoryOutlined,
+} from "@ant-design/icons";
 import { useAuth } from "../contexts/AuthContext";
 import { useCart } from "../contexts/CartContext";
-import "../styles/NavBar.css";
+
+const { Header } = Layout;
 
 export default function NavBar() {
   const { user, logout } = useAuth();
@@ -10,86 +22,179 @@ export default function NavBar() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isActive = (path) => {
-    return location.pathname === path ? "active" : "";
-  };
-
-  function handleLogout() {
+  const handleLogout = () => {
     logout();
     navigate("/");
-  }
+  };
+
+  const handleMenuClick = ({ key }) => {
+    navigate(key);
+  };
+
+  const userMenuItems = [
+    {
+      key: "profile",
+      icon: <UserOutlined />,
+      label: "Thông tin cá nhân",
+      onClick: () => navigate("/profile"),
+    },
+    {
+      key: "history",
+      icon: <HistoryOutlined />,
+      label: "Lịch sử thuê xe",
+      onClick: () => navigate("/history"),
+    },
+    {
+      type: "divider",
+    },
+    {
+      key: "logout",
+      icon: <LogoutOutlined />,
+      label: "Đăng xuất",
+      onClick: handleLogout,
+    },
+  ];
+
+  const menuItems = [
+    {
+      key: "/",
+      icon: <HomeOutlined />,
+      label: <Link to="/">Trang chủ</Link>,
+    },
+    {
+      key: "/vehicles",
+      icon: <CarOutlined />,
+      label: <Link to="/vehicles">Xe máy điện</Link>,
+    },
+    {
+      key: "/stations",
+      icon: <EnvironmentOutlined />,
+      label: <Link to="/stations">Điểm thuê</Link>,
+    },
+    {
+      key: "/about",
+      icon: <InfoCircleOutlined />,
+      label: <Link to="/about">Giới thiệu</Link>,
+    },
+  ];
 
   return (
-    <header className="navbar">
-      <div className="navbar-container">
-        <div className="navbar-logo">
-          <Link to="/">
-            <span>EV</span> Rental
+    <Header
+      style={{
+        position: "fixed",
+        zIndex: 1000,
+        width: "100%",
+        backgroundColor: "#fff",
+        borderBottom: "1px solid #f0f0f0",
+        padding: "0 20px",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          height: "100%",
+        }}
+      >
+        {/* Logo */}
+        <div
+          style={{
+            fontSize: "24px",
+            fontWeight: "bold",
+            color: "#4db6ac",
+          }}
+        >
+          <Link
+            to="/"
+            style={{
+              textDecoration: "none",
+              color: "inherit",
+            }}
+          >
+            <span style={{ color: "#4db6ac" }}>EV</span> Rental
           </Link>
         </div>
 
-        <nav className="navbar-nav">
-          <Link to="/" className={`nav-link ${isActive("/")}`}>
-            Trang chủ
-          </Link>
-          <Link to="/vehicles" className={`nav-link ${isActive("/vehicles")}`}>
-            Xe máy điện
-          </Link>
-          <Link to="/stations" className={`nav-link ${isActive("/stations")}`}>
-            Điểm thuê
-          </Link>
-          <Link to="/about" className={`nav-link ${isActive("/about")}`}>
-            Giới thiệu
-          </Link>
-        </nav>
+        {/* Menu */}
+        <Menu
+          mode="horizontal"
+          selectedKeys={[location.pathname]}
+          onClick={handleMenuClick}
+          items={menuItems}
+          style={{
+            border: "none",
+            backgroundColor: "transparent",
+            flex: 1,
+            justifyContent: "center",
+          }}
+        />
 
-        <div className="navbar-actions">
-          <Link to="/cart" className="cart-link">
-            🛒 Giỏ hàng
-            {getItemCount() > 0 && (
-              <span className="cart-badge">{getItemCount()}</span>
-            )}
+        {/* Actions */}
+        <Space size="middle">
+          {/* Cart */}
+          <Link to="/cart">
+            <Badge count={getItemCount()} showZero={false}>
+              <Button
+                type="text"
+                icon={<ShoppingCartOutlined />}
+                size="large"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  color: "#595959",
+                }}
+              >
+                Giỏ hàng
+              </Button>
+            </Badge>
           </Link>
 
+          {/* User Actions */}
           {user ? (
-            <>
-              <div className="user-menu">
-                <span className="user-info">{user.email}</span>
-                <div className="user-dropdown">
-                  {user.roleID === 3 && (
-                    <Link to="/admin" className="dropdown-item">
-                      ⚡ Quản trị Admin
-                    </Link>
-                  )}
-                  {user.roleID === 2 && (
-                    <Link to="/staff" className="dropdown-item">
-                      👔 Trang nhân viên
-                    </Link>
-                  )}
-                  <Link to="/profile" className="dropdown-item">
-                    👤 Hồ sơ
-                  </Link>
-                  <Link to="/history" className="dropdown-item">
-                    📋 Lịch sử thuê
-                  </Link>
-                  <button className="dropdown-item logout-btn" onClick={handleLogout}>
-                    🚪 Đăng xuất
-                  </button>
-                </div>
-              </div>
-            </>
+            <Dropdown
+              menu={{ items: userMenuItems }}
+              placement="bottomRight"
+              arrow
+            >
+              <Button
+                type="text"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  padding: "4px 8px",
+                }}
+              >
+                <Space>
+                  <Avatar
+                    icon={<UserOutlined />}
+                    size="small"
+                    style={{ backgroundColor: "#4db6ac" }}
+                  />
+                  <span style={{ color: "#262626" }}>
+                    {user.fullName || user.email}
+                  </span>
+                </Space>
+              </Button>
+            </Dropdown>
           ) : (
-            <>
-              <Link to="/login" className="login-btn">
-                Đăng nhập
+            <Space>
+              <Link to="/login">
+                <Button type="default">Đăng nhập</Button>
               </Link>
-              <Link to="/register" className="register-btn">
-                Đăng ký
+              <Link to="/register">
+                <Button
+                  type="primary"
+                  style={{ backgroundColor: "#4db6ac", borderColor: "#4db6ac" }}
+                >
+                  Đăng ký
+                </Button>
               </Link>
-            </>
+            </Space>
           )}
-        </div>
+        </Space>
       </div>
-    </header>
+    </Header>
   );
 }

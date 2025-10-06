@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import stationsData from "../data/stations_new";
+import stationsData from "../data/stations";
 import StationMap from "./StationMap";
 import "../styles/StationFinder.css";
 
@@ -125,7 +125,9 @@ export default function StationFinder({ stations: stationsProp }) {
                     <h4>{station.name}</h4>
                     <p className="address">📍 {station.address}</p>
                     {station.distance && (
-                      <p className="distance">📏 Cách bạn {station.distance.toFixed(1)} km</p>
+                      <p className="distance">
+                        📏 Cách bạn {station.distance.toFixed(1)} km
+                      </p>
                     )}
                     <p className="hours">🕒 {station.openingHours}</p>
                     <p className="contact">📞 {station.contactNumber}</p>

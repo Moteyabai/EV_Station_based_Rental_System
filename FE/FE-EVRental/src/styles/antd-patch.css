@@ -1,0 +1,129 @@
+/* 
+  Ant Design CSS Compatibility Patch
+  This file ensures Ant Design works well with existing CSS
+  and applies consistent color scheme
+*/
+
+/* Apply consistent color scheme to Ant Design components */
+.ant-btn-primary {
+  background-color: #4db6ac !important;
+  border-color: #4db6ac !important;
+}
+
+.ant-btn-primary:hover,
+.ant-btn-primary:focus {
+  background-color: #00867d !important;
+  border-color: #00867d !important;
+}
+
+.ant-menu-item-selected {
+  color: #4db6ac !important;
+}
+
+.ant-menu-item:hover {
+  color: #4db6ac !important;
+}
+
+.ant-menu-item-active {
+  color: #4db6ac !important;
+}
+
+.ant-badge-count {
+  background-color: #ff7043 !important;
+}
+
+.ant-tag-green {
+  background-color: #4db6ac !important;
+  border-color: #4db6ac !important;
+}
+
+.ant-tag-blue {
+  background-color: #26a69a !important;
+  border-color: #26a69a !important;
+}
+
+/* Link colors */
+a.ant-typography {
+  color: #00867d !important;
+}
+
+a.ant-typography:hover {
+  color: #4db6ac !important;
+}
+
+/* Ensure scroll functionality is preserved */
+body, html {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+/* Preserve original layout structure */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  overflow: visible;
+}
+
+/* Ant Design Modal adjustments */
+.ant-modal-mask {
+  z-index: 1000;
+}
+
+.ant-modal-wrap {
+  z-index: 1001;
+}
+
+/* Ensure DatePicker/TimePicker work correctly */
+.ant-picker-dropdown {
+  z-index: 1050;
+}
+
+/* Preserve button styling when not using Ant Design buttons */
+button:not(.ant-btn) {
+  /* Keep original button styles */
+  border: none;
+  outline: none;
+  cursor: pointer;
+}
+
+/* Ensure Cards don't interfere with existing layouts */
+.ant-card {
+  margin-bottom: 0;
+}
+
+/* Fix potential text rendering issues */
+.ant-typography {
+  color: inherit;
+}
+
+/* Ensure form elements align properly */
+.ant-form-item {
+  margin-bottom: 16px;
+}
+
+/* Fix Select dropdown positioning */
+.ant-select-dropdown {
+  z-index: 1050;
+}
+
+/* Ensure space components don't break layout */
+.ant-space {
+  display: inline-flex;
+}
+
+/* Preserve responsive behavior */
+@media (max-width: 768px) {
+  .ant-modal {
+    max-width: calc(100vw - 32px);
+    margin: 16px;
+  }
+  
+  .ant-card {
+    margin: 0 -8px;
+  }
+}
