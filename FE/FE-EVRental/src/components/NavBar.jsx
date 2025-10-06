@@ -56,6 +56,16 @@ export default function NavBar() {
               <div className="user-menu">
                 <span className="user-info">{user.email}</span>
                 <div className="user-dropdown">
+                  {user.roleID === 3 && (
+                    <Link to="/admin" className="dropdown-item">
+                      ⚡ Quản trị Admin
+                    </Link>
+                  )}
+                  {user.roleID === 2 && (
+                    <Link to="/staff" className="dropdown-item">
+                      👔 Trang nhân viên
+                    </Link>
+                  )}
                   <Link to="/profile" className="dropdown-item">
                     👤 Hồ sơ
                   </Link>
