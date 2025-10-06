@@ -30,6 +30,7 @@ import Checkout from "./pages/Checkout";
 import BookingSuccess from "./pages/BookingSuccess";
 import UserProfile from "./pages/UserProfile";
 import Staff from "./pages/Staff";
+import Admin from "./pages/Admin";
 
 // Styles
 import "./App.css";
@@ -42,6 +43,16 @@ function App() {
         <ReviewProvider>
           <Router>
             <Routes>
+              {/* Admin Route - Layout riêng không có NavBar/Footer */}
+              <Route 
+                path="/admin" 
+                element={
+                  <ProtectedRoute allowedRoles={3}>
+                    <Admin />
+                  </ProtectedRoute>
+                } 
+              />
+
               {/* Staff Route - Layout riêng không có NavBar/Footer */}
               <Route 
                 path="/staff" 
