@@ -82,12 +82,13 @@ body {
   animation: fadeIn 260ms ease both;
   background-color: var(--background-off);
   color: var(--text-primary);
-  overflow: hidden; /* Prevent body scrollbar */
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 /* Add rules for html element */
 html {
-  overflow-y: auto; /* Single scrollbar for the page */
+  overflow-x: hidden;
   height: 100%;
 }
 

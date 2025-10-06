@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import StationFinder from "../components/StationFinder";
 import StationMap from "../components/StationMap";
-import stationsData from "../data/stations_new";
+import stationsData from "../data/stations";
 import "../styles/Pages.css";
 
 export default function Stations() {
@@ -10,7 +10,7 @@ export default function Stations() {
   const [stations, setStations] = useState(stationsData);
   const [userLocation, setUserLocation] = useState(null);
   const [nearbyStations, setNearbyStations] = useState([]);
-  const [locationPermission, setLocationPermission] = useState('pending'); // 'pending', 'granted', 'denied'
+  const [locationPermission, setLocationPermission] = useState("pending"); // 'pending', 'granted', 'denied'
   const [isRequestingLocation, setIsRequestingLocation] = useState(false);
 
   // Yêu cầu quyền truy cập vị trí từ người dùng
@@ -24,26 +24,28 @@ export default function Stations() {
             lng: position.coords.longitude,
           };
           setUserLocation(location);
-          setLocationPermission('granted');
+          setLocationPermission("granted");
           setIsRequestingLocation(false);
-          
+
           // Tính khoảng cách và sắp xếp trạm theo khoảng cách gần nhất
-          const stationsWithDistance = stationsData.map(station => {
-            const distance = calculateDistance(
-              location.lat, 
-              location.lng, 
-              station.coordinates.lat, 
-              station.coordinates.lng
-            );
-            return { ...station, distance };
-          }).sort((a, b) => a.distance - b.distance);
-          
+          const stationsWithDistance = stationsData
+            .map((station) => {
+              const distance = calculateDistance(
+                location.lat,
+                location.lng,
+                station.coordinates.lat,
+                station.coordinates.lng
+              );
+              return { ...station, distance };
+            })
+            .sort((a, b) => a.distance - b.distance);
+
           setStations(stationsWithDistance);
           setNearbyStations(stationsWithDistance.slice(0, 5)); // 5 trạm gần nhất
         },
         (error) => {
           console.error("Lỗi khi lấy vị trí:", error);
-          setLocationPermission('denied');
+          setLocationPermission("denied");
           setIsRequestingLocation(false);
           // Mặc định là vị trí TPHCM
           const defaultLocation = { lat: 10.762622, lng: 106.660172 };
@@ -53,7 +55,7 @@ export default function Stations() {
       );
     } else {
       // Trình duyệt không hỗ trợ geolocation
-      setLocationPermission('denied');
+      setLocationPermission("denied");
       setIsRequestingLocation(false);
       const defaultLocation = { lat: 10.762622, lng: 106.660172 };
       setUserLocation(defaultLocation);
@@ -64,13 +66,15 @@ export default function Stations() {
   // Hàm tính khoảng cách giữa 2 điểm (công thức Haversine)
   const calculateDistance = (lat1, lng1, lat2, lng2) => {
     const R = 6371; // Bán kính Trái Đất (km)
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-      Math.sin(dLng/2) * Math.sin(dLng/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLng = ((lng2 - lng1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLng / 2) *
+        Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c; // Khoảng cách tính bằng km
   };
 
@@ -102,34 +106,42 @@ export default function Stations() {
         </div>
 
         {/* Location Permission Request */}
-        {locationPermission === 'pending' && (
+        {locationPermission === "pending" && (
           <div className="location-request-banner">
             <div className="banner-content">
               <div className="banner-icon">📍</div>
               <div className="banner-text">
                 <h3>Cho phép truy cập vị trí</h3>
-                <p>Chúng tôi cần quyền truy cập vị trí để hiển thị các trạm gần bạn nhất</p>
+                <p>
+                  Chúng tôi cần quyền truy cập vị trí để hiển thị các trạm gần
+                  bạn nhất
+                </p>
               </div>
-              <button 
+              <button
                 className="btn btn-primary location-btn"
                 onClick={requestLocationPermission}
                 disabled={isRequestingLocation}
               >
-                {isRequestingLocation ? '⏳ Đang xử lý...' : '📍 Chia sẻ vị trí'}
+                {isRequestingLocation
+                  ? "⏳ Đang xử lý..."
+                  : "📍 Chia sẻ vị trí"}
               </button>
             </div>
           </div>
         )}
 
-        {locationPermission === 'denied' && (
+        {locationPermission === "denied" && (
           <div className="location-denied-banner">
             <div className="banner-content">
               <div className="banner-icon">⚠️</div>
               <div className="banner-text">
                 <h3>Không có quyền truy cập vị trí</h3>
-                <p>Bạn có thể bật lại quyền truy cập vị trí trong cài đặt trình duyệt</p>
+                <p>
+                  Bạn có thể bật lại quyền truy cập vị trí trong cài đặt trình
+                  duyệt
+                </p>
               </div>
-              <button 
+              <button
                 className="btn btn-outline"
                 onClick={requestLocationPermission}
               >
@@ -155,7 +167,7 @@ export default function Stations() {
         </div>
 
         {/* Thông tin vị trí và trạm gần nhất */}
-        {locationPermission === 'granted' && (
+        {locationPermission === "granted" && (
           <div className="location-info location-success">
             <div className="user-location-section">
               <div className="location-status success">
@@ -182,10 +194,12 @@ export default function Stations() {
                   {nearbyStations.slice(0, 3).map((station, index) => (
                     <div
                       key={station.id}
-                      className={`nearby-card ${index === 0 ? 'featured' : ''}`}
+                      className={`nearby-card ${index === 0 ? "featured" : ""}`}
                       onClick={() => handleStationSelect(station)}
                     >
-                      {index === 0 && <div className="featured-badge">Gần nhất</div>}
+                      {index === 0 && (
+                        <div className="featured-badge">Gần nhất</div>
+                      )}
                       <div className="card-header">
                         <h4>{station.name}</h4>
                         <div className="distance-badge">
@@ -199,11 +213,15 @@ export default function Stations() {
                         </div>
                         <div className="card-info">
                           <span className="info-icon">🏍️</span>
-                          <span className="info-text">{station.availableVehicles} xe có sẵn</span>
+                          <span className="info-text">
+                            {station.availableVehicles} xe có sẵn
+                          </span>
                         </div>
                         <div className="card-info">
                           <span className="info-icon">⭐</span>
-                          <span className="info-text">{station.rating} ({station.reviews} đánh giá)</span>
+                          <span className="info-text">
+                            {station.rating} ({station.reviews} đánh giá)
+                          </span>
                         </div>
                       </div>
                       <button className="card-action-btn">
@@ -217,7 +235,9 @@ export default function Stations() {
 
             <div className="stations-count-badge">
               <span className="count-icon">📊</span>
-              <span className="count-text">Tổng cộng: <strong>{stations.length}</strong> điểm thuê</span>
+              <span className="count-text">
+                Tổng cộng: <strong>{stations.length}</strong> điểm thuê
+              </span>
             </div>
           </div>
         )}

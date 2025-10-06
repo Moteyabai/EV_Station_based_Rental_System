@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import "../styles/Home.css";
 import "../styles/media.css";
 import VideoBackground from "../components/VideoBackground";
-import stations from "../data/stations_new";
+import stations from "../data/stations";
 import vehicles from "../data/vehicles";
 
 // Using placeholder images and direct links to product images
