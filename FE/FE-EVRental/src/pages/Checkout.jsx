@@ -159,44 +159,6 @@ export default function Checkout() {
             <div className="confirmation-step">
               <h3>📋 Xác Nhận Thông Tin Đặt Xe</h3>
 
-              <div className="customer-info-summary">
-                <h4>👤 Thông Tin Khách Hàng</h4>
-                <div className="info-grid">
-                  <div className="info-item">
-                    <span className="info-label">Họ tên:</span>
-                    <span className="info-value">{customerInfo.fullName}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Email:</span>
-                    <span className="info-value">{customerInfo.email}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Số điện thoại:</span>
-                    <span className="info-value">{customerInfo.phone}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">CMND/CCCD:</span>
-                    <span className="info-value">{customerInfo.idCard}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Bằng lái xe:</span>
-                    <span className="info-value">
-                      {customerInfo.driverLicense}
-                    </span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Địa chỉ:</span>
-                    <span className="info-value">{customerInfo.address}</span>
-                  </div>
-                </div>
-                <button
-                  className="btn secondary edit-info-btn"
-                  onClick={() => navigate("/rental-form")}
-                >
-                  ✏️ Chỉnh sửa thông tin
-                </button>
-              </div>
-
               <div className="booking-summary">
                 {cartItems.map((item) => (
                   <div key={item.id} className="booking-item">
@@ -256,23 +218,6 @@ export default function Checkout() {
                     </div>
                   </div>
                 ))}
-              </div>
-
-              <div className="customer-info">
-                <h4>👤 Thông tin khách hàng</h4>
-                <p>
-                  <strong>Email:</strong> {user.email}
-                </p>
-                <p>
-                  <strong>Họ tên:</strong>{" "}
-                  {cartItems[0]?.rentalDetails.customerInfo?.fullName ||
-                    "Chưa cập nhật"}
-                </p>
-                <p>
-                  <strong>Số điện thoại:</strong>{" "}
-                  {cartItems[0]?.rentalDetails.customerInfo?.phone ||
-                    "Chưa cập nhật"}
-                </p>
               </div>
 
               <div className="confirmation-actions">
