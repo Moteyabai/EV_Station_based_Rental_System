@@ -431,7 +431,7 @@
 }
 .bike-card { background: linear-gradient(180deg,#0b1a1e,#071018); padding: 1rem; border-radius: 14px; width: 260px; box-shadow: 0 18px 40px rgba(2,6,23,0.6); text-align: center }
 .bike-top { font-weight: 700; color: #9fe0c9 }
-.bike-img { height: 160px; background: linear-gradient(90deg,#133a46,#0a6b5a); border-radius: 8px; margin: 0.8rem 0 }
+.bike-img { height: 200px; background: linear-gradient(90deg,#133a46,#0a6b5a); border-radius: 8px; margin: 0.8rem 0 }
 .bike-meta { color: #9aa; font-size: 0.9rem }
 
 .template-section { padding: 48px 0 }
