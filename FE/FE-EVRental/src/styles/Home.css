@@ -10,154 +10,98 @@
 
 .template-hero {
   position: relative;
-  height: 60vh;
+  min-height: 400px;
   display: flex;
   align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #4db6ac 0%, #26a69a 50%, #009688 100%);
   overflow: hidden;
-  background: linear-gradient(120deg, #f8f9fa, #e9ecef);
 }
 
-.parallax-bg {
+.template-hero::before {
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 100%;
-  background: radial-gradient(circle at 50% 50%, rgba(77, 182, 172, 0.15), transparent 70%);
-  transform: translateZ(-1px) scale(2);
-  z-index: -1;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(255,255,255,0.08) 0%, transparent 50%);
+  pointer-events: none;
 }
 
 .hero-inner {
   position: relative;
   z-index: 1;
-  display: flex;
-  gap: 2rem;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 0;
+  text-align: center;
+  padding: 4rem 1rem;
 }
 
 .hero-text {
-  max-width: 640px;
-  opacity: 0;
-  transform: translateY(30px);
-  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.hero-text.visible {
-  opacity: 1;
-  transform: translateY(0);
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .hero-text h1 {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
-  background: linear-gradient(90deg, var(--primary-dark), var(--primary-color));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-size: 3rem;
+  margin-bottom: 1.5rem;
+  color: white;
+  font-weight: 700;
   line-height: 1.2;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
 .lead {
-  color: var(--text-secondary);
-  font-size: 1rem;
-  margin-bottom: 0.8rem;
-  opacity: 0.9;
+  color: rgba(255,255,255,0.95);
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+  font-weight: 300;
 }
 
 .hero-ctas {
   display: flex;
   gap: 1rem;
-  margin-top: 2rem;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
-/* Enhanced button animations */
 .btn {
-  position: relative;
-  transition: transform 0.2s;
-  overflow: hidden;
-}
-
-.btn:hover {
-  transform: translateY(-2px);
+  padding: 0.875rem 2rem;
+  border-radius: 8px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
 }
 
 .btn.primary {
-  background: linear-gradient(45deg, var(--primary-color), var(--primary-dark));
+  background: white;
+  color: #4db6ac;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
-.btn.float {
-  background: rgba(77, 182, 172, 0.1);
-  color: var(--primary-dark);
-  border: 1px solid rgba(77, 182, 172, 0.3);
+.btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
 }
 
-.btn.glow::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 50%);
-  opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;
+.btn.secondary {
+  background: rgba(255,255,255,0.2);
+  color: white;
+  border: 2px solid white;
+  backdrop-filter: blur(10px);
 }
 
-.btn.glow:hover::after {
-  opacity: 1;
-  animation: glow-rotate 2s infinite linear;
+.btn.secondary:hover {
+  background: rgba(255,255,255,0.3);
+  transform: translateY(-2px);
 }
 
-@keyframes glow-rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* Floating animations */
-.floating {
-  animation: float 6s ease-in-out infinite;
-}
-
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
-}
-
-/* Floating badges */
-.floating-elements {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.float-badge {
-  position: absolute;
-  background: rgba(45,200,150,0.1);
-  backdrop-filter: blur(4px);
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  color: #9fd2c2;
-  animation: badgeFloat 4s ease-in-out infinite;
-}
-
-.float-badge.top {
-  top: 10%;
-  right: -20px;
-  animation-delay: -1s;
-}
-
-.float-badge.bottom {
-  bottom: 10%;
-  left: -20px;
-  animation-delay: -2s;
-}
-
+/* Sections */
 @keyframes badgeFloat {
   0%, 100% { transform: translate(0, 0) rotate(-2deg); }
   50% { transform: translate(5px, -5px) rotate(2deg); }

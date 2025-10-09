@@ -1,0 +1,229 @@
+/* ==========================================================================
+   RESPONSIVE DESIGN - Desktop & Laptop Optimization
+   ========================================================================== */
+
+/* ==========================================================================
+   BREAKPOINTS (Desktop focused)
+   - Small Laptop: 1024px - 1366px
+   - Standard Laptop: 1366px - 1920px
+   - Large Desktop: > 1920px
+   ========================================================================== */
+
+/* ==========================================================================
+   CONTAINER
+   ========================================================================== */
+
+.container {
+  width: 100%;
+  max-width: 1400px;
+  padding-left: 40px;
+  padding-right: 40px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (min-width: 1920px) {
+  .container {
+    max-width: 1600px;
+  }
+}
+
+/* ==========================================================================
+   PRODUCT CARD GRID
+   ========================================================================== */
+
+.product-grid {
+  display: grid;
+  gap: 24px;
+  padding: 20px;
+}
+
+/* Small Laptop: 2 columns */
+@media (min-width: 1024px) and (max-width: 1366px) {
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Standard Laptop: 3 columns */
+@media (min-width: 1366px) and (max-width: 1920px) {
+  .product-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Large Desktop: 4 columns */
+@media (min-width: 1920px) {
+  .product-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ==========================================================================
+   BOOKING FORM MODAL
+   ========================================================================== */
+
+.ant-modal {
+  max-width: 900px;
+}
+
+@media (min-width: 1920px) {
+  .ant-modal {
+    max-width: 1000px;
+  }
+}
+
+/* ==========================================================================
+   CART PAGE
+   ========================================================================== */
+
+.cart-container {
+  padding: 30px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.cart-content {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 30px;
+}
+
+@media (max-width: 1366px) {
+  .cart-content {
+    grid-template-columns: 1fr 350px;
+    gap: 20px;
+  }
+}
+
+/* ==========================================================================
+   STATION DETAIL
+   ========================================================================== */
+
+.station-detail-container {
+  padding: 30px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.station-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.station-map {
+  height: 500px;
+  border-radius: 8px;
+}
+
+@media (min-width: 1920px) {
+  .station-map {
+    height: 600px;
+  }
+}
+
+/* ==========================================================================
+   HOME PAGE
+   ========================================================================== */
+
+.hero-section {
+  min-height: 600px;
+  padding: 60px 40px;
+}
+
+@media (min-width: 1920px) {
+  .hero-section {
+    min-height: 700px;
+    padding: 80px 60px;
+  }
+}
+
+/* ==========================================================================
+   VEHICLE LIST PAGE
+   ========================================================================== */
+
+.vehicle-filters {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* ==========================================================================
+   SMOOTH SCROLLING
+   ========================================================================== */
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* ==========================================================================
+   ACCESSIBILITY
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ==========================================================================
+   PRINT STYLES
+   ========================================================================== */
+
+@media print {
+  .navbar,
+  .ant-btn,
+  .cart-actions,
+  .ant-modal-mask,
+  .ant-notification {
+    display: none !important;
+  }
+  
+  .cart-item,
+  .product-card {
+    page-break-inside: avoid;
+  }
+}
+
+/* ==========================================================================
+   LARGE SCREEN OPTIMIZATION
+   ========================================================================== */
+
+@media (min-width: 1920px) {
+  body {
+    font-size: 16px;
+  }
+  
+  h1 {
+    font-size: 42px;
+  }
+  
+  h2 {
+    font-size: 32px;
+  }
+  
+  h3 {
+    font-size: 24px;
+  }
+  
+  .ant-card {
+    font-size: 15px;
+  }
+  
+  .ant-btn-lg {
+    height: 48px;
+    font-size: 16px;
+    padding: 12px 24px;
+  }
+}
+
