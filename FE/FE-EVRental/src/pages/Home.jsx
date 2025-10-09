@@ -2,13 +2,10 @@ import React from "react";
 import { Link } from "react-router-dom";
 import "../styles/Home.css";
 import "../styles/media.css";
-import VideoBackground from "../components/VideoBackground";
 import stations from "../data/stations";
 import vehicles from "../data/vehicles";
 
 // Using placeholder images and direct links to product images
-const heroFallback =
-  "https://images.unsplash.com/photo-1622981515183-6f4d9e25e2a3?auto=format&fit=crop&w=1920&q=80";
 const bikeImg1 = vehicles[0].image; // VinFast Klara S
 const bikeImg2 = vehicles[1].image; // DatBike Weaver 200
 const bikeImg3 = vehicles[2].image; // VinFast Feliz S
@@ -46,46 +43,22 @@ export default function Home() {
   return (
     <div className="template-root">
       <section className="template-hero">
-        <VideoBackground fallbackImage={heroFallback} />
-        <div className="dark-overlay"></div>
-        <div className="bg-pattern"></div>
         <div className="hero-inner ev-container">
-          <div className="hero-text scroll-reveal fade-up">
+          <div className="hero-text">
             <h1>Thuê xe máy điện - Khám phá thành phố</h1>
             <p className="lead">
               Nhanh chóng tìm điểm thuê gần bạn, đặt xe và di chuyển — thân
               thiện với môi trường, giá cả phải chăng và thuận tiện.
             </p>
             <div className="hero-ctas">
-              <Link className="btn primary glow" to="/stations">
+              <Link className="btn primary" to="/stations">
                 Tìm điểm thuê
               </Link>
-              <Link className="btn float" to="/vehicles">
+              <Link className="btn secondary" to="/vehicles">
                 Xem xe máy điện
               </Link>
             </div>
           </div>
-          <div className="hero-visual scroll-reveal fade-left">
-            <div className="bike-card floating">
-              <div className="bike-top">VinFast Klara S</div>
-              <div
-                className="bike-img"
-                style={{ backgroundImage: `url(${bikeImg1})` }}
-              />
-              <div className="bike-meta">
-                Hiện đại • Phạm vi 120km • Tiện lợi
-              </div>
-              <div className="card-shine"></div>
-            </div>
-            <div className="floating-elements">
-              <div className="float-badge top">Chất lượng cao</div>
-              <div className="float-badge bottom">Hỗ trợ 24/7</div>
-            </div>
-          </div>
-        </div>
-        <div className="scroll-indicator">
-          <div className="mouse"></div>
-          <span>Cuộn xuống để khám phá</span>
         </div>
       </section>
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { formatPrice, formatDate } from "../utils/helpers";
 import "../styles/BookingSuccess.css";
 
 export default function BookingSuccess() {
@@ -12,23 +13,6 @@ export default function BookingSuccess() {
     const foundBooking = bookings.find((b) => b.bookingId === bookingId);
     setBooking(foundBooking);
   }, [bookingId]);
-
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(price * 1000);
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
 
   if (!booking) {
     return (
