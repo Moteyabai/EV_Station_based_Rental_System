@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useCart } from "../contexts/CartContext";
+import { formatPrice, formatDate } from "../utils/helpers";
 import "../styles/Cart.css";
 
 export default function Cart() {
@@ -25,21 +26,6 @@ export default function Cart() {
       </div>
     );
   }
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  };
-
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(price * 1000);
-  };
 
   return (
     <div className="cart-container">
@@ -94,13 +80,6 @@ export default function Cart() {
                     <span className="label">📍 Điểm nhận:</span>
                     <span>
                       {item.rentalDetails.pickupStation?.name || "Chưa chọn"}
-                    </span>
-                  </div>
-
-                  <div className="rental-info">
-                    <span className="label">📍 Điểm trả:</span>
-                    <span>
-                      {item.rentalDetails.returnStation?.name || "Chưa chọn"}
                     </span>
                   </div>
 

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import vehicles from "../data/vehicles";
 import "../styles/Vehicles.css";
 import { useCart } from "../contexts/CartContext";
+import BookingForm from "../components/BookingForm";
 
 export default function Vehicles() {
   const [filterType, setFilterType] = useState("all");
@@ -11,6 +12,8 @@ export default function Vehicles() {
   const [brandFilter, setBrandFilter] = useState("all");
   const { addToCart } = useCart();
   const navigate = useNavigate();
+  const [showBookingForm, setShowBookingForm] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
 
   // Get unique brands
   const brands = useMemo(() => {
@@ -138,8 +141,11 @@ export default function Vehicles() {
                       alt={vehicle.name}
                       className="vehicle-image"
                       onError={(e) => {
-                        console.log(`Failed to load image for vehicle: ${vehicle.name}`);
-                        e.target.src = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60';
+                        console.log(
+                          `Failed to load image for vehicle: ${vehicle.name}`
+                        );
+                        e.target.src =
+                          "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60";
                       }}
                     />
                     <div className="vehicle-badge">{vehicle.brand}</div>
@@ -156,7 +162,7 @@ export default function Vehicles() {
                       </span>
                     </div>
                     <div className="vehicle-price">
-                      {vehicle.price.toLocaleString('vi-VN')}
+                      {vehicle.price.toLocaleString("vi-VN")}
                       <span className="price-unit">{vehicle.priceUnit}</span>
                     </div>
                     <div className="vehicle-specs">
@@ -182,8 +188,8 @@ export default function Vehicles() {
                       </Link>
                       <button
                         onClick={() => {
-                          addToCart(vehicle);
-                          navigate("/cart");
+                          setSelectedVehicle(vehicle);
+                          setShowBookingForm(true);
                         }}
                         className="btn rent-now"
                       >
@@ -197,6 +203,21 @@ export default function Vehicles() {
           )}
         </div>
       </div>
+
+      {/* Booking Form Modal */}
+      {showBookingForm && selectedVehicle && (
+        <BookingForm
+          vehicle={selectedVehicle}
+          onSubmit={async (formData, rentalDetails) => {
+            setShowBookingForm(false);
+            navigate("/cart");
+          }}
+          onCancel={() => {
+            setShowBookingForm(false);
+            setSelectedVehicle(null);
+          }}
+        />
+      )}
     </div>
   );
 }

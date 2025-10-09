@@ -6,7 +6,6 @@ import {
   DatePicker,
   TimePicker,
   Select,
-  Checkbox,
   Button,
   Typography,
   Space,
@@ -15,24 +14,20 @@ import {
   Card,
   Divider,
   Alert,
-  InputNumber,
   message,
+  notification,
 } from "antd";
 import {
   CalendarOutlined,
-  ClockCircleOutlined,
   CarOutlined,
   DollarOutlined,
-  CheckCircleOutlined,
+  ShoppingCartOutlined,
+  PlusCircleOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useCart } from "../contexts/CartContext";
-import { mockStations, serviceOptions } from "../constants/mockData";
-import {
-  calculateRentalDays,
-  calculateTotalPrice,
-  formatPrice,
-} from "../utils/helpers";
+import stations from "../data/stations";
+import { calculateRentalDays, formatPrice } from "../utils/helpers";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -44,6 +39,10 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [totalPrice, setTotalPrice] = useState(0);
   const [rentalDays, setRentalDays] = useState(0);
+
+  // Debug: log stations data
+  console.log("Stations data:", stations);
+  console.log("Number of stations:", stations?.length);
 
   // Giữ nguyên logic state như cũ để tránh lỗi
   const [formData, setFormData] = useState({
@@ -63,13 +62,6 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
       returnStationId: "",
       specialRequests: "",
     },
-    additionalServices: {
-      insurance: false,
-      gps: false,
-      childSeat: false,
-      wifi: false,
-      extraDriver: false,
-    },
   });
 
   // Calculate rental duration
@@ -83,7 +75,7 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
     return 1;
   };
 
-  // Calculate total price with services
+  // Calculate total price (base price x days)
   const getTotalPrice = () => {
     const days = getRentalDays();
     const basePrice =
@@ -91,23 +83,14 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
         ? parseFloat(vehicle.price.replace(/[^\d]/g, ""))
         : vehicle.price;
 
-    const selectedServices = Object.entries(formData.additionalServices)
-      .filter(([_, isSelected]) => isSelected)
-      .map(([serviceId]) => serviceOptions.find((s) => s.id === serviceId))
-      .filter(Boolean);
-
-    return calculateTotalPrice(basePrice, days, selectedServices);
+    return basePrice * days;
   };
 
-  // Cập nhật giá khi thay đổi ngày hoặc dịch vụ
+  // Cập nhật giá khi thay đổi ngày
   useEffect(() => {
     setRentalDays(getRentalDays());
     setTotalPrice(getTotalPrice());
-  }, [
-    formData.rentalInfo.pickupDate,
-    formData.rentalInfo.returnDate,
-    formData.additionalServices,
-  ]);
+  }, [formData.rentalInfo.pickupDate, formData.rentalInfo.returnDate]);
 
   // Giữ nguyên logic validate
   const validateForm = () => {
@@ -186,13 +169,6 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
           returnStationId: values.returnStationId || "",
           specialRequests: values.specialRequests || "",
         },
-        additionalServices: {
-          ...formData.additionalServices,
-          ...(values.additionalServices || []).reduce((acc, service) => {
-            acc[service] = true;
-            return acc;
-          }, {}),
-        },
       };
 
       setFormData(updatedFormData);
@@ -206,7 +182,6 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
           (s) => s.id === updatedFormData.rentalInfo.returnStationId
         ),
         days: rentalDays,
-        additionalServices: updatedFormData.additionalServices,
         customerInfo: updatedFormData.customerInfo,
         totalPrice: totalPrice,
       };
@@ -214,12 +189,43 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
       // Add to cart
       addToCart(vehicle, rentalDetails);
 
-      // Call onSubmit callback if provided
-      if (onSubmit) {
-        await onSubmit(updatedFormData, rentalDetails);
-      }
+      // Show success notification with actions
+      notification.success({
+        message: "✅ Đã thêm vào giỏ hàng!",
+        description: `Xe ${vehicle.name} đã được thêm vào giỏ hàng của bạn.`,
+        duration: 6,
+        btn: (
+          <Space>
+            <Button
+              type="primary"
+              size="small"
+              icon={<ShoppingCartOutlined />}
+              onClick={() => {
+                notification.destroy();
+                if (onSubmit) {
+                  onSubmit(updatedFormData, rentalDetails);
+                }
+              }}
+              style={{ backgroundColor: "#4db6ac", borderColor: "#4db6ac" }}
+            >
+              Xem giỏ hàng
+            </Button>
+            <Button
+              size="small"
+              icon={<PlusCircleOutlined />}
+              onClick={() => {
+                notification.destroy();
+                onCancel();
+              }}
+            >
+              Tiếp tục chọn xe
+            </Button>
+          </Space>
+        ),
+      });
 
-      message.success("Đặt xe thành công!");
+      // Reset form
+      form.resetFields();
     } catch (error) {
       console.error("Error submitting booking:", error);
       message.error("Có lỗi xảy ra. Vui lòng thử lại.");
@@ -230,10 +236,6 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
 
   const disabledDate = (current) => {
     return current && current < dayjs().startOf("day");
-  };
-
-  const formatPrice = (price) => {
-    return price.toLocaleString("vi-VN") + "đ";
   };
 
   return (
@@ -300,16 +302,22 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
                 ]}
               >
                 <Select placeholder="Chọn điểm nhận xe">
-                  {stations.map((station) => (
-                    <Option key={station.id} value={station.id}>
-                      <div>
-                        <div style={{ fontWeight: "bold" }}>{station.name}</div>
-                        <div style={{ fontSize: "12px", color: "#999" }}>
-                          {station.address}
+                  {stations && stations.length > 0 ? (
+                    stations.map((station) => (
+                      <Option key={station.id} value={station.id}>
+                        <div>
+                          <div style={{ fontWeight: "bold" }}>
+                            {station.name}
+                          </div>
+                          <div style={{ fontSize: "12px", color: "#999" }}>
+                            {station.address}
+                          </div>
                         </div>
-                      </div>
-                    </Option>
-                  ))}
+                      </Option>
+                    ))
+                  ) : (
+                    <Option disabled>Không có trạm nào</Option>
+                  )}
                 </Select>
               </Form.Item>
             </Col>
@@ -322,16 +330,22 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
                 ]}
               >
                 <Select placeholder="Chọn điểm trả xe">
-                  {stations.map((station) => (
-                    <Option key={station.id} value={station.id}>
-                      <div>
-                        <div style={{ fontWeight: "bold" }}>{station.name}</div>
-                        <div style={{ fontSize: "12px", color: "#999" }}>
-                          {station.address}
+                  {stations && stations.length > 0 ? (
+                    stations.map((station) => (
+                      <Option key={station.id} value={station.id}>
+                        <div>
+                          <div style={{ fontWeight: "bold" }}>
+                            {station.name}
+                          </div>
+                          <div style={{ fontSize: "12px", color: "#999" }}>
+                            {station.address}
+                          </div>
                         </div>
-                      </div>
-                    </Option>
-                  ))}
+                      </Option>
+                    ))
+                  ) : (
+                    <Option disabled>Không có trạm nào</Option>
+                  )}
                 </Select>
               </Form.Item>
             </Col>
@@ -413,41 +427,6 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
           </Form.Item>
         </Card>
 
-        {/* Additional Services */}
-        <Card
-          title={
-            <Space>
-              <CheckCircleOutlined />
-              <span>Dịch vụ bổ sung</span>
-            </Space>
-          }
-          style={{ marginBottom: 24 }}
-        >
-          <Form.Item name="additionalServices">
-            <Checkbox.Group style={{ width: "100%" }}>
-              <Row gutter={[16, 16]}>
-                {serviceOptions.map((service) => (
-                  <Col span={24} key={service.id}>
-                    <Checkbox value={service.id}>
-                      <Space direction="vertical" size={0}>
-                        <Space>
-                          <Text strong>{service.name}</Text>
-                          <Text type="success" strong>
-                            +{formatPrice(service.price)}/ngày
-                          </Text>
-                        </Space>
-                        <Text type="secondary" style={{ fontSize: "12px" }}>
-                          {service.description}
-                        </Text>
-                      </Space>
-                    </Checkbox>
-                  </Col>
-                ))}
-              </Row>
-            </Checkbox.Group>
-          </Form.Item>
-        </Card>
-
         {/* Price Summary */}
         <Card
           title={
@@ -458,27 +437,27 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
           }
           style={{ marginBottom: 24 }}
         >
-          <Space direction="vertical" style={{ width: "100%" }}>
+          <Space direction="vertical" style={{ width: "100%" }} size="middle">
+            <Row justify="space-between">
+              <Text>Giá thuê mỗi ngày:</Text>
+              <Text strong>
+                {formatPrice(
+                  typeof vehicle.price === "string"
+                    ? parseFloat(vehicle.price.replace(/[^\d]/g, ""))
+                    : vehicle.price
+                )}
+              </Text>
+            </Row>
             <Row justify="space-between">
               <Text>Số ngày thuê:</Text>
               <Text strong>{rentalDays} ngày</Text>
             </Row>
-            <Row justify="space-between">
-              <Text>Giá thuê xe:</Text>
-              <Text>
-                {formatPrice(
-                  (typeof vehicle.price === "string"
-                    ? parseFloat(vehicle.price.replace(/[^\d]/g, ""))
-                    : vehicle.price) * rentalDays
-                )}
-              </Text>
-            </Row>
             <Divider style={{ margin: "8px 0" }} />
             <Row justify="space-between">
               <Text strong style={{ fontSize: "16px" }}>
-                Tổng cộng:
+                Tổng tiền:
               </Text>
-              <Text strong style={{ fontSize: "18px", color: "#f50" }}>
+              <Text strong style={{ fontSize: "20px", color: "#4db6ac" }}>
                 {formatPrice(totalPrice)}
               </Text>
             </Row>

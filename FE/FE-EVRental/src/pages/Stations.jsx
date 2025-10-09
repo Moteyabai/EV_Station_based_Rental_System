@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import StationFinder from "../components/StationFinder";
 import StationMap from "../components/StationMap";
 import stationsData from "../data/stations";
+import { calculateDistance } from "../utils/helpers";
 import "../styles/Pages.css";
 
 export default function Stations() {
@@ -33,8 +34,8 @@ export default function Stations() {
               const distance = calculateDistance(
                 location.lat,
                 location.lng,
-                station.coordinates.lat,
-                station.coordinates.lng
+                station.location.lat,
+                station.location.lng
               );
               return { ...station, distance };
             })
@@ -61,21 +62,6 @@ export default function Stations() {
       setUserLocation(defaultLocation);
       setStations(stationsData);
     }
-  };
-
-  // Hàm tính khoảng cách giữa 2 điểm (công thức Haversine)
-  const calculateDistance = (lat1, lng1, lat2, lng2) => {
-    const R = 6371; // Bán kính Trái Đất (km)
-    const dLat = ((lat2 - lat1) * Math.PI) / 180;
-    const dLng = ((lng2 - lng1) * Math.PI) / 180;
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLng / 2) *
-        Math.sin(dLng / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c; // Khoảng cách tính bằng km
   };
 
   const handleStationSelect = (station) => {
