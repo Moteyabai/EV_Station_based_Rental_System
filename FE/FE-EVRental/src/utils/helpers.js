@@ -23,17 +23,19 @@ export const calculateDistance = (lat1, lng1, lat2, lng2) => {
 /**
  * Format price based on currency unit
  * @param {number} price - Price value
- * @param {string} priceUnit - Price unit (VND, USD, etc.)
+ * @param {string} priceUnit - Price unit (VNĐ/ngày, k/ngày, etc.)
  * @returns {string} Formatted price string
  */
-export const formatPrice = (price, priceUnit = "VND") => {
-  if (priceUnit.includes("VND")) {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(price * 1000);
+export const formatPrice = (price, priceUnit = "VNĐ/ngày") => {
+  // If price unit contains 'k' or 'K', multiply by 1000
+  if (priceUnit && (priceUnit.includes("k") || priceUnit.includes("K"))) {
+    const formattedNumber = new Intl.NumberFormat("vi-VN").format(price * 1000);
+    return `${formattedNumber} VNĐ`;
   }
-  return `$${price}`;
+  
+  // Format number with Vietnamese locale and add VNĐ
+  const formattedNumber = new Intl.NumberFormat("vi-VN").format(price);
+  return `${formattedNumber} VNĐ`;
 };
 
 /**

@@ -1,17 +1,17 @@
 const stations = [
   {
     id: 's1',
-    name: 'Central Park EV Station',
-    address: '123 Park Avenue, City Center, 10001',
-    description: 'Our flagship station with the largest selection of EVs and charging facilities. Located near Central Park with easy access to major highways.',
+    name: 'Trạm EV Công Viên Tao Đàn',
+    address: '123 Trương Định, Phường Bến Thành, Quận 1, TP.HCM',
+    description: 'Trạm thuê xe điện lớn nhất với nhiều lựa chọn xe và trạm sạc hiện đại. Nằm gần công viên Tao Đàn, dễ dàng di chuyển đến các tuyến đường chính.',
     location: {
-      lat: 40.785091,
-      lng: -73.968285
+      lat: 10.773996,
+      lng: 106.704468
     },
     availableVehicles: 15,
     chargingStations: 8,
     openingHours: '24/7',
-    amenities: ['Restrooms', 'Cafe', 'Waiting Lounge', 'WiFi'],
+    amenities: ['Nhà vệ sinh', 'Quán cà phê', 'Phòng chờ', 'WiFi miễn phí'],
     images: {
       exterior: "https://images.unsplash.com/photo-1593941707285-aae966bad0cf?auto=format&fit=crop&w=800&q=60",
       chargers: "https://images.unsplash.com/photo-1635418421745-5e29b738d8e6?auto=format&fit=crop&w=800&q=60",
@@ -52,17 +52,17 @@ const stations = [
   },
   {
     id: 's2',
-    name: 'Riverside EV Hub',
-    address: '456 Riverside Drive, Waterfront District, 10002',
-    description: 'Scenic location by the river with premium EV options. Perfect starting point for weekend getaways.',
+    name: 'Trạm EV Bờ Sông Sài Gòn',
+    address: '456 Tôn Đức Thắng, Phường Bến Nghé, Quận 1, TP.HCM',
+    description: 'Vị trí đẹp bên bờ sông Sài Gòn với các lựa chọn xe điện cao cấp. Điểm khởi đầu hoàn hảo cho các chuyến đi cuối tuần.',
     location: {
-      lat: 40.803749,
-      lng: -73.947253
+      lat: 10.787932,
+      lng: 106.705169
     },
     availableVehicles: 8,
     chargingStations: 4,
-    openingHours: '7:00 AM - 10:00 PM',
-    amenities: ['Restrooms', 'Convenience Store', 'WiFi'],
+    openingHours: '7:00 - 22:00',
+    amenities: ['Nhà vệ sinh', 'Cửa hàng tiện lợi', 'WiFi miễn phí'],
     images: {
       exterior: "https://images.unsplash.com/photo-1594818379496-da1e345b812a?auto=format&fit=crop&w=800&q=60",
       chargers: "https://images.unsplash.com/photo-1637596331299-aa86e822f7bb?auto=format&fit=crop&w=800&q=60",
@@ -103,17 +103,17 @@ const stations = [
   },
   {
     id: 's3',
-    name: 'Downtown EV Center',
-    address: '789 Main Street, Downtown, 10003',
-    description: 'Conveniently located in the heart of downtown. Perfect for business travelers and city explorers.',
+    name: 'Trạm EV Trung Tâm Quận 1',
+    address: '789 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP.HCM',
+    description: 'Tọa lạc tại trung tâm thành phố sầm uất. Lý tưởng cho khách du lịch công tác và người khám phá đô thị.',
     location: {
-      lat: 40.712776,
-      lng: -74.005974
+      lat: 10.774929,
+      lng: 106.701736
     },
     availableVehicles: 12,
     chargingStations: 6,
-    openingHours: '6:00 AM - 12:00 AM',
-    amenities: ['Restrooms', 'Business Center', 'Coffee Shop', 'WiFi'],
+    openingHours: '6:00 - 24:00',
+    amenities: ['Nhà vệ sinh', 'Trung tâm dịch vụ', 'Quán cà phê', 'WiFi miễn phí'],
     images: {
       exterior: "https://images.unsplash.com/photo-1593941707882-a5bfb6f5343d?auto=format&fit=crop&w=800&q=60",
       chargers: "https://images.unsplash.com/photo-1662982592268-5b1f19359b99?auto=format&fit=crop&w=800&q=60", 
@@ -154,17 +154,17 @@ const stations = [
   },
   {
     id: 's4',
-    name: 'Tech District Station',
-    address: '101 Innovation Way, Tech District, 10004',
-    description: 'Located in the heart of the tech district, with the latest EV models and cutting-edge charging technology.',
+    name: 'Trạm EV Khu Công Nghệ Cao',
+    address: '101 Đường D1, Khu Công Nghệ Cao, Quận 9, TP.HCM',
+    description: 'Tọa lạc tại trung tâm khu công nghệ cao, với các mẫu xe điện mới nhất và công nghệ sạc tiên tiến.',
     location: {
-      lat: 40.741895,
-      lng: -73.989308
+      lat: 10.850799,
+      lng: 106.762587
     },
     availableVehicles: 10,
     chargingStations: 8,
     openingHours: '24/7',
-    amenities: ['Restrooms', 'Coworking Space', 'Coffee Bar', 'WiFi'],
+    amenities: ['Nhà vệ sinh', 'Không gian làm việc chung', 'Quầy cà phê', 'WiFi miễn phí'],
     images: {
       exterior: "https://images.unsplash.com/photo-1635769398371-78d717a1c06b?auto=format&fit=crop&w=800&q=60",
       chargers: "https://images.unsplash.com/photo-1580275266003-bfb5703a0376?auto=format&fit=crop&w=800&q=60",
@@ -195,17 +195,17 @@ const stations = [
   },
   {
     id: 's5',
-    name: 'Airport EV Terminal',
-    address: '200 Airport Road, Airport District, 10005',
-    description: 'Conveniently located near the airport for travelers needing immediate transportation.',
+    name: 'Trạm EV Sân Bay Tân Sơn Nhất',
+    address: '200 Trường Sơn, Phường 2, Quận Tân Bình, TP.HCM',
+    description: 'Vị trí thuận tiện gần sân bay cho khách du lịch cần phương tiện di chuyển ngay lập tức.',
     location: {
-      lat: 40.641312,
-      lng: -73.778137
+      lat: 10.818463,
+      lng: 106.658676
     },
     availableVehicles: 20,
     chargingStations: 10,
     openingHours: '24/7',
-    amenities: ['Restrooms', 'Luggage Storage', 'Shuttle Service', 'WiFi'],
+    amenities: ['Nhà vệ sinh', 'Lưu trữ hành lý', 'Dịch vụ đưa đón', 'WiFi miễn phí'],
     images: {
       exterior: "https://images.unsplash.com/photo-1620494697507-606467e30056?auto=format&fit=crop&w=800&q=60",
       chargers: "https://images.unsplash.com/photo-1591770184880-0adc4b59a381?auto=format&fit=crop&w=800&q=60",

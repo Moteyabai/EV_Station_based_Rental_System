@@ -2,15 +2,18 @@ import React, { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import vehicles from "../data/vehicles";
 import { useCart } from "../contexts/CartContext";
+import BookingForm from "../components/BookingForm";
+import { formatPrice } from "../utils/helpers";
 
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart, getItemCount } = useCart();
-  
+
   const vehicle = vehicles.find((v) => v.id === id);
-  
+
   const [showBookingSuccess, setShowBookingSuccess] = useState(false);
+  const [showBookingForm, setShowBookingForm] = useState(false);
 
   // Nếu không tìm thấy xe
   if (!vehicle) {
@@ -29,11 +32,15 @@ export default function ProductDetail() {
 
   // Xử lý thuê xe
   const handleRentNow = () => {
+    setShowBookingForm(true);
+  };
+
+  const handleBookingSubmit = async (formData, rentalDetails) => {
     try {
-      addToCart(vehicle);
+      setShowBookingForm(false);
       setShowBookingSuccess(true);
-      
-      // Tự động ẩn thông báo sau 3 giây
+
+      // Tự động ẩn thông báo sau 2 giây và chuyển đến giỏ hàng
       setTimeout(() => {
         setShowBookingSuccess(false);
         navigate("/cart");
@@ -43,57 +50,72 @@ export default function ProductDetail() {
     }
   };
 
-  // Format giá tiền
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat("vi-VN").format(price);
-  };
-
   // Lấy màu thương hiệu
   const getBrandColor = (brand) => {
     switch (brand?.toLowerCase()) {
-      case 'vinfast': return '#1e40af';
-      case 'datbike': return '#059669'; 
-      default: return '#6b7280';
+      case "vinfast":
+        return "#1e40af";
+      case "datbike":
+        return "#059669";
+      default:
+        return "#6b7280";
     }
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-      padding: '20px 0'
-    }}>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)",
+        padding: "20px 0",
+      }}
+    >
       {/* Thanh điều hướng */}
-      <div style={{
-        background: 'white',
-        borderBottom: '1px solid #e2e8f0',
-        padding: '15px 0'
-      }}>
-        <div style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          padding: '0 20px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          fontSize: '14px'
-        }}>
-          <Link to="/" style={{color: '#6366f1', textDecoration: 'none'}}>Trang chủ</Link>
-          <span style={{color: '#9ca3af'}}>→</span>
-          <Link to="/vehicles" style={{color: '#6366f1', textDecoration: 'none'}}>Xe thuê</Link>
-          <span style={{color: '#9ca3af'}}>→</span>
-          <span style={{color: '#374151', fontWeight: '500'}}>{vehicle.name}</span>
+      <div
+        style={{
+          background: "white",
+          borderBottom: "1px solid #e2e8f0",
+          padding: "15px 0",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: "1200px",
+            margin: "0 auto",
+            padding: "0 20px",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            fontSize: "14px",
+          }}
+        >
+          <Link to="/" style={{ color: "#6366f1", textDecoration: "none" }}>
+            Trang chủ
+          </Link>
+          <span style={{ color: "#9ca3af" }}>→</span>
+          <Link
+            to="/vehicles"
+            style={{ color: "#6366f1", textDecoration: "none" }}
+          >
+            Xe thuê
+          </Link>
+          <span style={{ color: "#9ca3af" }}>→</span>
+          <span style={{ color: "#374151", fontWeight: "500" }}>
+            {vehicle.name}
+          </span>
         </div>
       </div>
 
-      <div style={{maxWidth: '1200px', margin: '0 auto', padding: '0 20px'}}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '40px',
-          padding: '40px 0',
-          alignItems: 'start'
-        }}>
+      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "40px",
+            padding: "40px 0",
+            alignItems: "start",
+          }}
+        >
           {/* Phần ảnh xe */}
           <div className="vehicle-image-section">
             <div className="main-image">
@@ -101,10 +123,14 @@ export default function ProductDetail() {
                 src={vehicle.image}
                 alt={vehicle.name}
                 onError={(e) => {
-                  e.target.src = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60';
+                  e.target.src =
+                    "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60";
                 }}
               />
-              <div className="brand-badge" style={{ backgroundColor: getBrandColor(vehicle.brand) }}>
+              <div
+                className="brand-badge"
+                style={{ backgroundColor: getBrandColor(vehicle.brand) }}
+              >
                 {vehicle.brand}
               </div>
               {!vehicle.available && (
@@ -124,7 +150,9 @@ export default function ProductDetail() {
                 <span className="current-price">
                   {formatPrice(vehicle.price)}k
                 </span>
-                <span className="price-unit">/ {vehicle.priceUnit.split('/')[1]}</span>
+                <span className="price-unit">
+                  / {vehicle.priceUnit.split("/")[1]}
+                </span>
               </div>
             </div>
 
@@ -145,7 +173,7 @@ export default function ProductDetail() {
                     <span className="spec-value">{vehicle.specs.battery}</span>
                   </div>
                 </div>
-                
+
                 <div className="spec-item">
                   <div className="spec-icon">📏</div>
                   <div className="spec-content">
@@ -153,7 +181,7 @@ export default function ProductDetail() {
                     <span className="spec-value">{vehicle.specs.range}</span>
                   </div>
                 </div>
-                
+
                 <div className="spec-item">
                   <div className="spec-icon">⚡</div>
                   <div className="spec-content">
@@ -161,15 +189,17 @@ export default function ProductDetail() {
                     <span className="spec-value">{vehicle.specs.maxSpeed}</span>
                   </div>
                 </div>
-                
+
                 <div className="spec-item">
                   <div className="spec-icon">🔌</div>
                   <div className="spec-content">
                     <span className="spec-label">Thời gian sạc</span>
-                    <span className="spec-value">{vehicle.specs.chargingTime}</span>
+                    <span className="spec-value">
+                      {vehicle.specs.chargingTime}
+                    </span>
                   </div>
                 </div>
-                
+
                 <div className="spec-item">
                   <div className="spec-icon">⚖️</div>
                   <div className="spec-content">
@@ -187,16 +217,16 @@ export default function ProductDetail() {
                 onClick={handleRentNow}
                 disabled={!vehicle.available}
               >
-                {vehicle.available ? '� Thuê ngay' : 'Không có sẵn'}
+                {vehicle.available ? "� Thuê ngay" : "Không có sẵn"}
               </button>
-              
+
               <button
                 className="btn btn-secondary cart-btn"
-                onClick={() => navigate('/cart')}
+                onClick={() => navigate("/cart")}
               >
                 � Giỏ hàng ({getItemCount()})
               </button>
-              
+
               <Link to="/vehicles" className="btn btn-outline">
                 ← Quay lại danh sách
               </Link>
@@ -206,15 +236,21 @@ export default function ProductDetail() {
             <div className="vehicle-status">
               <div className="status-item">
                 <span className="status-label">Trạng thái:</span>
-                <span className={`status-value ${vehicle.available ? 'available' : 'unavailable'}`}>
-                  {vehicle.available ? '✅ Có sẵn' : '❌ Không có sẵn'}
+                <span
+                  className={`status-value ${
+                    vehicle.available ? "available" : "unavailable"
+                  }`}
+                >
+                  {vehicle.available ? "✅ Có sẵn" : "❌ Không có sẵn"}
                 </span>
               </div>
-              
+
               <div className="status-item">
                 <span className="status-label">Danh mục:</span>
                 <span className="status-value">
-                  {vehicle.category === 'scooter' ? '🛵 Xe máy điện' : vehicle.category}
+                  {vehicle.category === "scooter"
+                    ? "🛵 Xe máy điện"
+                    : vehicle.category}
                 </span>
               </div>
             </div>
@@ -233,6 +269,15 @@ export default function ProductDetail() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Booking Form Modal */}
+      {showBookingForm && (
+        <BookingForm
+          vehicle={vehicle}
+          onSubmit={handleBookingSubmit}
+          onCancel={() => setShowBookingForm(false)}
+        />
       )}
     </div>
   );
