@@ -21,6 +21,8 @@ namespace API.CustomServices
             services.AddScoped<AccountService>();
             services.AddScoped<IDDocumentRepository>();
             services.AddScoped<IDDocumentService>();
+            services.AddScoped<EVBikeRepository>();
+            services.AddScoped<EVBikeService>();
 
             services.AddAuthentication(options =>
             {
