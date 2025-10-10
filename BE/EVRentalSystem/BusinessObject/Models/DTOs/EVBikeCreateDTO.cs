@@ -1,13 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using Microsoft.AspNetCore.Http;
+using System.ComponentModel.DataAnnotations;
 
-namespace BusinessObject.Models
+namespace BusinessObject.Models.DTOs
 {
-    public class EVBike
+    public class EVBikeCreateDTO
     {
-        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int BikeID { get; set; }
-
         [Required(ErrorMessage = "Tên xe điện là bắt buộc")]
         [StringLength(100, ErrorMessage = "Tên xe điện không được quá 100 ký tự")]
         public string BikeName { get; set; }
@@ -26,20 +23,14 @@ namespace BusinessObject.Models
         public string Color { get; set; }
 
         [Required(ErrorMessage = "Hình ảnh mặt trước là bắt buộc")]
-        [Url(ErrorMessage = "Đường dẫn hình ảnh mặt trước không hợp lệ")]
-        public string FrontImg { get; set; }
+        public IFormFile FrontImg { get; set; }
 
         [Required(ErrorMessage = "Hình ảnh mặt sau là bắt buộc")]
-        [Url(ErrorMessage = "Đường dẫn hình ảnh mặt sau không hợp lệ")]
-        public string BackImg { get; set; }
+        public IFormFile BackImg { get; set; }
 
         [Required(ErrorMessage = "Số lượng là bắt buộc")]
         [Range(0, 1000, ErrorMessage = "Số lượng phải từ 0 đến 1000")]
         public int Quantity { get; set; }
-
-        [Required(ErrorMessage = "Số lần thuê là bắt buộc")]
-        [Range(0, int.MaxValue, ErrorMessage = "Số lần thuê không được âm")]
-        public int TimeRented { get; set; } = 0;
 
         [Required(ErrorMessage = "Mô tả là bắt buộc")]
         [StringLength(500, ErrorMessage = "Mô tả không được quá 500 ký tự")]
@@ -52,13 +43,5 @@ namespace BusinessObject.Models
         [Required(ErrorMessage = "Giá thuê theo ngày là bắt buộc")]
         [Range(0.01, 10000000, ErrorMessage = "Giá thuê phải từ 0.01 đến 10,000,000 VNĐ")]
         public decimal PricePerDay { get; set; }
-
-        [Required(ErrorMessage = "Trạng thái là bắt buộc")]
-        [Range(0, 1, ErrorMessage = "Trạng thái chỉ có thể là 0 (Không khả dụng) hoặc 1 (Khả dụng)")]
-        public int Status { get; set; } = 1; // 1: Available, 0: Unavailable
-
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
-        public DateTime UpdatedAt { get; set; } = DateTime.Now;
-        public virtual Brand Brand { get; set; }
     }
 }
