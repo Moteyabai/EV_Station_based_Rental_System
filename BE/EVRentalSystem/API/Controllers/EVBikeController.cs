@@ -147,5 +147,151 @@ namespace API.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
+        [HttpGet("GetBikeByID/{id}")]
+        [Authorize]
+        public async Task<ActionResult<EVBike>> GetBikeByID(int id)
+        {
+            try
+            {
+                var bike = await _evBikeService.GetByIdAsync(id);
+                if (bike == null)
+                {
+                    var res = new ResponseDTO();
+                    res.Message = "Không tìm thấy xe điện!";
+                    return NotFound(res);
+                }
+                return Ok(bike);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpPut("UpdateBike")]
+        [Authorize]
+        public async Task<ActionResult> UpdateBike([FromBody] EVBikeUpdateDTO eVBike)
+        {
+            //Check user permission
+            var permission = User.FindFirst(UserClaimTypes.RoleID).Value;
+            var res = new ResponseDTO();
+            if (permission != "3" && permission != "2")
+            {
+                res.Message = "Không có quyền truy cập!";
+                return Unauthorized(res);
+            }
+            if (!ModelState.IsValid)
+            {
+                res.Message = ModelState.ToString();
+                return BadRequest(res);
+            }
+            try
+            {
+                var existingBike = await _evBikeService.GetByIdAsync(eVBike.BikeID);
+                if (existingBike == null)
+                {
+                    res.Message = "Không tìm thấy xe điện!";
+                    return NotFound(res);
+                }
+
+                //Update bike image
+                // Upload images to Appwrite
+                var storage = new Storage(_appWriteClient);
+                var bucketID = "68dde8b0002f2952237f";
+                var projectID = _configuration.GetValue<string>("Appwrite:ProjectId");
+
+                List<string> perms = new List<string>() { Permission.Write(Appwrite.Role.Any()), Permission.Read(Appwrite.Role.Any()) };
+
+                //Upload Bike Front Image
+                var frontUID = Guid.NewGuid().ToString();
+                var front = InputFile.FromStream(
+                    eVBike.FrontImg.OpenReadStream(),
+                    eVBike.FrontImg.FileName,
+                    eVBike.FrontImg.ContentType
+                    );
+                var response = await storage.CreateFile(
+                            bucketID,
+                            frontUID,
+                            front,
+                            perms,
+                            null
+                            );
+
+                var frontID = response.Id;
+                var frontUrl = $"{_appWriteClient.Endpoint}/storage/buckets/{response.BucketId}/files/{frontID}/view?project={projectID}";
+                //Upload Bike Back Image
+                var backUID = Guid.NewGuid().ToString();
+                var back = InputFile.FromStream(
+                    eVBike.BackImg.OpenReadStream(),
+                    eVBike.BackImg.FileName,
+                    eVBike.BackImg.ContentType
+                    );
+                var response2 = await storage.CreateFile(
+                            bucketID,
+                            backUID,
+                            back,
+                            perms,
+                            null
+                            );
+                var backID = response2.Id;
+                var backUrl = $"{_appWriteClient.Endpoint}/storage/buckets/{response2.BucketId}/files/{backID}/view?project={projectID}";
+
+                // Update bike details
+                existingBike.BikeName = eVBike.BikeName;
+                existingBike.LicensePlate = eVBike.LicensePlate;
+                existingBike.BrandID = eVBike.BrandID;
+                existingBike.Color = eVBike.Color;
+                existingBike.Quantity = eVBike.Quantity;
+                existingBike.Description = eVBike.Description;
+                existingBike.BatteryCapacity = eVBike.BatteryCapacity;
+                existingBike.PricePerDay = eVBike.PricePerDay;
+                existingBike.Status = eVBike.Status;
+                existingBike.FrontImg = frontUrl;
+                existingBike.BackImg = backUrl;
+
+                await _evBikeService.UpdateAsync(existingBike);
+                res.Message = "Cập nhật xe thành công!";
+                return Ok(res);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpPut("UnactivateBike/{id}")]
+        [Authorize]
+        public async Task<ActionResult> UnactivateBike(int id)
+        {
+            //Check user permission
+            var permission = User.FindFirst(UserClaimTypes.RoleID).Value;
+            var res = new ResponseDTO();
+            if (permission != "3" && permission != "2")
+            {
+                res.Message = "Không có quyền truy cập!";
+                return Unauthorized(res);
+            }
+            try
+            {
+                var existingBike = await _evBikeService.GetByIdAsync(id);
+                if (existingBike == null)
+                {
+                    res.Message = "Không tìm thấy xe điện!";
+                    return NotFound(res);
+                }
+
+                // Update bike status to Unavailable
+                existingBike.Status = 0; // 0: Unavailable
+
+                await _evBikeService.UpdateAsync(existingBike);
+                res.Message = "Xe không còn hoạt động!";
+                return Ok(res);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
     }
 }

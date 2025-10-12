@@ -231,5 +231,125 @@ namespace API.Controllers
                 return StatusCode(500, "Internal server error: " + ex.Message);
             }
         }
+
+        [HttpPut("UpdateAccount")]
+        [Authorize]
+        public async Task<ActionResult<BusinessObject.Models.Account>> UpdateAccount([FromForm] AccountUpdateDTO accountUpdateDTO)
+        {
+            try
+            {
+                var res = new ResponseDTO();
+                var permission = User.FindFirst(UserClaimTypes.RoleID).Value;
+                var userID = int.Parse(User.FindFirst(UserClaimTypes.AccountID).Value);
+                if (permission != "3" && userID != accountUpdateDTO.AccountID)
+                {
+                    res.Message = "Không có quyền truy cập!";
+                    return Unauthorized(res);
+                }
+
+                var existingAcc = await _accountService.GetByIdAsync(accountUpdateDTO.AccountID);
+                if (existingAcc == null)
+                {
+                    res.Message = "Tài khoản không tồn tại!";
+                    return NotFound(res);
+                }
+                var storage = new Storage(_appWriteClient);
+                var bucketID = "68dde8b0002f2952237f";
+                var projectID = _configuration.GetValue<string>("Appwrite:ProjectId");
+                List<string> perms = new List<string>() { Permission.Write(Appwrite.Role.Any()), Permission.Read(Appwrite.Role.Any()) };
+                //Upload Avatar
+                if (accountUpdateDTO.Avatar != null)
+                {
+                    var avatarUID = Guid.NewGuid().ToString();
+                    var avatar = InputFile.FromStream(
+                        accountUpdateDTO.Avatar.OpenReadStream(),
+                        accountUpdateDTO.Avatar.FileName,
+                        accountUpdateDTO.Avatar.ContentType
+                        );
+                    var response = await storage.CreateFile(
+                                bucketID,
+                                avatarUID,
+                                avatar,
+                                perms,
+                                null
+                                );
+                    var avatarID = response.Id;
+                    var avatarUrl = $"{_appWriteClient.Endpoint}/storage/buckets/{response.BucketId}/files/{avatarID}/view?project={projectID}";
+                    existingAcc.Avatar = avatarUrl;
+                }
+
+                existingAcc.FullName = accountUpdateDTO.FullName;
+                existingAcc.Phone = accountUpdateDTO.PhoneNumber;
+
+                //If user want
+                await _accountService.UpdateAsync(existingAcc);
+                res.Message = "Cập nhật thành công!";
+                return Ok(res);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Internal server error: " + ex.Message);
+            }
+        }
+
+        [HttpGet("GetAccountById/{id}")]
+        [Authorize]
+        public async Task<ActionResult<BusinessObject.Models.Account>> GetAccountById(int id)
+        {
+            try
+            {
+                var permission = User.FindFirst(UserClaimTypes.RoleID).Value;
+                var userID = int.Parse(User.FindFirst(UserClaimTypes.AccountID).Value);
+                if (permission != "3" && userID != id)
+                {
+                    var res = new ResponseDTO();
+                    res.Message = "Không có quyền truy cập!";
+                    return Unauthorized(res);
+                }
+                var account = await _accountService.GetByIdAsync(id);
+                if (account == null)
+                {
+                    var res = new ResponseDTO();
+                    res.Message = "Tài khoản không tồn tại!";
+                    return NotFound(res);
+                }
+                return Ok(account);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Internal server error: " + ex.Message);
+            }
+        }
+
+        [HttpPut("SuspenseAccount/{id}")]
+        [Authorize]
+        public async Task<ActionResult> SuspensenseAccount(int id)
+        {
+            try
+            {
+                var res = new ResponseDTO();
+                var permission = User.FindFirst(UserClaimTypes.RoleID).Value;
+                if (permission != "3")
+                {
+                    res.Message = "Không có quyền truy cập!";
+                    return Unauthorized(res);
+                }
+                var existingAcc = await _accountService.GetByIdAsync(id);
+                if (existingAcc == null)
+                {
+                    res.Message = "Tài khoản không tồn tại!";
+                    return NotFound(res);
+                }
+
+                existingAcc.Status = 3; //Set status to suspended
+                await _accountService.DeleteAsync(id);
+                res.Message = "Tài khoản đạ bị khóa!";
+                return Ok(res);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Internal server error: " + ex.Message);
+            }
+        }
     }
 }
