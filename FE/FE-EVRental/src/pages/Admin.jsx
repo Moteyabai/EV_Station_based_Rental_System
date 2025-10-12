@@ -1,8 +1,20 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import '../styles/Admin.css';
 
 const Admin = () => {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [showAddStationModal, setShowAddStationModal] = useState(false);
+  const [newStation, setNewStation] = useState({
+    name: '',
+    address: '',
+    totalVehicles: 0,
+    chargingStations: 0
+  });
+  
   const [stats, setStats] = useState({
     totalVehicles: 125,
     activeRentals: 48,
@@ -18,6 +30,54 @@ const Admin = () => {
     { id: 1, name: 'VinFast Klara S', station: 'Quận 1', status: 'available', battery: 95, lastMaintenance: '2025-10-01' },
     { id: 2, name: 'DatBike Weaver 200', station: 'Quận 3', status: 'rented', battery: 78, lastMaintenance: '2025-09-28' },
     { id: 3, name: 'VinFast Feliz S', station: 'Quận 7', status: 'maintenance', battery: 45, lastMaintenance: '2025-10-05' },
+  ]);
+
+  const [stations, setStations] = useState([
+    { 
+      id: 's1', 
+      name: 'Trạm EV Công Viên Tao Đàn', 
+      address: '123 Trương Định, Phường Bến Thành, Quận 1, TP.HCM',
+      availableVehicles: 15,
+      totalVehicles: 20,
+      chargingStations: 8,
+      status: 'active'
+    },
+    { 
+      id: 's2', 
+      name: 'Trạm EV Bờ Sông Sài Gòn', 
+      address: '456 Tôn Đức Thắng, Phường Bến Nghé, Quận 1, TP.HCM',
+      availableVehicles: 8,
+      totalVehicles: 12,
+      chargingStations: 4,
+      status: 'active'
+    },
+    { 
+      id: 's3', 
+      name: 'Trạm EV Trung Tâm Quận 1', 
+      address: '789 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP.HCM',
+      availableVehicles: 12,
+      totalVehicles: 15,
+      chargingStations: 6,
+      status: 'active'
+    },
+    { 
+      id: 's4', 
+      name: 'Trạm EV Khu Công Nghệ Cao', 
+      address: '101 Đường D1, Khu Công Nghệ Cao, Quận 9, TP.HCM',
+      availableVehicles: 10,
+      totalVehicles: 12,
+      chargingStations: 8,
+      status: 'active'
+    },
+    { 
+      id: 's5', 
+      name: 'Trạm EV Sân Bay Tân Sơn Nhất', 
+      address: '200 Trường Sơn, Phường 2, Quận Tân Bình, TP.HCM',
+      availableVehicles: 18,
+      totalVehicles: 25,
+      chargingStations: 10,
+      status: 'maintenance'
+    },
   ]);
 
   const [customers, setCustomers] = useState([
@@ -44,6 +104,43 @@ const Admin = () => {
       { hour: '17-19h', usage: 93 },
     ]
   });
+
+  // Logout function
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  // Station management functions
+  const handleAddStation = () => {
+    if (!newStation.name || !newStation.address) {
+      alert('Vui lòng điền đầy đủ thông tin trạm');
+      return;
+    }
+
+    const station = {
+      id: `s${stations.length + 1}`,
+      name: newStation.name,
+      address: newStation.address,
+      availableVehicles: 0,
+      totalVehicles: parseInt(newStation.totalVehicles) || 0,
+      chargingStations: parseInt(newStation.chargingStations) || 0,
+      status: 'active'
+    };
+
+    setStations([...stations, station]);
+    setShowAddStationModal(false);
+    setNewStation({ name: '', address: '', totalVehicles: 0, chargingStations: 0 });
+    alert('✅ Đã thêm trạm mới thành công!');
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewStation(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   const renderDashboard = () => (
     <div className="dashboard-content">
@@ -131,74 +228,166 @@ const Admin = () => {
   const renderVehicleManagement = () => (
     <div className="management-content">
       <div className="section-header">
-        <h2>Quản lý đội xe & điểm thuê</h2>
-        <button className="btn-primary">+ Thêm xe mới</button>
+        <h2>Quản lý trạm thuê xe</h2>
+        <button className="btn-primary" onClick={() => setShowAddStationModal(true)}>
+          + Thêm trạm mới
+        </button>
       </div>
 
       <div className="filters">
         <select className="filter-select">
-          <option>Tất cả điểm</option>
-          <option>Quận 1</option>
-          <option>Quận 3</option>
-          <option>Quận 7</option>
-        </select>
-        <select className="filter-select">
           <option>Tất cả trạng thái</option>
-          <option>Khả dụng</option>
-          <option>Đang cho thuê</option>
-          <option>Bảo trì</option>
+          <option>Hoạt động</option>
+          <option>Không hoạt động</option>
         </select>
-        <input type="text" className="search-input" placeholder="Tìm kiếm xe..." />
+        <input type="text" className="search-input" placeholder="Tìm kiếm trạm..." />
       </div>
 
-      <div className="data-table">
-        <table>
+      {/* Stations Table */}
+      <div className="stations-table-container">
+        <table className="stations-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Tên xe</th>
-              <th>Điểm thuê</th>
+              <th>Trạm</th>
+              <th>Địa chỉ</th>
+              <th>Số lượng xe</th>
               <th>Trạng thái</th>
-              <th>Pin</th>
-              <th>Bảo trì gần nhất</th>
-              <th>Hành động</th>
+              <th>Thao tác</th>
             </tr>
           </thead>
           <tbody>
-            {vehicles.map((vehicle) => (
-              <tr key={vehicle.id}>
-                <td>#{vehicle.id}</td>
-                <td className="vehicle-name">{vehicle.name}</td>
-                <td>{vehicle.station}</td>
-                <td>
-                  <span className={`status-badge ${vehicle.status}`}>
-                    {vehicle.status === 'available' ? 'Khả dụng' : 
-                     vehicle.status === 'rented' ? 'Đang thuê' : 'Bảo trì'}
-                  </span>
-                </td>
-                <td>
-                  <div className="battery-indicator">
-                    <div 
-                      className="battery-fill" 
-                      style={{ 
-                        width: `${vehicle.battery}%`,
-                        backgroundColor: vehicle.battery > 60 ? '#4caf50' : 
-                                       vehicle.battery > 30 ? '#ff9800' : '#f44336'
-                      }}
-                    ></div>
-                    <span>{vehicle.battery}%</span>
-                  </div>
-                </td>
-                <td>{vehicle.lastMaintenance}</td>
-                <td>
-                  <button className="btn-action">Chi tiết</button>
-                  <button className="btn-action">Sửa</button>
-                </td>
-              </tr>
-            ))}
+            {stations.map((station) => {
+              const usageRate = ((station.totalVehicles - station.availableVehicles) / station.totalVehicles * 100);
+              return (
+                <tr key={station.id}>
+                  <td>
+                    <div className="station-name-cell">
+                      <div className="station-icon">�</div>
+                      <span>{station.name}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div className="address-cell">
+                      📍 {station.address}
+                    </div>
+                  </td>
+                  <td>
+                    <div className="vehicle-count-cell">
+                      <span className="count-value">
+                        {station.availableVehicles}/{station.totalVehicles}
+                      </span>
+                      <div className="mini-progress-bar">
+                        <div 
+                          className="mini-progress-fill"
+                          style={{ 
+                            width: `${usageRate}%`,
+                            backgroundColor: station.availableVehicles < 5 ? '#f44336' : 
+                                           station.availableVehicles < 10 ? '#ff9800' : '#4caf50'
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span className={`status-badge ${station.status}`}>
+                      {station.status === 'active' ? 'Hoạt động' : 'Không hoạt động'}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="table-actions">
+                      <button className="btn-table-action btn-view" title="Chi tiết">📊</button>
+                      <button className="btn-table-action btn-edit" title="Sửa">✏️</button>
+                      <button className="btn-table-action btn-manage" title="Quản lý xe">🏍️</button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
+
+      {/* Add Station Modal */}
+      {showAddStationModal && (
+        <div className="modal-overlay" onClick={() => setShowAddStationModal(false)}>
+          <div className="modal-content add-station-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>➕ Thêm trạm thuê xe mới</h2>
+              <button className="btn-close" onClick={() => setShowAddStationModal(false)}>✕</button>
+            </div>
+
+            <div className="modal-body">
+              <div className="form-group">
+                <label>Tên trạm <span className="required">*</span></label>
+                <input
+                  type="text"
+                  name="name"
+                  value={newStation.name}
+                  onChange={handleInputChange}
+                  placeholder="Ví dụ: Trạm EV Quận 1"
+                  className="form-input"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Địa chỉ <span className="required">*</span></label>
+                <textarea
+                  name="address"
+                  value={newStation.address}
+                  onChange={handleInputChange}
+                  placeholder="Nhập địa chỉ đầy đủ của trạm"
+                  className="form-textarea"
+                  rows="3"
+                  required
+                />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Số lượng xe</label>
+                  <input
+                    type="number"
+                    name="totalVehicles"
+                    value={newStation.totalVehicles}
+                    onChange={handleInputChange}
+                    placeholder="0"
+                    className="form-input"
+                    min="0"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Số trạm sạc</label>
+                  <input
+                    type="number"
+                    name="chargingStations"
+                    value={newStation.chargingStations}
+                    onChange={handleInputChange}
+                    placeholder="0"
+                    className="form-input"
+                    min="0"
+                  />
+                </div>
+              </div>
+
+              <div className="info-note">
+                <span className="note-icon">💡</span>
+                <p>Thông tin về số lượng xe và trạm sạc có thể cập nhật sau khi tạo trạm.</p>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={() => setShowAddStationModal(false)}>
+                Hủy
+              </button>
+              <button className="btn-confirm" onClick={handleAddStation}>
+                Thêm trạm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -451,7 +640,7 @@ const Admin = () => {
             onClick={() => setActiveTab('dashboard')}
           >
             <span className="nav-icon">📊</span>
-            Dashboard
+            Bảng phân tích
           </button>
           
           <button 
@@ -459,7 +648,7 @@ const Admin = () => {
             onClick={() => setActiveTab('vehicles')}
           >
             <span className="nav-icon">🏍️</span>
-            Quản lý xe
+            Các trạm thuê xe
           </button>
           
           <button 
@@ -488,7 +677,7 @@ const Admin = () => {
         </nav>
 
         <div className="admin-footer">
-          <button className="nav-item logout">
+          <button className="nav-item logout" onClick={handleLogout}>
             <span className="nav-icon">🚪</span>
             Đăng xuất
           </button>
@@ -499,7 +688,7 @@ const Admin = () => {
         <div className="admin-header">
           <h1>
             {activeTab === 'dashboard' && 'Dashboard'}
-            {activeTab === 'vehicles' && 'Quản lý Xe'}
+            {activeTab === 'vehicles' && 'Quản lý Trạm Thuê Xe'}
             {activeTab === 'customers' && 'Quản lý Khách hàng'}
             {activeTab === 'staff' && 'Quản lý Nhân viên'}
             {activeTab === 'reports' && 'Báo cáo & Phân tích'}
