@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Repositories.DBContext;
 
@@ -11,9 +12,11 @@ using Repositories.DBContext;
 namespace Repositories.Migrations
 {
     [DbContext(typeof(EVRenterDBContext))]
-    partial class EVRenterDBContextModelSnapshot : ModelSnapshot
+    [Migration("20251013082143_Add_Renter_Staff_Rental_FeedBack_Payment")]
+    partial class Add_Renter_Staff_Rental_FeedBack_Payment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -215,6 +218,9 @@ namespace Repositories.Migrations
                     b.Property<string>("Note")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("RenterID")
+                        .HasColumnType("int");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -226,50 +232,12 @@ namespace Repositories.Migrations
 
                     b.HasKey("DocumentID");
 
+                    b.HasIndex("RenterID")
+                        .IsUnique();
+
                     b.HasIndex("VerifiedByStaffID");
 
                     b.ToTable("IDDocuments");
-                });
-
-            modelBuilder.Entity("BusinessObject.Models.Payment", b =>
-                {
-                    b.Property<int>("PaymentID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PaymentID"));
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("PaymentMethod")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PaymentType")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RentalID")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RenterID")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("PaymentID");
-
-                    b.HasIndex("RentalID");
-
-                    b.HasIndex("RenterID");
-
-                    b.ToTable("Payments");
                 });
 
             modelBuilder.Entity("BusinessObject.Models.Rental", b =>
@@ -356,10 +324,6 @@ namespace Repositories.Migrations
 
                     b.HasIndex("AccountID")
                         .IsUnique();
-
-                    b.HasIndex("DocumentID")
-                        .IsUnique()
-                        .HasFilter("[DocumentID] IS NOT NULL");
 
                     b.ToTable("Renters");
                 });
@@ -532,30 +496,19 @@ namespace Repositories.Migrations
 
             modelBuilder.Entity("BusinessObject.Models.IDDocument", b =>
                 {
+                    b.HasOne("BusinessObject.Models.Renter", "Renter")
+                        .WithOne("IDDocument")
+                        .HasForeignKey("BusinessObject.Models.IDDocument", "RenterID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("BusinessObject.Models.StationStaff", "VerifiedByStaff")
                         .WithMany()
                         .HasForeignKey("VerifiedByStaffID");
 
-                    b.Navigation("VerifiedByStaff");
-                });
-
-            modelBuilder.Entity("BusinessObject.Models.Payment", b =>
-                {
-                    b.HasOne("BusinessObject.Models.Rental", "Rental")
-                        .WithMany()
-                        .HasForeignKey("RentalID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BusinessObject.Models.Renter", "Renter")
-                        .WithMany()
-                        .HasForeignKey("RenterID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Rental");
-
                     b.Navigation("Renter");
+
+                    b.Navigation("VerifiedByStaff");
                 });
 
             modelBuilder.Entity("BusinessObject.Models.Rental", b =>
@@ -599,13 +552,7 @@ namespace Repositories.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("BusinessObject.Models.IDDocument", "IDDocument")
-                        .WithOne("Renter")
-                        .HasForeignKey("BusinessObject.Models.Renter", "DocumentID");
-
                     b.Navigation("Account");
-
-                    b.Navigation("IDDocument");
                 });
 
             modelBuilder.Entity("BusinessObject.Models.StationStaff", b =>
@@ -634,9 +581,9 @@ namespace Repositories.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("BusinessObject.Models.IDDocument", b =>
+            modelBuilder.Entity("BusinessObject.Models.Renter", b =>
                 {
-                    b.Navigation("Renter")
+                    b.Navigation("IDDocument")
                         .IsRequired();
                 });
 

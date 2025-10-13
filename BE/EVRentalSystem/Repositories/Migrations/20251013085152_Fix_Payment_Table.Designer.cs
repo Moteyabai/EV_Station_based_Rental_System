@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Repositories.DBContext;
 
@@ -11,9 +12,11 @@ using Repositories.DBContext;
 namespace Repositories.Migrations
 {
     [DbContext(typeof(EVRenterDBContext))]
-    partial class EVRenterDBContextModelSnapshot : ModelSnapshot
+    [Migration("20251013085152_Fix_Payment_Table")]
+    partial class Fix_Payment_Table
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -215,6 +218,9 @@ namespace Repositories.Migrations
                     b.Property<string>("Note")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("RenterID")
+                        .HasColumnType("int");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -225,6 +231,9 @@ namespace Repositories.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("DocumentID");
+
+                    b.HasIndex("RenterID")
+                        .IsUnique();
 
                     b.HasIndex("VerifiedByStaffID");
 
@@ -356,10 +365,6 @@ namespace Repositories.Migrations
 
                     b.HasIndex("AccountID")
                         .IsUnique();
-
-                    b.HasIndex("DocumentID")
-                        .IsUnique()
-                        .HasFilter("[DocumentID] IS NOT NULL");
 
                     b.ToTable("Renters");
                 });
@@ -532,9 +537,17 @@ namespace Repositories.Migrations
 
             modelBuilder.Entity("BusinessObject.Models.IDDocument", b =>
                 {
+                    b.HasOne("BusinessObject.Models.Renter", "Renter")
+                        .WithOne("IDDocument")
+                        .HasForeignKey("BusinessObject.Models.IDDocument", "RenterID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("BusinessObject.Models.StationStaff", "VerifiedByStaff")
                         .WithMany()
                         .HasForeignKey("VerifiedByStaffID");
+
+                    b.Navigation("Renter");
 
                     b.Navigation("VerifiedByStaff");
                 });
@@ -599,13 +612,7 @@ namespace Repositories.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("BusinessObject.Models.IDDocument", "IDDocument")
-                        .WithOne("Renter")
-                        .HasForeignKey("BusinessObject.Models.Renter", "DocumentID");
-
                     b.Navigation("Account");
-
-                    b.Navigation("IDDocument");
                 });
 
             modelBuilder.Entity("BusinessObject.Models.StationStaff", b =>
@@ -634,9 +641,9 @@ namespace Repositories.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("BusinessObject.Models.IDDocument", b =>
+            modelBuilder.Entity("BusinessObject.Models.Renter", b =>
                 {
-                    b.Navigation("Renter")
+                    b.Navigation("IDDocument")
                         .IsRequired();
                 });
 

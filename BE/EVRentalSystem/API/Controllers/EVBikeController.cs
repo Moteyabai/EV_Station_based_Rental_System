@@ -131,7 +131,6 @@ namespace API.Controllers
                 bike.Color = eVBikeCreateDTO.Color;
                 bike.FrontImg = frontUrl;
                 bike.BackImg = backUrl;
-                bike.Quantity = eVBikeCreateDTO.Quantity;
                 bike.Description = eVBikeCreateDTO.Description;
                 bike.BatteryCapacity = eVBikeCreateDTO.BatteryCapacity;
                 bike.PricePerDay = eVBikeCreateDTO.PricePerDay;
@@ -242,7 +241,6 @@ namespace API.Controllers
                 existingBike.LicensePlate = eVBike.LicensePlate;
                 existingBike.BrandID = eVBike.BrandID;
                 existingBike.Color = eVBike.Color;
-                existingBike.Quantity = eVBike.Quantity;
                 existingBike.Description = eVBike.Description;
                 existingBike.BatteryCapacity = eVBike.BatteryCapacity;
                 existingBike.PricePerDay = eVBike.PricePerDay;

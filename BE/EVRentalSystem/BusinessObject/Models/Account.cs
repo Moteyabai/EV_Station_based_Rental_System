@@ -27,20 +27,14 @@ namespace BusinessObject.Models
         public string Avatar { get; set; }
 
         [Required]
-        public int TotalRental { get; set; } = 0;
-
-        [Required]
-        public decimal TotalSpent { get; set; } = 0;
-
-        [Required]
         public int RoleID { get; set; }
-
-        public int? StationID { get; set; }
 
         public int Status { get; set; } = 1;
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
         public virtual Role Role { get; set; }
+        public virtual Renter Renter { get; set; }
+        public virtual StationStaff StationStaff { get; set; }
     }
 }

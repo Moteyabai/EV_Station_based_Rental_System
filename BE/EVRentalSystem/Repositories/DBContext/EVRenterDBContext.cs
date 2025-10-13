@@ -29,6 +29,11 @@ namespace Repositories.DBContext
         public DbSet<EVBike> EVBikes { get; set; }
         public DbSet<Brand> Brands { get; set; }
         public DbSet<IDDocument> IDDocuments { get; set; }
+        public DbSet<Rental> Rentals { get; set; }
+        public DbSet<Renter> Renters { get; set; }
+        public DbSet<StationStaff> StationStaffs { get; set; }
+        public DbSet<Feedback> Feedbacks { get; set; }
+        public DbSet<Payment> Payments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

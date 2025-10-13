@@ -26,7 +26,7 @@ namespace BusinessObject.Models
                 public decimal Longitude { get; set; }*/
 
         [Required]
-        public int Capacity { get; set; }
+        public int BikeCapacity { get; set; }
 
         [StringLength(100)]
         public string OpeningHours { get; set; } = "24/7";
@@ -43,9 +43,6 @@ namespace BusinessObject.Models
         public string ExteriorImageUrl { get; set; }
 
         [StringLength(500)]
-        public string ChargersImageUrl { get; set; }
-
-        [StringLength(500)]
         public string ThumbnailImageUrl { get; set; }
 
         public bool IsActive { get; set; } = true;
@@ -53,7 +50,7 @@ namespace BusinessObject.Models
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
-        public virtual ICollection<Account> StaffMembers { get; set; }
+        public virtual ICollection<StationStaff> StationStaffs { get; set; }
 
         public virtual ICollection<EVBike> EVBikes { get; set; }
     }
