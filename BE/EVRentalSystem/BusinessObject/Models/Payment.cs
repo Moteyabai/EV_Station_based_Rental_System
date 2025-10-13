@@ -17,6 +17,10 @@ namespace BusinessObject.Models
         [Range(0.01, 999999999.99, ErrorMessage = "Số tiền phải từ 0.01 đến 999,999,999.99")]
         public decimal Amount { get; set; }
 
+        [Required(ErrorMessage = "Mã thuê là bắt buộc")]
+        [ForeignKey("Rental")]
+        public int RentalID { get; set; }
+
         [Required(ErrorMessage = "Phương thức thanh toán là bắt buộc")]
         [Range(1, 3, ErrorMessage = "Phương thức thanh toán phải là 1 (Thẻ tín dụng), 2 (VNPay), hoặc 3 (Tiền mặt)")]
         public int PaymentMethod { get; set; } // 1: Credit Card, 2: VNPay, 3: Cash
