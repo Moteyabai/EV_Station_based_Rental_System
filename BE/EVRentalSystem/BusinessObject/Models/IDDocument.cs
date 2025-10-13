@@ -28,7 +28,6 @@ namespace BusinessObject.Models
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
         // Navigation Properties with clearer names
-        [ForeignKey("RenterID")]
         public virtual Renter Renter { get; set; }
 
         [ForeignKey("VerifiedByStaffID")]

@@ -18,7 +18,6 @@ namespace BusinessObject.Models
         public decimal Amount { get; set; }
 
         [Required(ErrorMessage = "Mã thuê là bắt buộc")]
-        [ForeignKey("Rental")]
         public int RentalID { get; set; }
 
         [Required(ErrorMessage = "Phương thức thanh toán là bắt buộc")]
@@ -39,6 +38,7 @@ namespace BusinessObject.Models
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
         public virtual Renter Renter { get; set; }
+        [ForeignKey("RentalID")]
         public virtual Rental Rental { get; set; }
     }
 }
