@@ -21,12 +21,15 @@ namespace API.Controllers
     {
         private readonly AccountService _accountService;
         private readonly IDDocumentService _idDocumentService;
+        private readonly RenterService _renterService;
+        private readonly StationStaffService _stationStaffService;
         private readonly Client _appWriteClient;
         private readonly IConfiguration _configuration;
         private readonly IMapper _mapper;
         private readonly IPasswordHasher<BusinessObject.Models.Account> _passwordHasher = new PasswordHasher<BusinessObject.Models.Account>();
 
-        public AccountController(AccountService accountService, IMapper mapper, IConfiguration configuration, IDDocumentService idDocumentService)
+        public AccountController(AccountService accountService, IMapper mapper, IConfiguration configuration, IDDocumentService idDocumentService
+            , RenterService renterService, StationStaffService stationStaffService)
         {
             _accountService = accountService;
             _mapper = mapper;
@@ -39,6 +42,8 @@ namespace API.Controllers
             };
             _appWriteClient = new Client().SetProject(appW.ProjectId).SetEndpoint(appW.Endpoint).SetKey(appW.ApiKey);
             _idDocumentService = idDocumentService;
+            _renterService = renterService;
+            _stationStaffService = stationStaffService;
         }
 
         // GET: api/<AccountController>
@@ -206,9 +211,10 @@ namespace API.Controllers
 
                 var LSBackID = response4.Id;
                 var LSBackUrl = $"{_appWriteClient.Endpoint}/storage/buckets/{response4.BucketId}/files/{LSBackID}/view?project={projectID}";
+
                 //Hash the password before saving
                 acc.Password = _passwordHasher.HashPassword(acc, accountRegisterDTO.Password);
-                acc.RoleID = 1; //Default role is Customer
+                acc.RoleID = 1; //Default role is Renter
                 acc.Avatar = avatarUrl;
 
                 await _accountService.AddAsync(acc);
@@ -222,7 +228,84 @@ namespace API.Controllers
 
                 await _idDocumentService.AddAsync(id);
 
+                //Create Renter
+                var renter = new Renter()
+                {
+                    AccountID = acc.AccountId,
+                    DocumentID = id.DocumentID,
+                };
+
+                await _renterService.AddAsync(renter);
+
                 res.Message = "Đăng ký thành công! Vui lòng đợi xác nhận giấy tờ trước khi đặt xe!";
+                return Ok(res);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Internal server error: " + ex.Message);
+            }
+        }
+
+        [HttpPost("CreateStationStaff")]
+        [Authorize]
+        public async Task<ActionResult<StationStaff>> CreateStationStaff([FromForm] AccountRegisterDTO accountRegisterDTO)
+        {
+            try
+            {
+                var res = new ResponseDTO();
+                var permission = User.FindFirst(UserClaimTypes.RoleID).Value;
+                if (permission != "3")
+                {
+                    res.Message = "Không có quyền truy cập!";
+                    return Unauthorized(res);
+                }
+                var acc = _mapper.Map<BusinessObject.Models.Account>(accountRegisterDTO);
+                if (acc == null)
+                {
+                    res.Message = "Dữ liệu đăng ký không phù hợp!";
+                    return BadRequest(res);
+                }
+                var checkEmail = await _accountService.CheckEmail(acc.Email);
+                if (checkEmail)
+                {
+                    res.Message = "Email đã tồn tại!";
+                    return Conflict(res);
+                }
+                var storage = new Storage(_appWriteClient);
+                var bucketID = "68dde8b0002f2952237f";
+                var projectID = _configuration.GetValue<string>("Appwrite:ProjectId");
+                List<string> perms = new List<string>() { Permission.Write(Appwrite.Role.Any()), Permission.Read(Appwrite.Role.Any()) };
+                //Upload Avatar
+                var avatarUID = Guid.NewGuid().ToString();
+                var avatar = InputFile.FromStream(
+                    accountRegisterDTO.AvatarPicture.OpenReadStream(),
+                    accountRegisterDTO.AvatarPicture.FileName,
+                    accountRegisterDTO.AvatarPicture.ContentType
+                    );
+                var response = await storage.CreateFile(
+                            bucketID,
+                            avatarUID,
+                            avatar,
+                            perms,
+                            null
+                            );
+                var avatarID = response.Id;
+                var avatarUrl = $"{_appWriteClient.Endpoint}/storage/buckets/{response.BucketId}/files/{avatarID}/view?project={projectID}";
+                //Hash the password before saving
+                acc.Password = _passwordHasher.HashPassword(acc, accountRegisterDTO.Password);
+                acc.RoleID = 2; //Default role is Staff
+                acc.Avatar = avatarUrl;
+                await _accountService.AddAsync(acc);
+
+                //Create StationStaff
+                var staff = new StationStaff()
+                {
+                    AccountID = acc.AccountId
+                };
+
+                await _stationStaffService.AddAsync(staff);
+
+                res.Message = "Tạo tài khoản nhân viên thành công!";
                 return Ok(res);
             }
             catch (Exception ex)

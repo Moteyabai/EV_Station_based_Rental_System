@@ -23,6 +23,10 @@ namespace API.CustomServices
             services.AddScoped<IDDocumentService>();
             services.AddScoped<EVBikeRepository>();
             services.AddScoped<EVBikeService>();
+            services.AddScoped<RenterRepository>();
+            services.AddScoped<RenterService>();
+            services.AddScoped<StationStaffRepository>();
+            services.AddScoped<StationStaffService>();
 
             services.AddAuthentication(options =>
             {
@@ -74,7 +78,7 @@ namespace API.CustomServices
                 {
                     In = ParameterLocation.Header,
                     Description = "Please enter a valid token",
-                    Name = "Jwtorization",
+                    Name = "JwtAuthorization",
                     Type = SecuritySchemeType.Http,
                     BearerFormat = "JWT",
                     Scheme = "Bearer"
