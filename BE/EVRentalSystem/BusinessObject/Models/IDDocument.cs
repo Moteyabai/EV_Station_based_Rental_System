@@ -8,9 +8,6 @@ namespace BusinessObject.Models
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int DocumentID { get; set; }
 
-        [Required]
-        public int AccountID { get; set; }
-
         public int? VerifiedByStaffID { get; set; }
 
         [Required]
@@ -26,15 +23,15 @@ namespace BusinessObject.Models
         public string LicenseCardBack { get; set; }
 
         public int Status { get; set; } = 0; // 0: Pending, 1: Approved, 2: Rejected
-        public string? Feedback { get; set; }
+        public string? Note { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
         // Navigation Properties with clearer names
-        [ForeignKey("AccountID")]
-        public virtual Account Customer { get; set; }
+        [ForeignKey("RenterID")]
+        public virtual Renter Renter { get; set; }
 
         [ForeignKey("VerifiedByStaffID")]
-        public virtual Account VerifiedByStaff { get; set; }
+        public virtual StationStaff VerifiedByStaff { get; set; }
     }
 }

@@ -215,7 +215,6 @@ namespace API.Controllers
 
                 //Create IDDocument
                 var id = new IDDocument();
-                id.AccountID = acc.AccountId;
                 id.IDCardFront = IDFrontUrl;
                 id.IDCardBack = IDBackUrl;
                 id.LicenseCardFront = LSFrontUrl;

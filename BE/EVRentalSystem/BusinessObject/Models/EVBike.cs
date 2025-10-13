@@ -33,10 +33,6 @@ namespace BusinessObject.Models
         [Url(ErrorMessage = "Đường dẫn hình ảnh mặt sau không hợp lệ")]
         public string BackImg { get; set; }
 
-        [Required(ErrorMessage = "Số lượng là bắt buộc")]
-        [Range(0, 1000, ErrorMessage = "Số lượng phải từ 0 đến 1000")]
-        public int Quantity { get; set; }
-
         [Required(ErrorMessage = "Số lần thuê là bắt buộc")]
         [Range(0, int.MaxValue, ErrorMessage = "Số lần thuê không được âm")]
         public int TimeRented { get; set; } = 0;
