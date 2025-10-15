@@ -7,4 +7,11 @@
         Suspended = 2,
         Deleted = 3
     }
+
+    public enum DocumentStatus
+    {
+        Pending = 0,
+        Approved = 1,
+        Rejected = 2,
+    }
 }

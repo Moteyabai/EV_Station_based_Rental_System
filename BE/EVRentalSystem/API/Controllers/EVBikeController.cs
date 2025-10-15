@@ -84,7 +84,7 @@ namespace API.Controllers
             {
                 // Upload images to Appwrite
                 var storage = new Storage(_appWriteClient);
-                var bucketID = "68dde8b0002f2952237f";
+                var bucketID = _configuration.GetValue<string>("Appwrite:BucketId"); ;
                 var projectID = _configuration.GetValue<string>("Appwrite:ProjectId");
 
                 List<string> perms = new List<string>() { Permission.Write(Appwrite.Role.Any()), Permission.Read(Appwrite.Role.Any()) };
