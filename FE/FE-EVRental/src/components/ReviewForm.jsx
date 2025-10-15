@@ -1,98 +1,138 @@
 import React, { useState } from "react";
-import "../styles/ReviewForm.css";
+import { Modal, Form, Rate, Input, Button, message } from "antd";
+import { StarOutlined } from "@ant-design/icons";
+import { useReview } from "../contexts/ReviewContext";
 
-const ReviewForm = ({ vehicleId, stationId, onSubmit, onClose }) => {
-  const [rating, setRating] = useState(5);
-  const [comment, setComment] = useState("");
+const { TextArea } = Input;
+
+export default function ReviewForm({
+  visible,
+  onClose,
+  vehicleId,
+  vehicleName,
+  stationId,
+  stationName,
+}) {
+  const [form] = Form.useForm();
+  const { addReview } = useReview();
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (values) => {
     setSubmitting(true);
 
     try {
-      // Tạo đối tượng đánh giá
       const review = {
+        id: Date.now(),
         vehicleId: vehicleId,
+        vehicleName: vehicleName,
         stationId: stationId,
-        rating: rating,
-        comment: comment,
-        date: new Date().toISOString(),
+        stationName: stationName,
+        rating: values.rating,
+        comment: values.comment,
+        userName: values.userName || "Khách hàng",
+        createdAt: new Date().toISOString(),
       };
 
-      // Gửi đánh giá đi
-      await onSubmit(review);
+      addReview(review);
 
-      // Reset form
-      setRating(5);
-      setComment("");
-
-      // Thông báo thành công
-      alert("Cảm ơn bạn đã gửi đánh giá!");
-
-      // Đóng form
+      message.success("Cảm ơn bạn đã đánh giá!");
+      form.resetFields();
       onClose();
     } catch (error) {
-      console.error("Lỗi khi gửi đánh giá:", error);
-      alert("Có lỗi xảy ra khi gửi đánh giá. Vui lòng thử lại sau.");
+      message.error("Có lỗi xảy ra. Vui lòng thử lại!");
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="review-form-overlay">
-      <div className="review-form-container">
-        <h2>📝 Đánh giá trải nghiệm thuê xe</h2>
-        <button className="close-button" onClick={onClose}>
-          ×
-        </button>
-
-        <form onSubmit={handleSubmit}>
-          <div className="rating-container">
-            <p>Chất lượng trải nghiệm:</p>
-            <div className="star-rating">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <span
-                  key={star}
-                  className={`star ${rating >= star ? "filled" : ""}`}
-                  onClick={() => setRating(star)}
-                >
-                  ★
-                </span>
-              ))}
+    <Modal
+      open={visible}
+      onCancel={onClose}
+      footer={null}
+      title={
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <StarOutlined style={{ color: "#4db6ac", fontSize: "20px" }} />
+          <span>Đánh giá dịch vụ</span>
+        </div>
+      }
+      width={600}
+    >
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleSubmit}
+        initialValues={{
+          rating: 5,
+        }}
+      >
+        {vehicleName && (
+          <div
+            style={{
+              marginBottom: "20px",
+              padding: "12px",
+              background: "#f0f9ff",
+              borderRadius: "8px",
+              borderLeft: "4px solid #4db6ac",
+            }}
+          >
+            <div style={{ fontWeight: 500, color: "#333" }}>
+              Xe: {vehicleName}
             </div>
+            {stationName && (
+              <div
+                style={{ fontSize: "14px", color: "#666", marginTop: "4px" }}
+              >
+                Trạm: {stationName}
+              </div>
+            )}
           </div>
+        )}
 
-          <div className="form-group">
-            <label htmlFor="comment">Nhận xét của bạn:</label>
-            <textarea
-              id="comment"
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Chia sẻ trải nghiệm của bạn với xe và trạm thuê..."
-              rows={4}
-              required
-            />
-          </div>
+        <Form.Item name="userName" label="Tên của bạn">
+          <Input placeholder="Nhập tên của bạn (không bắt buộc)" />
+        </Form.Item>
 
-          <div className="form-actions">
-            <button
-              type="button"
-              className="btn secondary"
-              onClick={onClose}
-              disabled={submitting}
+        <Form.Item
+          name="rating"
+          label="Đánh giá của bạn"
+          rules={[{ required: true, message: "Vui lòng chọn số sao!" }]}
+        >
+          <Rate
+            style={{ fontSize: "32px", color: "#4db6ac" }}
+            character={<StarOutlined />}
+          />
+        </Form.Item>
+
+        <Form.Item
+          name="comment"
+          label="Nhận xét"
+          rules={[{ required: true, message: "Vui lòng nhập nhận xét!" }]}
+        >
+          <TextArea
+            rows={4}
+            placeholder="Chia sẻ trải nghiệm của bạn về dịch vụ thuê xe..."
+            maxLength={500}
+            showCount
+          />
+        </Form.Item>
+
+        <Form.Item>
+          <div
+            style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}
+          >
+            <Button onClick={onClose}>Hủy</Button>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={submitting}
+              style={{ backgroundColor: "#4db6ac", borderColor: "#4db6ac" }}
             >
-              Hủy
-            </button>
-            <button type="submit" className="btn primary" disabled={submitting}>
-              {submitting ? "Đang gửi..." : "Gửi đánh giá"}
-            </button>
+              Gửi đánh giá
+            </Button>
           </div>
-        </form>
-      </div>
-    </div>
+        </Form.Item>
+      </Form>
+    </Modal>
   );
-};
-
-export default ReviewForm;
+}

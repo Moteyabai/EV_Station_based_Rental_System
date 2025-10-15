@@ -44,6 +44,14 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
   console.log("Stations data:", stations);
   console.log("Number of stations:", stations?.length);
 
+  // Test if stations exist
+  useEffect(() => {
+    console.log("Stations loaded:", stations);
+    if (stations && stations.length > 0) {
+      console.log("First station:", stations[0]);
+    }
+  }, []);
+
   // Giữ nguyên logic state như cũ để tránh lỗi
   const [formData, setFormData] = useState({
     customerInfo: {
@@ -156,15 +164,17 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
     setIsSubmitting(true);
 
     try {
-      // Cập nhật formData từ Ant Design form values
+      console.log("Form values:", values);
+
+      // Cập nhật formData từ native HTML form values
       const updatedFormData = {
         ...formData,
         rentalInfo: {
           ...formData.rentalInfo,
-          pickupDate: values.pickupDate?.format("YYYY-MM-DD") || "",
-          returnDate: values.returnDate?.format("YYYY-MM-DD") || "",
-          pickupTime: values.pickupTime?.format("HH:mm") || "09:00",
-          returnTime: values.returnTime?.format("HH:mm") || "18:00",
+          pickupDate: values.pickupDate || "",
+          returnDate: values.returnDate || "",
+          pickupTime: values.pickupTime || "09:00",
+          returnTime: values.returnTime || "18:00",
           pickupStationId: values.pickupStationId || "",
           returnStationId: values.returnStationId || "",
           specialRequests: values.specialRequests || "",
@@ -251,16 +261,21 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
         </Space>
       }
       style={{ top: 20 }}
+      styles={{ body: { maxHeight: "70vh", overflowY: "auto" } }}
+      maskClosable={false}
+      destroyOnClose={false}
     >
       <Form
         form={form}
         layout="vertical"
         onFinish={handleSubmit}
         initialValues={{
-          pickupDate: dayjs(),
-          returnDate: dayjs().add(1, "day"),
-          pickupTime: dayjs().hour(9).minute(0),
-          returnTime: dayjs().hour(18).minute(0),
+          pickupDate: new Date().toISOString().split("T")[0],
+          returnDate: new Date(Date.now() + 86400000)
+            .toISOString()
+            .split("T")[0],
+          pickupTime: "09:00",
+          returnTime: "18:00",
         }}
       >
         {/* Vehicle Info */}
@@ -301,24 +316,30 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
                   { required: true, message: "Vui lòng chọn điểm nhận xe!" },
                 ]}
               >
-                <Select placeholder="Chọn điểm nhận xe">
+                <select
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    borderRadius: "6px",
+                    border: "1px solid #d9d9d9",
+                    fontSize: "14px",
+                  }}
+                  onChange={(e) => {
+                    form.setFieldValue("pickupStationId", e.target.value);
+                    console.log("Selected station:", e.target.value);
+                  }}
+                >
+                  <option value="">Chọn điểm nhận xe</option>
                   {stations && stations.length > 0 ? (
                     stations.map((station) => (
-                      <Option key={station.id} value={station.id}>
-                        <div>
-                          <div style={{ fontWeight: "bold" }}>
-                            {station.name}
-                          </div>
-                          <div style={{ fontSize: "12px", color: "#999" }}>
-                            {station.address}
-                          </div>
-                        </div>
-                      </Option>
+                      <option key={station.id} value={station.id}>
+                        {station.name} - {station.address}
+                      </option>
                     ))
                   ) : (
-                    <Option disabled>Không có trạm nào</Option>
+                    <option disabled>Không có trạm nào</option>
                   )}
-                </Select>
+                </select>
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -329,24 +350,29 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
                   { required: true, message: "Vui lòng chọn điểm trả xe!" },
                 ]}
               >
-                <Select placeholder="Chọn điểm trả xe">
+                <select
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    borderRadius: "6px",
+                    border: "1px solid #d9d9d9",
+                    fontSize: "14px",
+                  }}
+                  onChange={(e) => {
+                    form.setFieldValue("returnStationId", e.target.value);
+                  }}
+                >
+                  <option value="">Chọn điểm trả xe</option>
                   {stations && stations.length > 0 ? (
                     stations.map((station) => (
-                      <Option key={station.id} value={station.id}>
-                        <div>
-                          <div style={{ fontWeight: "bold" }}>
-                            {station.name}
-                          </div>
-                          <div style={{ fontSize: "12px", color: "#999" }}>
-                            {station.address}
-                          </div>
-                        </div>
-                      </Option>
+                      <option key={station.id} value={station.id}>
+                        {station.name} - {station.address}
+                      </option>
                     ))
                   ) : (
-                    <Option disabled>Không có trạm nào</Option>
+                    <option disabled>Không có trạm nào</option>
                   )}
-                </Select>
+                </select>
               </Form.Item>
             </Col>
           </Row>
@@ -360,11 +386,19 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
                   { required: true, message: "Vui lòng chọn ngày nhận xe!" },
                 ]}
               >
-                <DatePicker
-                  placeholder="Chọn ngày nhận xe"
-                  disabledDate={disabledDate}
-                  style={{ width: "100%" }}
-                  format="DD/MM/YYYY"
+                <input
+                  type="date"
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    borderRadius: "6px",
+                    border: "1px solid #d9d9d9",
+                    fontSize: "14px",
+                  }}
+                  min={new Date().toISOString().split("T")[0]}
+                  onChange={(e) => {
+                    form.setFieldValue("pickupDate", e.target.value);
+                  }}
                 />
               </Form.Item>
             </Col>
@@ -376,10 +410,19 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
                   { required: true, message: "Vui lòng chọn giờ nhận xe!" },
                 ]}
               >
-                <TimePicker
-                  placeholder="Chọn giờ nhận xe"
-                  format="HH:mm"
-                  style={{ width: "100%" }}
+                <input
+                  type="time"
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    borderRadius: "6px",
+                    border: "1px solid #d9d9d9",
+                    fontSize: "14px",
+                  }}
+                  defaultValue="09:00"
+                  onChange={(e) => {
+                    form.setFieldValue("pickupTime", e.target.value);
+                  }}
                 />
               </Form.Item>
             </Col>
@@ -394,11 +437,19 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
                   { required: true, message: "Vui lòng chọn ngày trả xe!" },
                 ]}
               >
-                <DatePicker
-                  placeholder="Chọn ngày trả xe"
-                  disabledDate={disabledDate}
-                  style={{ width: "100%" }}
-                  format="DD/MM/YYYY"
+                <input
+                  type="date"
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    borderRadius: "6px",
+                    border: "1px solid #d9d9d9",
+                    fontSize: "14px",
+                  }}
+                  min={new Date().toISOString().split("T")[0]}
+                  onChange={(e) => {
+                    form.setFieldValue("returnDate", e.target.value);
+                  }}
                 />
               </Form.Item>
             </Col>
@@ -410,10 +461,19 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
                   { required: true, message: "Vui lòng chọn giờ trả xe!" },
                 ]}
               >
-                <TimePicker
-                  placeholder="Chọn giờ trả xe"
-                  format="HH:mm"
-                  style={{ width: "100%" }}
+                <input
+                  type="time"
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    borderRadius: "6px",
+                    border: "1px solid #d9d9d9",
+                    fontSize: "14px",
+                  }}
+                  defaultValue="18:00"
+                  onChange={(e) => {
+                    form.setFieldValue("returnTime", e.target.value);
+                  }}
                 />
               </Form.Item>
             </Col>

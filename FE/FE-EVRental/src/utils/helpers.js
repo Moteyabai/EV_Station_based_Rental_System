@@ -26,15 +26,19 @@ export const calculateDistance = (lat1, lng1, lat2, lng2) => {
  * @param {string} priceUnit - Price unit (VNĐ/ngày, k/ngày, etc.)
  * @returns {string} Formatted price string
  */
-export const formatPrice = (price, priceUnit = "VNĐ/ngày") => {
-  // If price unit contains 'k' or 'K', multiply by 1000
-  if (priceUnit && (priceUnit.includes("k") || priceUnit.includes("K"))) {
-    const formattedNumber = new Intl.NumberFormat("vi-VN").format(price * 1000);
-    return `${formattedNumber} VNĐ`;
+export const formatPrice = (price, priceUnit = "VNĐ") => {
+  // Đảm bảo price là số
+  const numPrice = typeof price === "string" ? parseFloat(price) : price;
+  
+  // Nếu price unit không có hoặc đã là VNĐ đầy đủ, không nhân thêm
+  // Chỉ nhân × 1000 nếu priceUnit rõ ràng có chữ "k" VÀ giá < 10000 (tức là đơn vị nghìn)
+  let finalPrice = numPrice;
+  if (priceUnit && (priceUnit.toLowerCase().includes("k") || priceUnit.toLowerCase().includes("k/")) && numPrice < 10000) {
+    finalPrice = numPrice * 1000;
   }
   
   // Format number with Vietnamese locale and add VNĐ
-  const formattedNumber = new Intl.NumberFormat("vi-VN").format(price);
+  const formattedNumber = new Intl.NumberFormat("vi-VN").format(finalPrice);
   return `${formattedNumber} VNĐ`;
 };
 

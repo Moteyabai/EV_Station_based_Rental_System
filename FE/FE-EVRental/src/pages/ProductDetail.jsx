@@ -1,21 +1,23 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import { Button } from "antd";
+import { StarOutlined } from "@ant-design/icons";
 import vehicles from "../data/vehicles";
 import { useCart } from "../contexts/CartContext";
 import BookingForm from "../components/BookingForm";
+import ReviewList from "../components/ReviewList";
+import ReviewForm from "../components/ReviewForm";
 import { formatPrice } from "../utils/helpers";
 
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart, getItemCount } = useCart();
-
+  const { getItemCount } = useCart();
   const vehicle = vehicles.find((v) => v.id === id);
-
   const [showBookingSuccess, setShowBookingSuccess] = useState(false);
   const [showBookingForm, setShowBookingForm] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
 
-  // Nếu không tìm thấy xe
   if (!vehicle) {
     return (
       <div className="product-not-found">
@@ -23,14 +25,14 @@ export default function ProductDetail() {
           <h2>Không tìm thấy xe</h2>
           <p>Xe bạn đang tìm không tồn tại hoặc đã bị xóa.</p>
           <Link to="/vehicles" className="btn primary">
-            ← Quay lại danh sách xe
+            {" "}
+            Quay lại danh sách xe
           </Link>
         </div>
       </div>
     );
   }
 
-  // Xử lý thuê xe
   const handleRentNow = () => {
     setShowBookingForm(true);
   };
@@ -39,8 +41,6 @@ export default function ProductDetail() {
     try {
       setShowBookingForm(false);
       setShowBookingSuccess(true);
-
-      // Tự động ẩn thông báo sau 2 giây và chuyển đến giỏ hàng
       setTimeout(() => {
         setShowBookingSuccess(false);
         navigate("/cart");
@@ -50,7 +50,6 @@ export default function ProductDetail() {
     }
   };
 
-  // Lấy màu thương hiệu
   const getBrandColor = (brand) => {
     switch (brand?.toLowerCase()) {
       case "vinfast":
@@ -70,7 +69,6 @@ export default function ProductDetail() {
         padding: "20px 0",
       }}
     >
-      {/* Thanh điều hướng */}
       <div
         style={{
           background: "white",
@@ -92,20 +90,19 @@ export default function ProductDetail() {
           <Link to="/" style={{ color: "#6366f1", textDecoration: "none" }}>
             Trang chủ
           </Link>
-          <span style={{ color: "#9ca3af" }}>→</span>
+          <span style={{ color: "#9ca3af" }}></span>
           <Link
             to="/vehicles"
             style={{ color: "#6366f1", textDecoration: "none" }}
           >
             Xe thuê
           </Link>
-          <span style={{ color: "#9ca3af" }}>→</span>
+          <span style={{ color: "#9ca3af" }}></span>
           <span style={{ color: "#374151", fontWeight: "500" }}>
             {vehicle.name}
           </span>
         </div>
       </div>
-
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px" }}>
         <div
           style={{
@@ -116,7 +113,6 @@ export default function ProductDetail() {
             alignItems: "start",
           }}
         >
-          {/* Phần ảnh xe */}
           <div className="vehicle-image-section">
             <div className="main-image">
               <img
@@ -140,58 +136,49 @@ export default function ProductDetail() {
               )}
             </div>
           </div>
-
-          {/* Thông tin chi tiết */}
           <div className="vehicle-info-section">
             <div className="vehicle-header">
               <h1 className="vehicle-name">{vehicle.name}</h1>
               <p className="vehicle-category">{vehicle.short}</p>
               <div className="price-section">
                 <span className="current-price">
-                  {formatPrice(vehicle.price)}k
+                  {formatPrice(vehicle.price, vehicle.priceUnit)}
                 </span>
                 <span className="price-unit">
                   / {vehicle.priceUnit.split("/")[1]}
                 </span>
               </div>
             </div>
-
-            {/* Mô tả */}
             <div className="description-section">
               <h3>Mô tả xe</h3>
               <p>{vehicle.description}</p>
             </div>
-
-            {/* Thông số kỹ thuật */}
             <div className="specs-section">
               <h3>Thông số kỹ thuật</h3>
               <div className="specs-grid">
                 <div className="spec-item">
-                  <div className="spec-icon">🔋</div>
+                  <div className="spec-icon"></div>
                   <div className="spec-content">
                     <span className="spec-label">Dung lượng pin</span>
                     <span className="spec-value">{vehicle.specs.battery}</span>
                   </div>
                 </div>
-
                 <div className="spec-item">
-                  <div className="spec-icon">📏</div>
+                  <div className="spec-icon"></div>
                   <div className="spec-content">
                     <span className="spec-label">Tầm xa</span>
                     <span className="spec-value">{vehicle.specs.range}</span>
                   </div>
                 </div>
-
                 <div className="spec-item">
-                  <div className="spec-icon">⚡</div>
+                  <div className="spec-icon"></div>
                   <div className="spec-content">
                     <span className="spec-label">Tốc độ tối đa</span>
                     <span className="spec-value">{vehicle.specs.maxSpeed}</span>
                   </div>
                 </div>
-
                 <div className="spec-item">
-                  <div className="spec-icon">🔌</div>
+                  <div className="spec-icon"></div>
                   <div className="spec-content">
                     <span className="spec-label">Thời gian sạc</span>
                     <span className="spec-value">
@@ -199,9 +186,8 @@ export default function ProductDetail() {
                     </span>
                   </div>
                 </div>
-
                 <div className="spec-item">
-                  <div className="spec-icon">⚖️</div>
+                  <div className="spec-icon"></div>
                   <div className="spec-content">
                     <span className="spec-label">Trọng lượng</span>
                     <span className="spec-value">{vehicle.specs.weight}</span>
@@ -209,30 +195,33 @@ export default function ProductDetail() {
                 </div>
               </div>
             </div>
-
-            {/* Nút hành động */}
             <div className="action-buttons">
               <button
                 className="btn btn-primary rent-btn"
                 onClick={handleRentNow}
                 disabled={!vehicle.available}
               >
-                {vehicle.available ? "� Thuê ngay" : "Không có sẵn"}
+                {vehicle.available ? " Thuê ngay" : "Không có sẵn"}
               </button>
-
               <button
                 className="btn btn-secondary cart-btn"
                 onClick={() => navigate("/cart")}
               >
-                � Giỏ hàng ({getItemCount()})
+                {" "}
+                Giỏ hàng ({getItemCount()})
               </button>
-
-              <Link to="/vehicles" className="btn btn-outline">
-                ← Quay lại danh sách
-              </Link>
+              <Button
+                icon={<StarOutlined />}
+                onClick={() => setShowReviewForm(true)}
+                style={{
+                  marginLeft: "12px",
+                  color: "#4db6ac",
+                  borderColor: "#4db6ac",
+                }}
+              >
+                Viết đánh giá
+              </Button>
             </div>
-
-            {/* Trạng thái xe */}
             <div className="vehicle-status">
               <div className="status-item">
                 <span className="status-label">Trạng thái:</span>
@@ -241,28 +230,26 @@ export default function ProductDetail() {
                     vehicle.available ? "available" : "unavailable"
                   }`}
                 >
-                  {vehicle.available ? "✅ Có sẵn" : "❌ Không có sẵn"}
+                  {vehicle.available ? " Có sẵn" : " Không có sẵn"}
                 </span>
               </div>
-
               <div className="status-item">
                 <span className="status-label">Danh mục:</span>
                 <span className="status-value">
                   {vehicle.category === "scooter"
-                    ? "🛵 Xe máy điện"
+                    ? " Xe máy điện"
                     : vehicle.category}
                 </span>
               </div>
             </div>
           </div>
         </div>
+        <ReviewList vehicleId={vehicle.id} />
       </div>
-
-      {/* Thông báo thành công */}
       {showBookingSuccess && (
         <div className="success-notification">
           <div className="success-content">
-            <div className="success-icon">✅</div>
+            <div className="success-icon"></div>
             <div className="success-message">
               <h4>Đã thêm vào giỏ hàng!</h4>
               <p>Xe {vehicle.name} đã được thêm vào giỏ hàng của bạn.</p>
@@ -270,13 +257,19 @@ export default function ProductDetail() {
           </div>
         </div>
       )}
-
-      {/* Booking Form Modal */}
       {showBookingForm && (
         <BookingForm
           vehicle={vehicle}
           onSubmit={handleBookingSubmit}
           onCancel={() => setShowBookingForm(false)}
+        />
+      )}
+      {showReviewForm && (
+        <ReviewForm
+          visible={showReviewForm}
+          onClose={() => setShowReviewForm(false)}
+          vehicleId={vehicle.id}
+          vehicleName={vehicle.name}
         />
       )}
     </div>

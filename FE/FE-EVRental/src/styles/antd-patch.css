@@ -51,6 +51,75 @@ a.ant-typography:hover {
   color: #4db6ac !important;
 }
 
+/* Fix dropdown visibility in Modal */
+.ant-select-dropdown,
+.ant-picker-dropdown,
+.ant-picker-panel-container {
+  z-index: 999999 !important;
+}
+
+/* Ensure Dropdown menu is visible */
+.ant-dropdown {
+  z-index: 1050 !important;
+}
+
+.ant-dropdown-menu {
+  z-index: 1050 !important;
+}
+
+.ant-select-dropdown-placement-bottomLeft,
+.ant-select-dropdown-placement-topLeft {
+  display: block !important;
+  visibility: visible !important;
+}
+
+.ant-modal-wrap {
+  overflow: visible !important;
+}
+
+.ant-modal-body {
+  overflow: visible !important;
+  max-height: none !important;
+}
+
+.ant-modal-content {
+  overflow: visible !important;
+}
+
+.ant-modal {
+  overflow: visible !important;
+}
+
+.ant-modal-mask {
+  pointer-events: none !important;
+}
+
+/* Ensure dropdowns render above everything */
+.rc-virtual-list {
+  z-index: 999999 !important;
+}
+
+.ant-select-item {
+  display: block !important;
+  visibility: visible !important;
+}
+
+/* Force dropdown to be visible */
+.ant-select-dropdown {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  background: white !important;
+  box-shadow: 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 9px 28px 8px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Make sure dropdown is not hidden */
+.ant-select-dropdown-hidden {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
 /* Ensure scroll functionality is preserved */
 body, html {
   overflow-x: hidden !important;

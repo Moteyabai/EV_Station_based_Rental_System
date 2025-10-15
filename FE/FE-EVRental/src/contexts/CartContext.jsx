@@ -31,12 +31,22 @@ export function CartProvider({ children }) {
 
     const finalRentalDetails = rentalDetails || defaultRentalDetails;
 
+    // Debug: Log giá trị
+    console.log("🔍 DEBUG addToCart:");
+    console.log("vehicle.price:", vehicle.price);
+    console.log("days:", finalRentalDetails.days);
+    const calculatedPrice = calculateItemPrice(
+      vehicle.price,
+      finalRentalDetails.days
+    );
+    console.log("totalPrice:", calculatedPrice);
+
     const cartItem = {
       id: Date.now(), // Unique cart item ID
       vehicleId: vehicle.id,
       vehicle: vehicle,
       rentalDetails: finalRentalDetails,
-      totalPrice: calculateItemPrice(vehicle.price, finalRentalDetails.days),
+      totalPrice: calculatedPrice,
       addedAt: new Date().toISOString(),
     };
 
