@@ -26,7 +26,13 @@ namespace API.CustomServices
             services.AddScoped<RenterRepository>();
             services.AddScoped<RenterService>();
             services.AddScoped<StationStaffRepository>();
-            services.AddScoped<StationStaffService>();
+            services.AddScoped<StationStaffService>();        
+            services.AddScoped<RentalRepository>();
+            services.AddScoped<RentalService>();           
+            services.AddScoped<PaymentRepository>();
+            services.AddScoped<PaymentService>();
+            services.AddScoped<StationRepository>();
+            services.AddScoped<StationService>();
 
             services.AddAuthentication(options =>
             {

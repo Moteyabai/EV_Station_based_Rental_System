@@ -121,7 +121,7 @@ namespace API.Controllers
                 }
 
                 var storage = new Storage(_appWriteClient);
-                var bucketID = "68dde8b0002f2952237f";
+                var bucketID = _configuration.GetValue<string>("Appwrite:BucketId");
                 var projectID = _configuration.GetValue<string>("Appwrite:ProjectId");
 
                 List<string> perms = new List<string>() { Permission.Write(Appwrite.Role.Any()), Permission.Read(Appwrite.Role.Any()) };
@@ -362,8 +362,8 @@ namespace API.Controllers
 
                 existingAcc.FullName = accountUpdateDTO.FullName;
                 existingAcc.Phone = accountUpdateDTO.PhoneNumber;
+                existingAcc.UpdatedAt = DateTime.Now;
 
-                //If user want
                 await _accountService.UpdateAsync(existingAcc);
                 res.Message = "Cập nhật thành công!";
                 return Ok(res);
