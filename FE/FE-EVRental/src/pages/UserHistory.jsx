@@ -27,9 +27,11 @@ export default function UserHistory() {
       return;
     }
     const allBookings = JSON.parse(localStorage.getItem("ev_bookings") || "[]");
+
     const userBookings = allBookings.filter(
       (booking) => booking.userId === user.email
     );
+
     userBookings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     setBookings(userBookings);
   }, [user, navigate]);

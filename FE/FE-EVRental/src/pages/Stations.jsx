@@ -7,7 +7,7 @@ import "../styles/Pages.css";
 
 export default function Stations() {
   const [selectedStation, setSelectedStation] = useState(null);
-  const [viewMode, setViewMode] = useState("map"); // 'map' or 'list'
+  const [viewMode, setViewMode] = useState("list"); // 'map' or 'list'
   const [stations, setStations] = useState(stationsData);
   const [userLocation, setUserLocation] = useState(null);
   const [nearbyStations, setNearbyStations] = useState([]);

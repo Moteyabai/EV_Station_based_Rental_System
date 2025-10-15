@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import stations from "../data/stations";
+import { formatVehiclesForStation } from "../utils/stationHelpers";
 import { useAuth } from "../contexts/AuthContext";
 import { useCart } from "../contexts/CartContext";
 import { useReviews } from "../contexts/ReviewContext";
@@ -19,6 +20,11 @@ export default function StationDetail() {
   const navigate = useNavigate();
   const [reviews, setReviews] = useState([]);
 
+  // Lấy danh sách xe đầy đủ từ vehicleIds
+  const stationVehicles = station
+    ? formatVehiclesForStation(station.vehicleIds)
+    : [];
+
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [bookingData, setBookingData] = useState({
     pickupDate: "",
@@ -29,7 +35,6 @@ export default function StationDetail() {
   });
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
-  const [activeImage, setActiveImage] = useState("exterior");
   const [showReviewForm, setShowReviewForm] = useState(false);
 
   useEffect(() => {
@@ -165,64 +170,13 @@ export default function StationDetail() {
           </div>
         </div>
 
-        {/* Station Gallery */}
-        {station.images && (
-          <div className="station-gallery">
-            <div className="main-image">
-              {activeImage === "exterior" && station.images.exterior && (
-                <img
-                  src={station.images.exterior}
-                  alt={`${station.name} bên ngoài`}
-                />
-              )}
-              {activeImage === "chargers" && station.images.chargers && (
-                <img
-                  src={station.images.chargers}
-                  alt={`${station.name} trạm sạc`}
-                />
-              )}
-              {activeImage === "thumbnail" && station.images.thumbnail && (
-                <img
-                  src={station.images.thumbnail}
-                  alt={`${station.name} tổng quan`}
-                />
-              )}
-            </div>
-
-            <div className="gallery-thumbnails">
-              {station.images.exterior && (
-                <div
-                  className={`thumbnail ${
-                    activeImage === "exterior" ? "active" : ""
-                  }`}
-                  onClick={() => setActiveImage("exterior")}
-                >
-                  <img src={station.images.exterior} alt="Hình ảnh bên ngoài" />
-                </div>
-              )}
-
-              {station.images.chargers && (
-                <div
-                  className={`thumbnail ${
-                    activeImage === "chargers" ? "active" : ""
-                  }`}
-                  onClick={() => setActiveImage("chargers")}
-                >
-                  <img src={station.images.chargers} alt="Charging stations" />
-                </div>
-              )}
-
-              {station.images.thumbnail && (
-                <div
-                  className={`thumbnail ${
-                    activeImage === "thumbnail" ? "active" : ""
-                  }`}
-                  onClick={() => setActiveImage("thumbnail")}
-                >
-                  <img src={station.images.thumbnail} alt="Overview" />
-                </div>
-              )}
-            </div>
+        {/* Station Image - Chỉ hiển thị 1 ảnh chính */}
+        {(station.images?.thumbnail || station.image) && (
+          <div className="station-main-image">
+            <img
+              src={station.images?.thumbnail || station.image}
+              alt={station.name}
+            />
           </div>
         )}
 
@@ -249,7 +203,7 @@ export default function StationDetail() {
           <h2>Xe máy điện hiện có</h2>
 
           <div className="vehicles-list">
-            {station.vehicles
+            {stationVehicles
               .filter((vehicle) => vehicle.available)
               .map((vehicle) => (
                 <div
@@ -345,7 +299,7 @@ export default function StationDetail() {
                 </div>
               ))}
 
-            {station.vehicles.filter((vehicle) => vehicle.available).length ===
+            {stationVehicles.filter((vehicle) => vehicle.available).length ===
               0 && (
               <div className="no-vehicles">
                 <p>Hiện không có xe nào tại trạm này.</p>

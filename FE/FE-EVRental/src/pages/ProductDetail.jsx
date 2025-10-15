@@ -1,13 +1,10 @@
 ﻿import React, { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { Button } from "antd";
-import { StarOutlined } from "@ant-design/icons";
 import vehicles from "../data/vehicles";
 import { useCart } from "../contexts/CartContext";
 import BookingForm from "../components/BookingForm";
-import ReviewList from "../components/ReviewList";
-import ReviewForm from "../components/ReviewForm";
 import { formatPrice } from "../utils/helpers";
+import "../styles/ProductDetail.css";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -16,7 +13,6 @@ export default function ProductDetail() {
   const vehicle = vehicles.find((v) => v.id === id);
   const [showBookingSuccess, setShowBookingSuccess] = useState(false);
   const [showBookingForm, setShowBookingForm] = useState(false);
-  const [showReviewForm, setShowReviewForm] = useState(false);
 
   if (!vehicle) {
     return (
@@ -201,26 +197,14 @@ export default function ProductDetail() {
                 onClick={handleRentNow}
                 disabled={!vehicle.available}
               >
-                {vehicle.available ? " Thuê ngay" : "Không có sẵn"}
+                {vehicle.available ? "Thuê ngay" : "Không có sẵn"}
               </button>
               <button
                 className="btn btn-secondary cart-btn"
                 onClick={() => navigate("/cart")}
               >
-                {" "}
                 Giỏ hàng ({getItemCount()})
               </button>
-              <Button
-                icon={<StarOutlined />}
-                onClick={() => setShowReviewForm(true)}
-                style={{
-                  marginLeft: "12px",
-                  color: "#4db6ac",
-                  borderColor: "#4db6ac",
-                }}
-              >
-                Viết đánh giá
-              </Button>
             </div>
             <div className="vehicle-status">
               <div className="status-item">
@@ -230,21 +214,20 @@ export default function ProductDetail() {
                     vehicle.available ? "available" : "unavailable"
                   }`}
                 >
-                  {vehicle.available ? " Có sẵn" : " Không có sẵn"}
+                  {vehicle.available ? "Có sẵn" : "Không có sẵn"}
                 </span>
               </div>
               <div className="status-item">
                 <span className="status-label">Danh mục:</span>
                 <span className="status-value">
                   {vehicle.category === "scooter"
-                    ? " Xe máy điện"
+                    ? "Xe máy điện"
                     : vehicle.category}
                 </span>
               </div>
             </div>
           </div>
         </div>
-        <ReviewList vehicleId={vehicle.id} />
       </div>
       {showBookingSuccess && (
         <div className="success-notification">
@@ -262,14 +245,6 @@ export default function ProductDetail() {
           vehicle={vehicle}
           onSubmit={handleBookingSubmit}
           onCancel={() => setShowBookingForm(false)}
-        />
-      )}
-      {showReviewForm && (
-        <ReviewForm
-          visible={showReviewForm}
-          onClose={() => setShowReviewForm(false)}
-          vehicleId={vehicle.id}
-          vehicleName={vehicle.name}
         />
       )}
     </div>

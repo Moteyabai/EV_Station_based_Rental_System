@@ -45,7 +45,7 @@ export default function Home() {
       <section className="template-hero">
         <div className="hero-inner ev-container">
           <div className="hero-text">
-            <h1>Thuê xe máy điện - Khám phá thành phố</h1>
+            <h1>Thuê xe máy điện - Khám phá thành&nbsp;phố</h1>
             <p className="lead">
               Nhanh chóng tìm điểm thuê gần bạn, đặt xe và di chuyển — thân
               thiện với môi trường, giá cả phải chăng và thuận tiện.
@@ -58,37 +58,6 @@ export default function Home() {
                 Xem xe máy điện
               </Link>
             </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="vehicles-showcase" className="template-section">
-        <div className="ev-container">
-          <h2 className="section-title scroll-reveal fade-up">
-            Xe máy điện cao cấp
-          </h2>
-          <p className="section-sub scroll-reveal fade-up">
-            Trải nghiệm tương lai của giao thông đô thị.
-          </p>
-          <div className="image-gallery">
-            {featuredVehicles.map((vehicle, index) => (
-              <div
-                key={vehicle.id}
-                className="gallery-item scroll-reveal fade-up"
-              >
-                <img src={vehicle.image} alt={vehicle.name} loading="lazy" />
-                <div className="gradient-overlay"></div>
-                <div className="gallery-content">
-                  <h3>{vehicle.name}</h3>
-                  <p>{vehicle.short}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="text-center mt-4">
-            <Link to="/vehicles" className="btn primary">
-              Xem tất cả xe máy điện
-            </Link>
           </div>
         </div>
       </section>

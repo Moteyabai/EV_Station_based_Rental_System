@@ -6,7 +6,6 @@ import { useCart } from "../contexts/CartContext";
 import BookingForm from "../components/BookingForm";
 
 export default function Vehicles() {
-  const [filterType, setFilterType] = useState("all");
   const [sortOption, setSortOption] = useState("price-asc");
   const [searchTerm, setSearchTerm] = useState("");
   const [brandFilter, setBrandFilter] = useState("all");
@@ -36,11 +35,6 @@ export default function Vehicles() {
       );
     }
 
-    // Apply type filter
-    if (filterType !== "all") {
-      filtered = filtered.filter((vehicle) => vehicle.category === filterType);
-    }
-
     // Apply brand filter
     if (brandFilter !== "all") {
       filtered = filtered.filter((vehicle) => vehicle.brand === brandFilter);
@@ -53,7 +47,7 @@ export default function Vehicles() {
       if (sortOption === "name") return a.name.localeCompare(b.name);
       return 0;
     });
-  }, [filterType, sortOption, searchTerm, brandFilter]);
+  }, [sortOption, searchTerm, brandFilter]);
 
   return (
     <div className="vehicles-page">
@@ -91,20 +85,6 @@ export default function Vehicles() {
                     {brand === "all" ? "Tất cả thương hiệu" : brand}
                   </option>
                 ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label htmlFor="category">Loại phương tiện</label>
-              <select
-                id="category"
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-              >
-                <option value="all">Tất cả</option>
-                <option value="scooter">Xe máy điện</option>
-                <option value="motorcycle">Xe máy</option>
-                <option value="bicycle">Xe đạp điện</option>
               </select>
             </div>
 

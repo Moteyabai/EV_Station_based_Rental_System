@@ -30,7 +30,6 @@ import BookingSuccess from "./pages/BookingSuccess";
 import UserProfile from "./pages/UserProfile";
 import Staff from "./pages/Staff";
 import Admin from "./pages/Admin";
-import TestDropdown from "./pages/TestDropdown";
 
 // Styles
 import "./App.css";
@@ -89,10 +88,6 @@ function App() {
                         <Route path="/register" element={<Register />} />
                         <Route path="/profile" element={<UserProfile />} />
                         <Route path="/history" element={<UserHistory />} />
-                        <Route
-                          path="/test-dropdown"
-                          element={<TestDropdown />}
-                        />
 
                         <Route
                           path="/pickup/:vehicleId/:stationId"

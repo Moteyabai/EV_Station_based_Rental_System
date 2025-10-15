@@ -25,7 +25,6 @@ import {
   PlusCircleOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
-import { useNavigate } from "react-router-dom";
 import { useCart } from "../contexts/CartContext";
 import stations from "../data/stations";
 import { calculateRentalDays, formatPrice } from "../utils/helpers";
@@ -35,24 +34,11 @@ const { TextArea } = Input;
 const { Option } = Select;
 
 export default function BookingForm({ vehicle, onSubmit, onCancel }) {
-  const navigate = useNavigate();
   const { addToCart } = useCart();
   const [form] = Form.useForm();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [totalPrice, setTotalPrice] = useState(0);
   const [rentalDays, setRentalDays] = useState(0);
-
-  // Debug: log stations data
-  console.log("Stations data:", stations);
-  console.log("Number of stations:", stations?.length);
-
-  // Test if stations exist
-  useEffect(() => {
-    console.log("Stations loaded:", stations);
-    if (stations && stations.length > 0) {
-      console.log("First station:", stations[0]);
-    }
-  }, []);
 
   // Giữ nguyên logic state như cũ để tránh lỗi
   const [formData, setFormData] = useState({
@@ -154,9 +140,7 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
     if (!formData.rentalInfo.pickupStationId) {
       newErrors["rentalInfo.pickupStationId"] = "Vui lòng chọn điểm nhận xe";
     }
-    if (!formData.rentalInfo.returnStationId) {
-      newErrors["rentalInfo.returnStationId"] = "Vui lòng chọn điểm trả xe";
-    }
+    // returnStationId sẽ tự động bằng pickupStationId, không cần validate riêng
 
     return Object.keys(newErrors).length === 0;
   };
@@ -166,8 +150,6 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
     setIsSubmitting(true);
 
     try {
-      console.log("Form values:", values);
-
       // Cập nhật formData từ native HTML form values
       const updatedFormData = {
         ...formData,
@@ -178,7 +160,7 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
           pickupTime: values.pickupTime || "09:00",
           returnTime: values.returnTime || "18:00",
           pickupStationId: values.pickupStationId || "",
-          returnStationId: values.returnStationId || "",
+          returnStationId: values.pickupStationId || "", // Điểm trả xe = điểm nhận xe
           specialRequests: values.specialRequests || "",
         },
       };
@@ -201,22 +183,43 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
       // Add to cart
       addToCart(vehicle, rentalDetails);
 
-      // Show success message
-      message.success({
-        content: `✅ Đã thêm xe ${vehicle.name} vào giỏ hàng!`,
-        duration: 2,
+      // Show success notification with actions
+      notification.success({
+        message: "✅ Đã thêm vào giỏ hàng!",
+        description: `Xe ${vehicle.name} đã được thêm vào giỏ hàng của bạn.`,
+        duration: 6,
+        btn: (
+          <Space>
+            <Button
+              type="primary"
+              size="small"
+              icon={<ShoppingCartOutlined />}
+              onClick={() => {
+                notification.destroy();
+                if (onSubmit) {
+                  onSubmit(updatedFormData, rentalDetails);
+                }
+              }}
+              style={{ backgroundColor: "#4db6ac", borderColor: "#4db6ac" }}
+            >
+              Xem giỏ hàng
+            </Button>
+            <Button
+              size="small"
+              icon={<PlusCircleOutlined />}
+              onClick={() => {
+                notification.destroy();
+                onCancel();
+              }}
+            >
+              Tiếp tục chọn xe
+            </Button>
+          </Space>
+        ),
       });
 
       // Reset form
       form.resetFields();
-
-      // Tự động chuyển đến trang giỏ hàng
-      setTimeout(() => {
-        navigate('/cart');
-        if (onCancel) {
-          onCancel(); // Đóng modal
-        }
-      }, 500);
     } catch (error) {
       console.error("Error submitting booking:", error);
       message.error("Có lỗi xảy ra. Vui lòng thử lại.");
@@ -289,10 +292,10 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
           style={{ marginBottom: 24 }}
         >
           <Row gutter={16}>
-            <Col span={12}>
+            <Col span={24}>
               <Form.Item
                 name="pickupStationId"
-                label="Điểm nhận xe"
+                label="Điểm nhận xe (cũng là điểm trả xe)"
                 rules={[
                   { required: true, message: "Vui lòng chọn điểm nhận xe!" },
                 ]}
@@ -306,8 +309,10 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
                     fontSize: "14px",
                   }}
                   onChange={(e) => {
-                    form.setFieldValue("pickupStationId", e.target.value);
-                    console.log("Selected station:", e.target.value);
+                    const stationId = e.target.value;
+                    form.setFieldValue("pickupStationId", stationId);
+                    // Tự động set điểm trả xe giống điểm nhận xe
+                    form.setFieldValue("returnStationId", stationId);
                   }}
                 >
                   <option value="">Chọn điểm nhận xe</option>
@@ -322,38 +327,9 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
                   )}
                 </select>
               </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="returnStationId"
-                label="Điểm trả xe"
-                rules={[
-                  { required: true, message: "Vui lòng chọn điểm trả xe!" },
-                ]}
-              >
-                <select
-                  style={{
-                    width: "100%",
-                    padding: "8px",
-                    borderRadius: "6px",
-                    border: "1px solid #d9d9d9",
-                    fontSize: "14px",
-                  }}
-                  onChange={(e) => {
-                    form.setFieldValue("returnStationId", e.target.value);
-                  }}
-                >
-                  <option value="">Chọn điểm trả xe</option>
-                  {stations && stations.length > 0 ? (
-                    stations.map((station) => (
-                      <option key={station.id} value={station.id}>
-                        {station.name} - {station.address}
-                      </option>
-                    ))
-                  ) : (
-                    <option disabled>Không có trạm nào</option>
-                  )}
-                </select>
+              {/* Hidden field để lưu returnStationId */}
+              <Form.Item name="returnStationId" hidden>
+                <input type="hidden" />
               </Form.Item>
             </Col>
           </Row>
