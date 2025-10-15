@@ -291,6 +291,11 @@
   color: #065f46;
 }
 
+.status-completed {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
 .status-rented {
   background: #dbeafe;
   color: #1e40af;
@@ -351,6 +356,27 @@
 
 .btn-view:hover {
   background: #475569;
+  transform: translateY(-1px);
+}
+
+.btn-delete {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-delete:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-pay {
+  background: #10b981;
+  color: white;
+}
+
+.btn-pay:hover {
+  background: #059669;
   transform: translateY(-1px);
 }
 
@@ -635,9 +661,108 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
+/* Xe quá hạn - Cảnh báo màu đỏ */
+.handover-vehicle-card.overdue-warning {
+  border: 3px solid #ef4444;
+  background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+  animation: pulse-border 2s ease-in-out infinite;
+}
+
+@keyframes pulse-border {
+  0%, 100% {
+    border-color: #ef4444;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+  }
+  50% {
+    border-color: #dc2626;
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+  }
+}
+
 .handover-vehicle-card:hover {
   transform: translateX(4px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.handover-vehicle-card.overdue-warning:hover {
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.3);
+}
+
+/* Cảnh báo quá hạn */
+.overdue-alert {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  border: 2px solid #f87171;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.overdue-alert .alert-icon {
+  font-size: 1.5rem;
+  animation: blink 1s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.overdue-alert .alert-text {
+  color: #991b1b;
+  font-weight: 500;
+  font-size: 0.95rem;
+  flex: 1;
+}
+
+.overdue-alert .alert-text strong {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+/* Badge quá hạn */
+.overdue-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+  animation: pulse-badge 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-badge {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.6);
+  }
+}
+
+.status-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-end;
 }
 
 .vehicle-header {
@@ -690,6 +815,11 @@
   font-size: 0.9rem;
 }
 
+.completed-date {
+  color: #6366f1 !important;
+  font-weight: 700 !important;
+}
+
 .battery-indicator {
   display: inline-block;
   width: 100px;
@@ -724,6 +854,18 @@
 
 .btn-return:hover {
   background: #2563eb;
+}
+
+.btn-completed {
+  background: #6366f1;
+  color: white;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.btn-completed:hover {
+  background: #6366f1;
+  transform: none;
 }
 
 .btn-photo {
@@ -841,6 +983,13 @@
 .customer-info-box p {
   margin: 0.25rem 0;
   color: #64748b;
+}
+
+.license-plate-display {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #1e293b !important;
+  margin-top: 0.5rem !important;
 }
 
 /* Checklist Styles */
