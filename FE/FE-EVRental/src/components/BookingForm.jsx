@@ -25,6 +25,7 @@ import {
   PlusCircleOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
+import { useNavigate } from "react-router-dom";
 import { useCart } from "../contexts/CartContext";
 import stations from "../data/stations";
 import { calculateRentalDays, formatPrice } from "../utils/helpers";
@@ -34,6 +35,7 @@ const { TextArea } = Input;
 const { Option } = Select;
 
 export default function BookingForm({ vehicle, onSubmit, onCancel }) {
+  const navigate = useNavigate();
   const { addToCart } = useCart();
   const [form] = Form.useForm();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -199,43 +201,22 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
       // Add to cart
       addToCart(vehicle, rentalDetails);
 
-      // Show success notification with actions
-      notification.success({
-        message: "✅ Đã thêm vào giỏ hàng!",
-        description: `Xe ${vehicle.name} đã được thêm vào giỏ hàng của bạn.`,
-        duration: 6,
-        btn: (
-          <Space>
-            <Button
-              type="primary"
-              size="small"
-              icon={<ShoppingCartOutlined />}
-              onClick={() => {
-                notification.destroy();
-                if (onSubmit) {
-                  onSubmit(updatedFormData, rentalDetails);
-                }
-              }}
-              style={{ backgroundColor: "#4db6ac", borderColor: "#4db6ac" }}
-            >
-              Xem giỏ hàng
-            </Button>
-            <Button
-              size="small"
-              icon={<PlusCircleOutlined />}
-              onClick={() => {
-                notification.destroy();
-                onCancel();
-              }}
-            >
-              Tiếp tục chọn xe
-            </Button>
-          </Space>
-        ),
+      // Show success message
+      message.success({
+        content: `✅ Đã thêm xe ${vehicle.name} vào giỏ hàng!`,
+        duration: 2,
       });
 
       // Reset form
       form.resetFields();
+
+      // Tự động chuyển đến trang giỏ hàng
+      setTimeout(() => {
+        navigate('/cart');
+        if (onCancel) {
+          onCancel(); // Đóng modal
+        }
+      }, 500);
     } catch (error) {
       console.error("Error submitting booking:", error);
       message.error("Có lỗi xảy ra. Vui lòng thử lại.");
