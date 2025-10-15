@@ -51,35 +51,41 @@ export default function Staff() {
       {/* Navigation Tabs */}
       <nav className="staff-nav">
         <button 
+          className={`nav-tab ${activeTab === 'bookings' ? 'active' : ''}`}
+          onClick={() => setActiveTab('bookings')}
+        >
+          Quản lý đơn hàng
+        </button>
+        <button 
           className={`nav-tab ${activeTab === 'handover' ? 'active' : ''}`}
           onClick={() => setActiveTab('handover')}
         >
-          � Giao nhận xe
+          Giao nhận xe
         </button>
         <button 
           className={`nav-tab ${activeTab === 'verification' ? 'active' : ''}`}
           onClick={() => setActiveTab('verification')}
         >
-          🔐 Xác thực KH
+          Xác thực KH
         </button>
         <button 
           className={`nav-tab ${activeTab === 'payment' ? 'active' : ''}`}
           onClick={() => setActiveTab('payment')}
         >
-          � Thanh toán
+          Thanh toán
         </button>
         <button 
           className={`nav-tab ${activeTab === 'vehicles' ? 'active' : ''}`}
           onClick={() => setActiveTab('vehicles')}
         >
-          🏍️ Quản lý xe
+          Quản lý xe
         </button>
       </nav>
 
       {/* Main Content */}
       <main className="staff-content">
         <div className="content-container">
-          {activeTab === 'handover' && <VehicleHandover />}
+          {activeTab === 'bookings' && <BookingManagement userRole="staff" stationId={user.stationId} />}`n          {activeTab === 'bookings' && <BookingManagement userRole="staff" stationId={user.stationId} />}`n          {activeTab === 'handover' && <VehicleHandover />}
           {activeTab === 'verification' && <CustomerVerification />}
           {activeTab === 'payment' && <PaymentManagement />}
           {activeTab === 'vehicles' && <VehicleManagement />}
@@ -1555,3 +1561,6 @@ function ReportIssueModal({ vehicle, onClose, onReport }) {
     </div>
   );
 }
+
+
+
