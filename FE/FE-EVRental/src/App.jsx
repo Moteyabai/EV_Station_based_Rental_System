@@ -25,12 +25,12 @@ import VehiclePickup from "./pages/VehiclePickup";
 import VehicleReturn from "./pages/VehicleReturn";
 import PickupSuccess from "./pages/PickupSuccess";
 import ReturnSuccess from "./pages/ReturnSuccess";
-import RentalForm from "./pages/RentalForm";
 import Checkout from "./pages/Checkout";
 import BookingSuccess from "./pages/BookingSuccess";
 import UserProfile from "./pages/UserProfile";
 import Staff from "./pages/Staff";
 import Admin from "./pages/Admin";
+import TestDropdown from "./pages/TestDropdown";
 
 // Styles
 import "./App.css";
@@ -43,13 +43,13 @@ function App() {
           <Router>
             <Routes>
               {/* Admin Route - Layout riêng không có NavBar/Footer */}
-              <Route 
-                path="/admin" 
+              <Route
+                path="/admin"
                 element={
                   <ProtectedRoute allowedRoles={3}>
                     <Admin />
                   </ProtectedRoute>
-                } 
+                }
               />
 
               {/* Staff Route - Layout riêng không có NavBar/Footer */}
@@ -89,6 +89,10 @@ function App() {
                         <Route path="/register" element={<Register />} />
                         <Route path="/profile" element={<UserProfile />} />
                         <Route path="/history" element={<UserHistory />} />
+                        <Route
+                          path="/test-dropdown"
+                          element={<TestDropdown />}
+                        />
 
                         <Route
                           path="/pickup/:vehicleId/:stationId"
@@ -107,7 +111,6 @@ function App() {
                           element={<ReturnSuccess />}
                         />
                         <Route path="/cart" element={<Cart />} />
-                        <Route path="/rental-form" element={<RentalForm />} />
                         <Route path="/checkout" element={<Checkout />} />
                         <Route
                           path="/booking-success/:bookingId"

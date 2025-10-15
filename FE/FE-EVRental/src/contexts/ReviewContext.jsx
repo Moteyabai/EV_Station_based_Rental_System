@@ -90,6 +90,28 @@ export const ReviewProvider = ({ children }) => {
     return (sum / stationReviews.length).toFixed(1);
   };
 
+  // Lấy đánh giá cho xe hoặc trạm (hàm helper chung)
+  const getReviews = (vehicleId, stationId) => {
+    if (vehicleId) {
+      return getVehicleReviews(vehicleId);
+    }
+    if (stationId) {
+      return getStationReviews(stationId);
+    }
+    return [];
+  };
+
+  // Lấy điểm trung bình cho xe hoặc trạm (hàm helper chung)
+  const getAverageRating = (vehicleId, stationId) => {
+    if (vehicleId) {
+      return getAverageVehicleRating(vehicleId);
+    }
+    if (stationId) {
+      return getAverageStationRating(stationId);
+    }
+    return 0;
+  };
+
   // Context value
   const value = {
     addReview,
@@ -97,6 +119,8 @@ export const ReviewProvider = ({ children }) => {
     getStationReviews,
     getAverageVehicleRating,
     getAverageStationRating,
+    getReviews,
+    getAverageRating,
   };
 
   return (
@@ -105,10 +129,13 @@ export const ReviewProvider = ({ children }) => {
 };
 
 // Hook tùy chỉnh để sử dụng review context
-export const useReviews = () => {
+export const useReview = () => {
   const context = useContext(ReviewContext);
   if (context === undefined) {
-    throw new Error("useReviews must be used within a ReviewProvider");
+    throw new Error("useReview must be used within a ReviewProvider");
   }
   return context;
 };
+
+// Alias để tương thích
+export const useReviews = useReview;

@@ -14,16 +14,6 @@ export default function Checkout() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("credit_card");
 
-  // Lấy thông tin khách hàng từ localStorage (đã được lưu từ trang RentalForm)
-  const [customerInfo, setCustomerInfo] = useState(() => {
-    try {
-      const savedRentalInfo = localStorage.getItem("rental_info");
-      return savedRentalInfo ? JSON.parse(savedRentalInfo).customerInfo : null;
-    } catch {
-      return null;
-    }
-  });
-
   const [paymentData, setPaymentData] = useState({
     cardNumber: "",
     cardName: "",
@@ -46,12 +36,6 @@ export default function Checkout() {
     );
   }
 
-  // Kiểm tra nếu chưa điền thông tin khách hàng thì chuyển đến trang RentalForm
-  if (!customerInfo) {
-    navigate("/rental-form");
-    return null;
-  }
-
   if (cartItems.length === 0) {
     return (
       <div className="checkout-container">
@@ -65,21 +49,6 @@ export default function Checkout() {
       </div>
     );
   }
-
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(price * 1000);
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  };
 
   const subtotal = getTotalPrice();
   const total = subtotal;
@@ -99,7 +68,7 @@ export default function Checkout() {
       const bookingData = {
         bookingId,
         userId: user.email,
-        customerInfo: customerInfo,
+        userName: user.name || user.email,
         items: cartItems,
         payment: {
           method: paymentMethod,
@@ -214,7 +183,7 @@ export default function Checkout() {
 
                     <div className="item-price">
                       <div className="price-amount">
-                        {formatPrice(item.totalPrice)}
+                        {formatPrice(item.totalPrice, "VNĐ")}
                       </div>
                     </div>
                   </div>
@@ -356,7 +325,7 @@ export default function Checkout() {
                     >
                       {isProcessing
                         ? "🔄 Đang xử lý..."
-                        : `💳 Thanh toán ${formatPrice(total)}`}
+                        : `💳 Thanh toán ${formatPrice(total, "VNĐ")}`}
                     </button>
                   </div>
                 </form>
@@ -400,12 +369,12 @@ export default function Checkout() {
 
               <div className="summary-row">
                 <span>Tổng tiền thuê:</span>
-                <span>{formatPrice(subtotal)}</span>
+                <span>{formatPrice(subtotal, "VNĐ")}</span>
               </div>
 
               <div className="summary-row total">
                 <span>Tổng thanh toán:</span>
-                <span>{formatPrice(total)}</span>
+                <span>{formatPrice(total, "VNĐ")}</span>
               </div>
             </div>
 

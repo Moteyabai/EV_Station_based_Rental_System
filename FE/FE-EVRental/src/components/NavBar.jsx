@@ -1,6 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Layout, Menu, Badge, Dropdown, Avatar, Space, Button } from "antd";
+import {
+  Layout,
+  Menu,
+  Badge,
+  Dropdown,
+  Avatar,
+  Space,
+  Button,
+  Popover,
+} from "antd";
 import {
   HomeOutlined,
   CarOutlined,
@@ -21,6 +30,7 @@ export default function NavBar() {
   const { getItemCount } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
+  const [userMenuVisible, setUserMenuVisible] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -31,18 +41,63 @@ export default function NavBar() {
     navigate(key);
   };
 
+  const handleUserMenuClick = ({ key }) => {
+    console.log("Menu clicked:", key);
+    setUserMenuVisible(false); // Đóng menu sau khi click
+    switch (key) {
+      case "logout":
+        logout();
+        navigate("/");
+        break;
+      case "profile":
+        navigate("/profile");
+        break;
+      case "history":
+        navigate("/user-history");
+        break;
+      default:
+        console.log("Unknown menu key:", key);
+    }
+  };
+
+  const userMenuContent = (
+    <Menu
+      onClick={handleUserMenuClick}
+      style={{ minWidth: 200 }}
+      items={[
+        {
+          key: "profile",
+          icon: <UserOutlined />,
+          label: "Thông tin cá nhân",
+        },
+        {
+          key: "history",
+          icon: <HistoryOutlined />,
+          label: "Lịch sử thuê xe",
+        },
+        {
+          type: "divider",
+        },
+        {
+          key: "logout",
+          icon: <LogoutOutlined />,
+          label: "Đăng xuất",
+          danger: true,
+        },
+      ]}
+    />
+  );
+
   const userMenuItems = [
     {
       key: "profile",
       icon: <UserOutlined />,
       label: "Thông tin cá nhân",
-      onClick: () => navigate("/profile"),
     },
     {
       key: "history",
       icon: <HistoryOutlined />,
       label: "Lịch sử thuê xe",
-      onClick: () => navigate("/history"),
     },
     {
       type: "divider",
@@ -51,7 +106,7 @@ export default function NavBar() {
       key: "logout",
       icon: <LogoutOutlined />,
       label: "Đăng xuất",
-      onClick: handleLogout,
+      danger: true,
     },
   ];
 
@@ -153,17 +208,16 @@ export default function NavBar() {
 
           {/* User Actions */}
           {user ? (
-            <Dropdown
-              menu={{ items: userMenuItems }}
-              placement="bottomRight"
-              arrow
-            >
+            <div style={{ position: "relative" }}>
               <Button
                 type="text"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  padding: "4px 8px",
+                style={{ height: "auto", padding: "4px 8px" }}
+                onClick={() => {
+                  console.log(
+                    "Button clicked, current state:",
+                    userMenuVisible
+                  );
+                  setUserMenuVisible(!userMenuVisible);
                 }}
               >
                 <Space>
@@ -177,7 +231,100 @@ export default function NavBar() {
                   </span>
                 </Space>
               </Button>
-            </Dropdown>
+
+              {userMenuVisible && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    right: 0,
+                    marginTop: "8px",
+                    backgroundColor: "white",
+                    borderRadius: "8px",
+                    boxShadow:
+                      "0 3px 6px -4px rgba(0,0,0,0.12), 0 6px 16px 0 rgba(0,0,0,0.08), 0 9px 28px 8px rgba(0,0,0,0.05)",
+                    zIndex: 1000,
+                    minWidth: "200px",
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: "8px 12px",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.backgroundColor = "#f5f5f5")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.backgroundColor = "white")
+                    }
+                    onClick={() => {
+                      setUserMenuVisible(false);
+                      navigate("/profile");
+                    }}
+                  >
+                    <UserOutlined />
+                    <span>Thông tin cá nhân</span>
+                  </div>
+
+                  <div
+                    style={{
+                      padding: "8px 12px",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.backgroundColor = "#f5f5f5")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.backgroundColor = "white")
+                    }
+                    onClick={() => {
+                      setUserMenuVisible(false);
+                      navigate("/user-history");
+                    }}
+                  >
+                    <HistoryOutlined />
+                    <span>Lịch sử thuê xe</span>
+                  </div>
+
+                  <div
+                    style={{ borderTop: "1px solid #f0f0f0", margin: "4px 0" }}
+                  />
+
+                  <div
+                    style={{
+                      padding: "8px 12px",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      color: "#ff4d4f",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.backgroundColor = "#fff1f0")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.backgroundColor = "white")
+                    }
+                    onClick={() => {
+                      setUserMenuVisible(false);
+                      logout();
+                      navigate("/");
+                    }}
+                  >
+                    <LogoutOutlined />
+                    <span>Đăng xuất</span>
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
             <Space>
               <Link to="/login">

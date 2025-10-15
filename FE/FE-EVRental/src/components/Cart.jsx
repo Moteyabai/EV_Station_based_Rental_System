@@ -93,10 +93,10 @@ export default function Cart() {
               <div className="cart-item-price">
                 <div className="price-breakdown">
                   <div className="daily-price">
-                    {formatPrice(item.vehicle.price)}/ngày
+                    {formatPrice(item.vehicle.price, "VNĐ")}/ngày
                   </div>
                   <div className="total-price">
-                    = {formatPrice(item.totalPrice)}
+                    = {formatPrice(item.totalPrice, "VNĐ")}
                   </div>
                 </div>
 
@@ -121,19 +121,19 @@ export default function Cart() {
                 <span>{getItemCount()} xe</span>
               </div>
 
-              <div className="summary-row total">
+              <div className="summary-row">
                 <span>Tổng tiền thuê:</span>
-                <span>{formatPrice(getTotalPrice())}</span>
+                <span>{formatPrice(getTotalPrice(), "VNĐ")}</span>
               </div>
             </div>
 
             <div className="checkout-actions">
               <Link to="/vehicles" className="btn secondary continue-shopping">
-                ← Tiếp tục mua sắm
+                ← Tiếp tục chọn xe
               </Link>
 
-              <Link to="/rental-form" className="btn primary checkout-btn">
-                🚀 Tiến Hành Đặt Xe
+              <Link to="/checkout" className="btn primary checkout-btn">
+                � Thanh toán
               </Link>
             </div>
           </div>
