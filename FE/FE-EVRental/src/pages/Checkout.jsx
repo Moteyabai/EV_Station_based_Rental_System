@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useCart } from "../contexts/CartContext";
 import { useAuth } from "../contexts/AuthContext";
 import { formatPrice, formatDate } from "../utils/helpers";
+import { saveBooking } from "../utils/bookingStorage";
 import "../styles/Checkout.css";
 
 export default function Checkout() {
@@ -59,41 +60,97 @@ export default function Checkout() {
 
     // Simulate payment processing
     try {
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      console.log('🔄 Bắt đầu xử lý thanh toán...');
+      console.log('Phương thức thanh toán:', paymentMethod);
+      console.log('User:', user);
+      console.log('Cart items:', cartItems);
+
+      // Validate data trước khi xử lý
+      if (!user || !user.email) {
+        throw new Error('Thông tin người dùng không hợp lệ');
+      }
+
+      if (cartItems.length === 0) {
+        throw new Error('Giỏ hàng trống');
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // Generate booking confirmation
-      const bookingId = "BK" + Date.now();
+      const bookingId = `BK${Date.now()}`;
+      console.log('📋 Booking ID:', bookingId);
 
-      // In real app, send booking data to server
-      const bookingData = {
-        bookingId,
-        userId: user.email,
-        userName: user.name || user.email,
-        items: cartItems,
-        payment: {
-          method: paymentMethod,
-          amount: total,
-          currency: "VND",
-        },
-        status: "confirmed",
-        createdAt: new Date().toISOString(),
-      };
+      // Prepare booking data for each cart item
+      const savedBookings = [];
+      let itemIndex = 1;
+      
+      for (const item of cartItems) {
+        // Validate item data
+        if (!item.vehicle || !item.rentalDetails) {
+          console.error('❌ Invalid item:', item);
+          continue;
+        }
 
-      // Save booking to localStorage (in real app would be server)
-      const existingBookings = JSON.parse(
-        localStorage.getItem("ev_bookings") || "[]"
-      );
-      localStorage.setItem(
-        "ev_bookings",
-        JSON.stringify([...existingBookings, bookingData])
-      );
+        // Tạo unique booking ID cho mỗi item: BK1234567890-1, BK1234567890-2, ...
+        const itemBookingId = `${bookingId}-${itemIndex}`;
+
+        const bookingData = {
+          userId: user.accountID || user.AccountID || user.id || user.email,
+          userEmail: user.email,
+          userName: user.fullName || user.name || user.email,
+          userPhone: user.phone || 'Chưa cập nhật',
+          vehicleName: item.vehicle.name,
+          vehicleId: item.vehicle.id,
+          licensePlate: item.vehicle.licensePlate || `59${String.fromCharCode(65 + Math.floor(Math.random() * 26))}-${Math.floor(10000 + Math.random() * 90000)}`,
+          vehicleImage: item.vehicle.image,
+          pickupDate: item.rentalDetails.pickupDate,
+          returnDate: item.rentalDetails.returnDate,
+          pickupTime: item.rentalDetails.pickupTime || '09:00',
+          returnTime: item.rentalDetails.returnTime || '18:00',
+          pickupStation: item.rentalDetails.pickupStation?.name || 'Chưa chọn',
+          returnStation: item.rentalDetails.returnStation?.name || 'Chưa chọn',
+          days: item.rentalDetails.days || 1,
+          totalPrice: item.totalPrice || 0,
+          additionalServices: item.rentalDetails.additionalServices || {},
+          paymentMethod: paymentMethod,
+          battery: '100%',
+          lastCheck: new Date().toISOString(),
+        };
+
+        console.log('💾 Đang lưu booking với ID:', itemBookingId);
+
+        try {
+          // Save each booking với ID cụ thể
+          const savedBooking = saveBooking(bookingData, itemBookingId);
+          savedBookings.push(savedBooking);
+          console.log('✅ Đã lưu booking:', savedBooking.id);
+          itemIndex++;
+        } catch (saveError) {
+          console.error('❌ Lỗi khi lưu booking:', saveError);
+          throw new Error(`Không thể lưu booking cho xe ${item.vehicle.name}`);
+        }
+      }
+
+      if (savedBookings.length === 0) {
+        throw new Error('Không có booking nào được lưu thành công');
+      }
+
+      console.log('🎉 Đã lưu tất cả bookings:', savedBookings);
 
       // Clear cart and redirect
       clearCart();
+      
+      // Show success message based on payment method
+      if (paymentMethod === 'cash') {
+        alert('✅ Đặt xe thành công! Vui lòng thanh toán khi nhận xe tại điểm.');
+      } else {
+        alert('✅ Thanh toán thành công! Đang chuyển đến trang xác nhận...');
+      }
+      
       navigate(`/booking-success/${bookingId}`);
     } catch (error) {
-      console.error("Payment error:", error);
-      alert("❌ Có lỗi xảy ra trong quá trình thanh toán. Vui lòng thử lại!");
+      console.error("❌ Payment error:", error);
+      alert(`❌ Lỗi: ${error.message || 'Có lỗi xảy ra trong quá trình thanh toán. Vui lòng thử lại!'}`);
     } finally {
       setIsProcessing(false);
     }
@@ -250,6 +307,20 @@ export default function Checkout() {
                     <span>Ví điện tử (Momo, ZaloPay)</span>
                   </div>
                 </label>
+
+                <label className="payment-option">
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="cash"
+                    checked={paymentMethod === "cash"}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                  />
+                  <div className="payment-info">
+                    <span className="payment-icon">💵</span>
+                    <span>Thanh toán tại điểm nhận xe</span>
+                  </div>
+                </label>
               </div>
 
               {paymentMethod === "credit_card" && (
@@ -331,7 +402,7 @@ export default function Checkout() {
                 </form>
               )}
 
-              {paymentMethod !== "credit_card" && (
+              {paymentMethod !== "credit_card" && paymentMethod !== "cash" && (
                 <div className="alternative-payment">
                   <p>
                     Phương thức thanh toán này sẽ được hỗ trợ trong phiên bản
@@ -349,6 +420,43 @@ export default function Checkout() {
                       onClick={() => setPaymentMethod("credit_card")}
                     >
                       Chọn thẻ tín dụng
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {paymentMethod === "cash" && (
+                <div className="cash-payment-info">
+                  <div className="info-box">
+                    <h4>💵 Hướng dẫn thanh toán tại điểm</h4>
+                    <ul>
+                      <li>✅ Bạn sẽ thanh toán trực tiếp khi nhận xe tại điểm</li>
+                      <li>✅ Vui lòng mang theo CMND/CCCD và bằng lái xe</li>
+                      <li>✅ Số tiền cần thanh toán: <strong>{formatPrice(total, "VNĐ")}</strong></li>
+                      <li>✅ Nhân viên sẽ xác nhận và giao xe cho bạn</li>
+                    </ul>
+                    <div className="note-box">
+                      <p><strong>⚠️ Lưu ý:</strong></p>
+                      <p>• Vui lòng đến đúng giờ đã đặt</p>
+                      <p>• Chuẩn bị đầy đủ giấy tờ cần thiết</p>
+                      <p>• Liên hệ hotline nếu cần hỗ trợ: <strong>1900-xxxx</strong></p>
+                    </div>
+                  </div>
+                  <div className="payment-actions">
+                    <button
+                      className="btn secondary"
+                      onClick={() => setStep(1)}
+                    >
+                      ← Quay lại
+                    </button>
+                    <button
+                      className="btn primary"
+                      onClick={handlePaymentSubmit}
+                      disabled={isProcessing}
+                    >
+                      {isProcessing
+                        ? "🔄 Đang xử lý..."
+                        : `✅ Xác nhận đặt xe`}
                     </button>
                   </div>
                 </div>

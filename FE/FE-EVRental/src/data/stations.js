@@ -14,11 +14,42 @@ const stations = [
     openingHours: '24/7',
     amenities: ['Nhà vệ sinh', 'Quán cà phê', 'Phòng chờ', 'WiFi miễn phí'],
     images: {
-      exterior: "/images/stations/station1-exterior.jpg",
-      chargers: "/images/stations/station1-chargers.jpg",
-      thumbnail: "/images/stations/station1.jpg"
+      exterior: "https://images.unsplash.com/photo-1593941707285-aae966bad0cf?auto=format&fit=crop&w=800&q=60",
+      chargers: "https://images.unsplash.com/photo-1635418421745-5e29b738d8e6?auto=format&fit=crop&w=800&q=60",
+      thumbnail: "https://images.unsplash.com/photo-1647531257138-ff6ce2547643?auto=format&fit=crop&w=800&q=60"
     },
-    vehicleIds: ['v1', 'v2', 'v3'] // Chỉ lưu ID xe có sẵn tại trạm này
+    vehicles: [
+      {
+        id: 'v1',
+        name: 'VinFast Klara S',
+        type: 'Xe máy điện cao cấp',
+        batteryCapacity: '1.2 kWh',
+        range: '60 km',
+        price: 120,
+        available: true,
+        image: '/images/vehicles/vinfast-klara-s.jpg'
+      },
+      {
+        id: 'v2',
+        name: 'DatBike Weaver 200',
+        type: 'Xe máy điện thể thao',
+        batteryCapacity: '2.5 kWh',
+        range: '120 km',
+        price: 150,
+        available: true,
+        image: '/images/vehicles/datbike-weaver-200.jpg'
+      },
+      {
+        id: 'v3',
+        name: 'VinFast Feliz S',
+        type: 'Xe máy điện nhỏ gọn',
+        batteryCapacity: '0.9 kWh',
+        range: '50 km',
+        price: 100,
+        available: true,
+        image: '/images/vehicles/vinfast-feliz-s.jpg'
+      }
+    ]
   },
   {
     id: 's2',
@@ -35,11 +66,42 @@ const stations = [
     openingHours: '7:00 - 22:00',
     amenities: ['Nhà vệ sinh', 'Cửa hàng tiện lợi', 'WiFi miễn phí'],
     images: {
-      exterior: "/images/stations/station2-exterior.jpg",
-      chargers: "/images/stations/station2-chargers.jpg",
-      thumbnail: "/images/stations/station2.jpg"
+      exterior: "https://images.unsplash.com/photo-1594818379496-da1e345b812a?auto=format&fit=crop&w=800&q=60",
+      chargers: "https://images.unsplash.com/photo-1637596331299-aa86e822f7bb?auto=format&fit=crop&w=800&q=60",
+      thumbnail: "https://images.unsplash.com/photo-1683009427479-c7e36bbb7bca?auto=format&fit=crop&w=800&q=60"
     },
-    vehicleIds: ['v1', 'v2', 'v3'] // Chỉ lưu ID xe có sẵn tại trạm này
+    vehicles: [
+      {
+        id: 'v1',
+        name: 'VinFast Klara S',
+        type: 'Xe máy điện cao cấp',
+        batteryCapacity: '1.2 kWh',
+        range: '60 km',
+        price: 120,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60'
+      },
+      {
+        id: 'v2',
+        name: 'DatBike Weaver 200',
+        type: 'Xe máy điện thể thao',
+        batteryCapacity: '2.5 kWh',
+        range: '120 km',
+        price: 150,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=60'
+      },
+      {
+        id: 'v3',
+        name: 'VinFast Feliz S',
+        type: 'Xe máy điện nhỏ gọn',
+        batteryCapacity: '0.9 kWh',
+        range: '50 km',
+        price: 100,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?auto=format&fit=crop&w=800&q=60'
+      }
+    ]
   },
   {
     id: 's3',
@@ -56,11 +118,42 @@ const stations = [
     openingHours: '6:00 - 24:00',
     amenities: ['Nhà vệ sinh', 'Trung tâm dịch vụ', 'Quán cà phê', 'WiFi miễn phí'],
     images: {
-      exterior: "/images/stations/station3-exterior.jpg",
-      chargers: "/images/stations/station3-chargers.jpg", 
-      thumbnail: "/images/stations/station3.jpg"
+      exterior: "https://images.unsplash.com/photo-1593941707882-a5bfb6f5343d?auto=format&fit=crop&w=800&q=60",
+      chargers: "https://images.unsplash.com/photo-1662982592268-5b1f19359b99?auto=format&fit=crop&w=800&q=60", 
+      thumbnail: "https://images.unsplash.com/photo-1647531257173-8c74b4c0093b?auto=format&fit=crop&w=800&q=60"
     },
-    vehicleIds: ['v1', 'v2', 'v3'] // Chỉ lưu ID xe có sẵn tại trạm này
+    vehicles: [
+      {
+        id: 'v1',
+        name: 'VinFast Klara S',
+        type: 'Xe máy điện cao cấp',
+        batteryCapacity: '1.2 kWh',
+        range: '60 km',
+        price: 120,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60'
+      },
+      {
+        id: 'v2',
+        name: 'DatBike Weaver 200',
+        type: 'Xe máy điện thể thao',
+        batteryCapacity: '2.5 kWh',
+        range: '120 km',
+        price: 150,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=60'
+      },
+      {
+        id: 'v3',
+        name: 'VinFast Feliz S',
+        type: 'Xe máy điện nhỏ gọn',
+        batteryCapacity: '0.9 kWh',
+        range: '50 km',
+        price: 100,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?auto=format&fit=crop&w=800&q=60'
+      }
+    ]
   },
   {
     id: 's4',
@@ -77,11 +170,32 @@ const stations = [
     openingHours: '24/7',
     amenities: ['Nhà vệ sinh', 'Không gian làm việc chung', 'Quầy cà phê', 'WiFi miễn phí'],
     images: {
-      exterior: "/images/stations/station4-exterior.jpg",
-      chargers: "/images/stations/station4-chargers.jpg",
-      thumbnail: "/images/stations/station4.jpg"
+      exterior: "https://images.unsplash.com/photo-1635769398371-78d717a1c06b?auto=format&fit=crop&w=800&q=60",
+      chargers: "https://images.unsplash.com/photo-1580275266003-bfb5703a0376?auto=format&fit=crop&w=800&q=60",
+      thumbnail: "https://images.unsplash.com/photo-1605627079912-97c3810a11a9?auto=format&fit=crop&w=800&q=60"
     },
-    vehicleIds: ['v1', 'v2'] // Chỉ lưu ID xe có sẵn tại trạm này
+    vehicles: [
+      {
+        id: 'v1',
+        name: 'VinFast Klara S',
+        type: 'Xe máy điện cao cấp',
+        batteryCapacity: '1.2 kWh',
+        range: '60 km',
+        price: 120,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60'
+      },
+      {
+        id: 'v2',
+        name: 'DatBike Weaver 200',
+        type: 'Xe máy điện thể thao',
+        batteryCapacity: '2.5 kWh',
+        range: '120 km',
+        price: 150,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=60'
+      }
+    ]
   },
   {
     id: 's5',
@@ -98,11 +212,42 @@ const stations = [
     openingHours: '24/7',
     amenities: ['Nhà vệ sinh', 'Lưu trữ hành lý', 'Dịch vụ đưa đón', 'WiFi miễn phí'],
     images: {
-      exterior: "/images/stations/station5-exterior.jpg",
-      chargers: "/images/stations/station5-chargers.jpg",
-      thumbnail: "/images/stations/station5.jpg"
+      exterior: "https://images.unsplash.com/photo-1620494697507-606467e30056?auto=format&fit=crop&w=800&q=60",
+      chargers: "https://images.unsplash.com/photo-1591770184880-0adc4b59a381?auto=format&fit=crop&w=800&q=60",
+      thumbnail: "https://images.unsplash.com/photo-1635053419037-c3f6dab301b9?auto=format&fit=crop&w=800&q=60"
     },
-    vehicleIds: ['v1', 'v2', 'v3'] // Chỉ lưu ID xe có sẵn tại trạm này
+    vehicles: [
+      {
+        id: 'v1',
+        name: 'VinFast Klara S',
+        type: 'Xe máy điện cao cấp',
+        batteryCapacity: '1.2 kWh',
+        range: '60 km',
+        price: 120,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60'
+      },
+      {
+        id: 'v2',
+        name: 'DatBike Weaver 200',
+        type: 'Xe máy điện thể thao',
+        batteryCapacity: '2.5 kWh',
+        range: '120 km',
+        price: 150,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=60'
+      },
+      {
+        id: 'v3',
+        name: 'VinFast Feliz S',
+        type: 'Xe máy điện nhỏ gọn',
+        batteryCapacity: '0.9 kWh',
+        range: '50 km',
+        price: 100,
+        available: true,
+        image: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?auto=format&fit=crop&w=800&q=60'
+      }
+    ]
   }
 ];
 

@@ -155,7 +155,7 @@ export default function StationFinder({ stations: stationsProp }) {
       </div>
 
       <div className="station-finder-content">
-        <div className="stations-list">
+        <div className="stations-list-fullwidth">
           <h3>📍 Danh sách trạm ({filteredStations.length})</h3>
 
           {filteredStations.length === 0 ? (

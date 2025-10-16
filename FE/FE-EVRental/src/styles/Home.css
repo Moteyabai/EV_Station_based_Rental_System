@@ -14,10 +14,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab, #4db6ac, #26a69a);
-  background-size: 600% 600%;
+  background: linear-gradient(135deg, #4db6ac 0%, #26a69a 50%, #009688 100%);
   overflow: hidden;
-  animation: gradientMove 5s ease infinite;
 }
 
 .template-hero::before {
@@ -30,26 +28,6 @@
   background: 
     radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
     radial-gradient(circle at 80% 80%, rgba(255,255,255,0.08) 0%, transparent 50%);
-  pointer-events: none;
-  animation: floatBackground 8s ease-in-out infinite;
-}
-
-.template-hero::after {
-  content: '';
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background-image: 
-    radial-gradient(circle at 10% 20%, rgba(255,255,255,0.3) 2px, transparent 2px),
-    radial-gradient(circle at 90% 80%, rgba(255,255,255,0.25) 2px, transparent 2px),
-    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.2) 2px, transparent 2px),
-    radial-gradient(circle at 30% 70%, rgba(255,255,255,0.28) 2px, transparent 2px),
-    radial-gradient(circle at 70% 30%, rgba(255,255,255,0.22) 2px, transparent 2px),
-    radial-gradient(circle at 85% 15%, rgba(255,255,255,0.26) 1.5px, transparent 1.5px),
-    radial-gradient(circle at 15% 85%, rgba(255,255,255,0.24) 1.5px, transparent 1.5px);
-  background-size: 200px 200px, 250px 250px, 300px 300px, 150px 150px, 180px 180px, 220px 220px, 160px 160px;
-  background-position: 0 0, 40px 60px, 130px 270px, 70px 100px, 200px 150px, 90px 200px, 150px 50px;
-  animation: particlesFloat 12s linear infinite;
   pointer-events: none;
 }
 
@@ -71,21 +49,8 @@
   color: white;
   font-weight: 700;
   line-height: 1.2;
-  text-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  animation: slideInFromTop 0.8s ease-out;
-  position: relative;
-}
-
-.hero-text h1::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: -10px;
-  width: 0;
-  height: 5px;
-  background: linear-gradient(90deg, rgba(255,255,255,0), white, rgba(255,255,255,0));
-  box-shadow: 0 0 10px rgba(255,255,255,0.8);
-  animation: underlineGrow 1.5s ease-in-out 0.8s forwards;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  white-space: nowrap;
 }
 
 .lead {
@@ -94,7 +59,6 @@
   margin-bottom: 2rem;
   line-height: 1.6;
   font-weight: 300;
-  animation: slideInFromBottom 0.8s ease-out 0.2s backwards, textGlow 3s ease-in-out infinite;
 }
 
 .hero-ctas {
@@ -102,7 +66,6 @@
   gap: 1rem;
   justify-content: center;
   flex-wrap: wrap;
-  animation: zoomIn 0.6s ease-out 0.4s backwards;
 }
 
 .btn {
@@ -120,62 +83,13 @@
   background: white;
   color: #4db6ac;
   box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-  position: relative;
-  overflow: hidden;
-}
-
-.btn.primary::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(77, 182, 172, 0.3);
-  transform: translate(-50%, -50%);
-  transition: width 0.6s, height 0.6s;
-}
-
-.btn.primary:hover::before {
-  width: 400px;
-  height: 400px;
-}
-
-.btn.primary:hover {
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.3);
 }
 
 .btn.secondary {
-  background: rgba(255,255,255,0.2);
-  color: white;
-  border: 2px solid white;
-  backdrop-filter: blur(10px);
-  position: relative;
-  overflow: hidden;
-}
-
-.btn.secondary::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-  transition: left 0.5s;
-}
-
-.btn.secondary:hover::before {
-  left: 100%;
-}
-
-.btn.secondary:hover {
-  background: white;
-  color: #4db6ac;
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+  background: white !important;
+  color: #4caf50 !important;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  border: none !important;
 }
 
 /* Sections */
@@ -449,102 +363,6 @@
 @keyframes lineFlow {
   0% { transform: translateX(-100%); }
   50%, 100% { transform: translateX(100%); }
-}
-
-/* Simple Hero Animations */
-@keyframes slideInFromTop {
-  from {
-    opacity: 0;
-    transform: translateY(-50px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideInFromBottom {
-  from {
-    opacity: 0;
-    transform: translateY(50px);
-  }
-  to {
-    opacity: 0.95;
-    transform: translateY(0);
-  }
-}
-
-@keyframes zoomIn {
-  from {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes gradientMove {
-  0% {
-    background-position: 0% 50%;
-  }
-  25% {
-    background-position: 50% 100%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  75% {
-    background-position: 50% 0%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-@keyframes particlesFloat {
-  0% {
-    transform: translateY(0) translateX(0) rotate(0deg);
-  }
-  33% {
-    transform: translateY(-30px) translateX(30px) rotate(120deg);
-  }
-  66% {
-    transform: translateY(-15px) translateX(-20px) rotate(240deg);
-  }
-  100% {
-    transform: translateY(0) translateX(0) rotate(360deg);
-  }
-}
-
-@keyframes floatBackground {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-@keyframes underlineGrow {
-  from {
-    width: 0;
-    left: 50%;
-  }
-  to {
-    width: 100%;
-    left: 0;
-  }
-}
-
-@keyframes textGlow {
-  0%, 100% {
-    text-shadow: 0 0 5px rgba(255,255,255,0.3);
-  }
-  50% {
-    text-shadow: 0 0 15px rgba(255,255,255,0.6);
-  }
 }
 .bike-card { background: linear-gradient(180deg,#0b1a1e,#071018); padding: 1rem; border-radius: 14px; width: 260px; box-shadow: 0 18px 40px rgba(2,6,23,0.6); text-align: center }
 .bike-top { font-weight: 700; color: #9fe0c9 }

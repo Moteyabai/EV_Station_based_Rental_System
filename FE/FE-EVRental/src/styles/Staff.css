@@ -189,9 +189,11 @@
 }
 
 .stat-label {
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: rgb(24, 181, 53);
   text-align: center;
+  margin-top: 0.25rem;
 }
 
 .btn-add, .btn-export {
@@ -1415,6 +1417,36 @@
 }
 
 /* Payment Management Styles */
+.filter-tabs {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0;
+}
+
+.filter-tab {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+}
+
+.filter-tab:hover {
+  color: #66c9a9;
+}
+
+.filter-tab.active {
+  color: #66c9a9;
+  border-bottom-color: #66c9a9;
+}
+
 .payment-list {
   display: flex;
   flex-direction: column;
@@ -1866,3 +1898,35 @@
   box-shadow: 0 0 0 3px rgba(102, 201, 169, 0.1);
 }
 
+/* Highlight important info */
+.booking-id {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  font-weight: 700 !important;
+  color: #92400e !important;
+  border: 2px solid #fbbf24;
+  font-family: 'Courier New', monospace;
+}
+
+.pickup-location,
+.return-location {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  font-weight: 600 !important;
+  color: #1e40af !important;
+  border: 1px solid #93c5fd;
+}
+
+.detail-row .value a[href^="tel:"] {
+  color: #10b981;
+  text-decoration: none;
+  font-weight: 700;
+  transition: all 0.3s ease;
+}
+
+.detail-row .value a[href^="tel:"]:hover {
+  color: #059669;
+  text-decoration: underline;
+}

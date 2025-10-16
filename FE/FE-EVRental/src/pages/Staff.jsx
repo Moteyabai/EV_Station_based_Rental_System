@@ -1,33 +1,28 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
-import {
-  getAllBookings,
-  updateBookingStatus,
-  verifyPayment,
-  rejectPayment,
-} from "../utils/bookingStorage";
-import "../styles/Staff.css";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { getAllBookings, updateBookingStatus, verifyPayment, rejectPayment } from '../utils/bookingStorage';
+import '../styles/Staff.css';
 
 export default function Staff() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("handover");
+  const [activeTab, setActiveTab] = useState('handover');
 
   useEffect(() => {
     // Kiểm tra quyền truy cập
     const userRoleId = user?.roleID || user?.RoleID;
-    console.log("Staff page: User:", user, "RoleID:", userRoleId);
-
+    console.log('Staff page: User:', user, 'RoleID:', userRoleId);
+    
     if (!user || userRoleId !== 2) {
-      console.log("Staff page: Access denied, redirecting to home");
-      navigate("/");
+      console.log('Staff page: Access denied, redirecting to home');
+      navigate('/');
     }
   }, [user, navigate]);
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    navigate('/login');
   };
 
   if (!user) return null;
@@ -55,52 +50,39 @@ export default function Staff() {
 
       {/* Navigation Tabs */}
       <nav className="staff-nav">
-        <button
-          className={`nav-tab ${activeTab === "bookings" ? "active" : ""}`}
-          onClick={() => setActiveTab("bookings")}
+        <button 
+          className={`nav-tab ${activeTab === 'handover' ? 'active' : ''}`}
+          onClick={() => setActiveTab('handover')}
         >
-          Quản lý đơn hàng
+          � Giao nhận xe
         </button>
-        <button
-          className={`nav-tab ${activeTab === "handover" ? "active" : ""}`}
-          onClick={() => setActiveTab("handover")}
+        <button 
+          className={`nav-tab ${activeTab === 'verification' ? 'active' : ''}`}
+          onClick={() => setActiveTab('verification')}
         >
-          Giao nhận xe
+          🔐 Xác thực KH
         </button>
-        <button
-          className={`nav-tab ${activeTab === "verification" ? "active" : ""}`}
-          onClick={() => setActiveTab("verification")}
+        <button 
+          className={`nav-tab ${activeTab === 'payment' ? 'active' : ''}`}
+          onClick={() => setActiveTab('payment')}
         >
-          Xác thực KH
+          � Thanh toán
         </button>
-        <button
-          className={`nav-tab ${activeTab === "payment" ? "active" : ""}`}
-          onClick={() => setActiveTab("payment")}
+        <button 
+          className={`nav-tab ${activeTab === 'vehicles' ? 'active' : ''}`}
+          onClick={() => setActiveTab('vehicles')}
         >
-          Thanh toán
-        </button>
-        <button
-          className={`nav-tab ${activeTab === "vehicles" ? "active" : ""}`}
-          onClick={() => setActiveTab("vehicles")}
-        >
-          Quản lý xe
+          🏍️ Quản lý xe
         </button>
       </nav>
 
       {/* Main Content */}
       <main className="staff-content">
         <div className="content-container">
-          {activeTab === "bookings" && (
-            <BookingManagement userRole="staff" stationId={user.stationId} />
-          )}
-          `n{" "}
-          {activeTab === "bookings" && (
-            <BookingManagement userRole="staff" stationId={user.stationId} />
-          )}
-          `n {activeTab === "handover" && <VehicleHandover />}
-          {activeTab === "verification" && <CustomerVerification />}
-          {activeTab === "payment" && <PaymentManagement />}
-          {activeTab === "vehicles" && <VehicleManagement />}
+          {activeTab === 'handover' && <VehicleHandover />}
+          {activeTab === 'verification' && <CustomerVerification />}
+          {activeTab === 'payment' && <PaymentManagement />}
+          {activeTab === 'vehicles' && <VehicleManagement />}
         </div>
       </main>
     </div>
@@ -109,7 +91,7 @@ export default function Staff() {
 
 // Component Quản lý Giao - Nhận xe
 function VehicleHandover() {
-  const [selectedFilter, setSelectedFilter] = useState("all");
+  const [selectedFilter, setSelectedFilter] = useState('booked'); // 'booked', 'renting', 'completed'
   const [vehicles, setVehicles] = useState([]);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [showHandoverModal, setShowHandoverModal] = useState(false);
@@ -117,43 +99,94 @@ function VehicleHandover() {
   // Load bookings from localStorage on mount and set up refresh
   useEffect(() => {
     loadBookings();
-
+    
     // Refresh bookings every 5 seconds to catch new bookings
     const interval = setInterval(loadBookings, 5000);
     return () => clearInterval(interval);
   }, []);
 
-  const loadBookings = () => {
+  // Fetch user phone from backend API
+  const fetchUserPhone = async (userId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token || !userId) return null;
+
+      // Nếu userId là email hoặc không phải số, skip
+      if (typeof userId === 'string' && (userId.includes('@') || isNaN(userId))) {
+        console.log('⚠️ UserId không phải accountId (số):', userId);
+        return null;
+      }
+
+      const accountId = parseInt(userId);
+      if (isNaN(accountId)) {
+        console.log('⚠️ Không thể parse userId thành số:', userId);
+        return null;
+      }
+
+      const response = await fetch(`http://localhost:5168/api/Account/GetAccountById/${accountId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          console.error('❌ Token hết hạn hoặc không hợp lệ');
+        } else {
+          console.error('❌ Lỗi fetch user phone:', response.status);
+        }
+        return null;
+      }
+
+      const userData = await response.json();
+      console.log('✅ Fetched user phone for accountId', accountId, ':', userData.phone);
+      return userData.phone || userData.Phone || null;
+    } catch (error) {
+      console.error('❌ Error fetching user phone:', error);
+      return null;
+    }
+  };
+
+  const loadBookings = async () => {
     const allBookings = getAllBookings();
-
+    
     // CHỈ LẤY BOOKINGS ĐÃ XÁC THỰC THANH TOÁN (status !== 'pending_payment')
-    const verifiedBookings = allBookings.filter(
-      (booking) =>
-        booking.status !== "pending_payment" && booking.status !== "cancelled"
+    const verifiedBookings = allBookings.filter(booking => 
+      booking.status !== 'pending_payment' && booking.status !== 'cancelled'
     );
-
+    
     // Transform bookings to vehicle format for display
-    const transformedVehicles = verifiedBookings.map((booking) => {
+    const transformedVehicles = await Promise.all(verifiedBookings.map(async (booking) => {
       // Kiểm tra xe đã quá hạn chưa
-      const returnDateTime = new Date(
-        `${booking.returnDate} ${booking.returnTime}`
-      );
+      const returnDateTime = new Date(`${booking.returnDate} ${booking.returnTime}`);
       const now = new Date();
-      const isOverdue = booking.status === "renting" && returnDateTime < now;
-
+      const isOverdue = booking.status === 'renting' && returnDateTime < now;
+      
+      // Fetch phone from backend if not available or is placeholder
+      let userPhone = booking.userPhone;
+      
+      if (!userPhone || userPhone === 'Chưa cập nhật' || userPhone === 'N/A') {
+        const fetchedPhone = await fetchUserPhone(booking.userId);
+        if (fetchedPhone) {
+          userPhone = fetchedPhone;
+        }
+      }
+      
       return {
         id: booking.id,
         vehicleName: booking.vehicleName,
         licensePlate: booking.licensePlate,
         customerName: booking.userName,
-        userPhone: booking.userPhone,
+        userId: booking.userId,
+        userPhone: userPhone,
         userEmail: booking.userEmail,
-        bookingId: booking.bookingId,
+        bookingId: booking.bookingId || booking.id,
         status: booking.status,
         pickupDate: `${booking.pickupDate} ${booking.pickupTime}`,
         returnDate: `${booking.returnDate} ${booking.returnTime}`,
-        pickupStation: booking.pickupStation?.name || "Chưa xác định",
-        returnStation: booking.returnStation?.name || "Chưa xác định",
+        pickupStation: booking.pickupStation || 'Chưa xác định',
+        returnStation: booking.returnStation || 'Chưa xác định',
         battery: booking.battery,
         lastCheck: booking.lastCheck,
         completedDate: booking.completedDate,
@@ -163,36 +196,31 @@ function VehicleHandover() {
         paymentVerified: booking.paymentVerified,
         paymentVerifiedAt: booking.paymentVerifiedAt,
         isOverdue: isOverdue, // Flag để đánh dấu xe quá hạn
-        overdueHours: isOverdue
-          ? Math.floor((now - returnDateTime) / (1000 * 60 * 60))
-          : 0,
+        overdueHours: isOverdue ? Math.floor((now - returnDateTime) / (1000 * 60 * 60)) : 0
       };
-    });
+    }));
 
     setVehicles(transformedVehicles);
   };
 
-  const filteredVehicles = vehicles.filter((v) => {
-    if (selectedFilter === "all") return true;
+  const filteredVehicles = vehicles.filter(v => {
+    if (selectedFilter === 'all') return true;
     return v.status === selectedFilter;
   });
 
+  // Count vehicles by status
+  const bookedCount = vehicles.filter(v => v.status === 'booked').length;
+  const rentingCount = vehicles.filter(v => v.status === 'renting').length;
+  const completedCount = vehicles.filter(v => v.status === 'completed').length;
+
   const getStatusBadge = (status) => {
     const config = {
-      booked: { text: "Đã đặt trước", class: "status-booked", icon: "📅" },
-      renting: { text: "Đang cho thuê", class: "status-renting", icon: "�" },
-      completed: {
-        text: "Đã hoàn thành",
-        class: "status-completed",
-        icon: "✅",
-      },
+      booked: { text: 'Đã đặt trước', class: 'status-booked', icon: '📅' },
+      renting: { text: 'Đang cho thuê', class: 'status-renting', icon: '�' },
+      completed: { text: 'Đã hoàn thành', class: 'status-completed', icon: '✅' }
     };
     const c = config[status] || config.booked;
-    return (
-      <span className={`status-badge ${c.class}`}>
-        {c.icon} {c.text}
-      </span>
-    );
+    return <span className={`status-badge ${c.class}`}>{c.icon} {c.text}</span>;
   };
 
   const handlePickup = (vehicle) => {
@@ -208,10 +236,10 @@ function VehicleHandover() {
   const handleCompleteHandover = (vehicleId, newStatus) => {
     // Update status in localStorage
     updateBookingStatus(vehicleId, newStatus);
-
+    
     // Reload bookings to refresh the display
     loadBookings();
-
+    
     // Close modal
     setShowHandoverModal(false);
     setSelectedVehicle(null);
@@ -221,48 +249,43 @@ function VehicleHandover() {
     <div className="management-section">
       <div className="section-header">
         <h2>🔄 Quản lý Giao - Nhận Xe</h2>
-        <div className="filter-buttons">
-          <button
-            className={`filter-btn ${selectedFilter === "all" ? "active" : ""}`}
-            onClick={() => setSelectedFilter("all")}
-          >
-            Tất cả ({vehicles.length})
-          </button>
-          <button
-            className={`filter-btn ${
-              selectedFilter === "completed" ? "active" : ""
-            }`}
-            onClick={() => setSelectedFilter("completed")}
-          >
-            Đã hoàn thành đơn (
-            {vehicles.filter((v) => v.status === "completed").length})
-          </button>
-          <button
-            className={`filter-btn ${
-              selectedFilter === "booked" ? "active" : ""
-            }`}
-            onClick={() => setSelectedFilter("booked")}
-          >
-            Đã đặt ({vehicles.filter((v) => v.status === "booked").length})
-          </button>
-          <button
-            className={`filter-btn ${
-              selectedFilter === "renting" ? "active" : ""
-            }`}
-            onClick={() => setSelectedFilter("renting")}
-          >
-            Đang thuê ({vehicles.filter((v) => v.status === "renting").length})
-          </button>
-        </div>
+      </div>
+
+      {/* Filter Tabs */}
+      <div className="filter-tabs">
+        <button 
+          className={`filter-tab ${selectedFilter === 'booked' ? 'active' : ''}`}
+          onClick={() => setSelectedFilter('booked')}
+        >
+          📅 Chuẩn bị bàn giao ({bookedCount})
+        </button>
+        <button 
+          className={`filter-tab ${selectedFilter === 'renting' ? 'active' : ''}`}
+          onClick={() => setSelectedFilter('renting')}
+        >
+          🚗 Đang cho thuê ({rentingCount})
+        </button>
+        <button 
+          className={`filter-tab ${selectedFilter === 'completed' ? 'active' : ''}`}
+          onClick={() => setSelectedFilter('completed')}
+        >
+          ✅ Đã thu hồi ({completedCount})
+        </button>
       </div>
 
       <div className="vehicles-list">
-        {filteredVehicles.map((vehicle) => (
-          <div
-            key={vehicle.id}
-            className={`handover-vehicle-card ${
-              vehicle.isOverdue ? "overdue-warning" : ""
-            }`}
+        {filteredVehicles.length === 0 && (
+          <div className="empty-state">
+            {selectedFilter === 'booked' && <p>📭 Chưa có xe nào cần bàn giao</p>}
+            {selectedFilter === 'renting' && <p>📭 Chưa có xe nào đang cho thuê</p>}
+            {selectedFilter === 'completed' && <p>📭 Chưa có xe nào đã hoàn thành</p>}
+          </div>
+        )}
+        
+        {filteredVehicles.map(vehicle => (
+          <div 
+            key={vehicle.id} 
+            className={`handover-vehicle-card ${vehicle.isOverdue ? 'overdue-warning' : ''}`}
           >
             <div className="vehicle-header">
               <div className="vehicle-title">
@@ -283,9 +306,8 @@ function VehicleHandover() {
               <div className="overdue-alert">
                 <span className="alert-icon">🚨</span>
                 <span className="alert-text">
-                  Xe đã quá thời hạn trả{" "}
-                  <strong>{vehicle.overdueHours} giờ</strong>! Vui lòng liên hệ
-                  khách hàng ngay.
+                  Xe đã quá thời hạn trả <strong>{vehicle.overdueHours} giờ</strong>! 
+                  Vui lòng liên hệ khách hàng ngay.
                 </span>
               </div>
             )}
@@ -295,8 +317,8 @@ function VehicleHandover() {
                 <span className="label">🔋 Pin:</span>
                 <span className="value">
                   <div className="battery-indicator">
-                    <div
-                      className="battery-fill"
+                    <div 
+                      className="battery-fill" 
                       style={{ width: vehicle.battery }}
                     />
                   </div>
@@ -307,55 +329,45 @@ function VehicleHandover() {
                 <span className="label">🕐 Kiểm tra cuối:</span>
                 <span className="value">{vehicle.lastCheck}</span>
               </div>
-
+              
               {vehicle.customerName && (
                 <>
                   <div className="detail-row">
                     <span className="label">👤 Khách hàng:</span>
                     <span className="value">{vehicle.customerName}</span>
                   </div>
-                  {vehicle.userPhone && (
-                    <div className="detail-row">
-                      <span className="label">📱 Số điện thoại:</span>
-                      <span className="value">{vehicle.userPhone}</span>
-                    </div>
-                  )}
-                  {vehicle.userEmail && (
-                    <div className="detail-row">
-                      <span className="label">� Email:</span>
-                      <span className="value">{vehicle.userEmail}</span>
-                    </div>
-                  )}
                   <div className="detail-row">
-                    <span className="label">�📋 Mã booking:</span>
-                    <span className="value">{vehicle.bookingId}</span>
+                    <span className="label">� Mã booking:</span>
+                    <span className="value booking-id">{vehicle.bookingId || 'N/A'}</span>
                   </div>
                   <div className="detail-row">
-                    <span className="label">📅 Nhận xe:</span>
+                    <span className="label">📱 Số điện thoại:</span>
+                    <span className="value">{vehicle.userPhone || 'Chưa cập nhật'}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">� Email:</span>
+                    <span className="value">{vehicle.userEmail || 'Chưa cập nhật'}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">� Điểm nhận xe:</span>
+                    <span className="value pickup-location">{vehicle.pickupStation || 'Chưa xác định'}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">� Điểm trả xe:</span>
+                    <span className="value return-location">{vehicle.returnStation || 'Chưa xác định'}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">� Ngày nhận xe:</span>
                     <span className="value">{vehicle.pickupDate}</span>
                   </div>
                   <div className="detail-row">
-                    <span className="label">📅 Trả xe:</span>
+                    <span className="label">� Ngày trả xe:</span>
                     <span className="value">{vehicle.returnDate}</span>
                   </div>
-                  {vehicle.pickupStation && (
-                    <div className="detail-row">
-                      <span className="label">📍 Điểm nhận:</span>
-                      <span className="value">{vehicle.pickupStation}</span>
-                    </div>
-                  )}
-                  {vehicle.returnStation && (
-                    <div className="detail-row">
-                      <span className="label">📍 Điểm trả:</span>
-                      <span className="value">{vehicle.returnStation}</span>
-                    </div>
-                  )}
-                  {vehicle.status === "completed" && vehicle.completedDate && (
+                  {vehicle.status === 'completed' && vehicle.completedDate && (
                     <div className="detail-row">
                       <span className="label">✅ Hoàn thành:</span>
-                      <span className="value completed-date">
-                        {vehicle.completedDate}
-                      </span>
+                      <span className="value completed-date">{vehicle.completedDate}</span>
                     </div>
                   )}
                 </>
@@ -363,35 +375,37 @@ function VehicleHandover() {
             </div>
 
             <div className="vehicle-actions">
-              {vehicle.status === "booked" && (
-                <button
+              {vehicle.status === 'booked' && (
+                <button 
                   className="btn-action btn-pickup"
                   onClick={() => handlePickup(vehicle)}
                 >
                   ✅ Bàn giao xe
                 </button>
               )}
-              {vehicle.status === "renting" && (
-                <button
+              {vehicle.status === 'renting' && (
+                <button 
                   className="btn-action btn-return"
                   onClick={() => handleReturn(vehicle)}
                 >
                   🔄 Thu hồi xe
                 </button>
               )}
-              {vehicle.status === "completed" && (
+              {vehicle.status === 'completed' && (
                 <button className="btn-action btn-completed" disabled>
                   ✅ Đã hoàn thành
                 </button>
               )}
-              <button className="btn-action btn-view">👁️ Chi tiết xe</button>
+              <button className="btn-action btn-view">
+                👁️ Chi tiết xe
+              </button>
             </div>
           </div>
         ))}
       </div>
 
       {showHandoverModal && selectedVehicle && (
-        <HandoverModal
+        <HandoverModal 
           vehicle={selectedVehicle}
           onClose={() => {
             setShowHandoverModal(false);
@@ -412,22 +426,22 @@ function HandoverModal({ vehicle, onClose, onComplete }) {
     lightsWorking: false,
     brakeWorking: false,
     batteryCharged: false,
-    documentsChecked: false,
+    documentsChecked: false
   });
-  const [signature, setSignature] = useState("");
+  const [signature, setSignature] = useState('');
   const [photos, setPhotos] = useState([]);
 
   const handleChecklistChange = (key) => {
-    setChecklist((prev) => ({ ...prev, [key]: !prev[key] }));
+    setChecklist(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
   const handleCompleteHandover = () => {
     // Determine new status based on current status
     let newStatus;
-    if (vehicle.status === "booked") {
-      newStatus = "renting"; // Bàn giao xe -> đang thuê
-    } else if (vehicle.status === "renting") {
-      newStatus = "completed"; // Thu hồi xe -> hoàn thành
+    if (vehicle.status === 'booked') {
+      newStatus = 'renting'; // Bàn giao xe -> đang thuê
+    } else if (vehicle.status === 'renting') {
+      newStatus = 'completed'; // Thu hồi xe -> hoàn thành
     }
 
     // Call parent handler to update booking status
@@ -438,80 +452,72 @@ function HandoverModal({ vehicle, onClose, onComplete }) {
     onClose();
   };
 
-  const allChecked = Object.values(checklist).every((v) => v);
+  const allChecked = Object.values(checklist).every(v => v);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>📋 Thủ tục Bàn giao Xe</h2>
-          <button className="btn-close" onClick={onClose}>
-            ✕
-          </button>
+          <button className="btn-close" onClick={onClose}>✕</button>
         </div>
 
         <div className="modal-body">
           <div className="vehicle-info-box">
             <h3>{vehicle.vehicleName}</h3>
-            <p className="license-plate-display">
-              🏍️ Biển số: <strong>{vehicle.licensePlate}</strong>
-            </p>
-            <p>
-              Khách hàng: <strong>{vehicle.customerName}</strong>
-            </p>
-            <p>
-              Mã booking: <strong>{vehicle.bookingId}</strong>
-            </p>
+            <p className="license-plate-display">🏍️ Biển số: <strong>{vehicle.licensePlate}</strong></p>
+            <p>Khách hàng: <strong>{vehicle.customerName}</strong></p>
+            <p>Mã booking: <strong>{vehicle.bookingId}</strong></p>
           </div>
 
           <div className="checklist-section">
             <h3>✅ Checklist kiểm tra xe</h3>
             <div className="checklist-items">
               <label className="checklist-item">
-                <input
+                <input 
                   type="checkbox"
                   checked={checklist.bodyCondition}
-                  onChange={() => handleChecklistChange("bodyCondition")}
+                  onChange={() => handleChecklistChange('bodyCondition')}
                 />
                 <span>Thân xe không trầy xước, móp méo</span>
               </label>
               <label className="checklist-item">
-                <input
+                <input 
                   type="checkbox"
                   checked={checklist.tireCondition}
-                  onChange={() => handleChecklistChange("tireCondition")}
+                  onChange={() => handleChecklistChange('tireCondition')}
                 />
                 <span>Lốp xe trong tình trạng tốt</span>
               </label>
               <label className="checklist-item">
-                <input
+                <input 
                   type="checkbox"
                   checked={checklist.lightsWorking}
-                  onChange={() => handleChecklistChange("lightsWorking")}
+                  onChange={() => handleChecklistChange('lightsWorking')}
                 />
                 <span>Đèn chiếu sáng hoạt động bình thường</span>
               </label>
               <label className="checklist-item">
-                <input
+                <input 
                   type="checkbox"
                   checked={checklist.brakeWorking}
-                  onChange={() => handleChecklistChange("brakeWorking")}
+                  onChange={() => handleChecklistChange('brakeWorking')}
                 />
                 <span>Phanh hoạt động tốt</span>
               </label>
               <label className="checklist-item">
-                <input
+                <input 
                   type="checkbox"
                   checked={checklist.batteryCharged}
-                  onChange={() => handleChecklistChange("batteryCharged")}
+                  onChange={() => handleChecklistChange('batteryCharged')}
                 />
                 <span>Pin đầy, sạc tốt ({vehicle.battery})</span>
               </label>
               <label className="checklist-item">
-                <input
+                <input 
                   type="checkbox"
                   checked={checklist.documentsChecked}
-                  onChange={() => handleChecklistChange("documentsChecked")}
+                  onChange={() => handleChecklistChange('documentsChecked')}
                 />
                 <span>Giấy tờ xe đầy đủ</span>
               </label>
@@ -529,7 +535,7 @@ function HandoverModal({ vehicle, onClose, onComplete }) {
           <div className="signature-section">
             <h3>✍️ Ký xác nhận điện tử</h3>
             <div className="signature-box">
-              <input
+              <input 
                 type="text"
                 placeholder="Nhập tên để ký xác nhận..."
                 value={signature}
@@ -547,8 +553,8 @@ function HandoverModal({ vehicle, onClose, onComplete }) {
           <button className="btn-cancel" onClick={onClose}>
             Hủy
           </button>
-          <button
-            className="btn-confirm"
+          <button 
+            className="btn-confirm" 
             disabled={!allChecked || !signature}
             onClick={handleCompleteHandover}
           >
@@ -562,40 +568,39 @@ function HandoverModal({ vehicle, onClose, onComplete }) {
 
 // Component Xác thực khách hàng
 function CustomerVerification() {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [customers, setCustomers] = useState([
     {
       id: 1,
-      fullName: "Nguyễn Văn A",
-      phone: "0901234567",
-      email: "nguyenvana@email.com",
-      idCard: "001234567890",
-      driverLicense: "B1-123456789",
-      licenseExpiry: "2028-12-31",
+      fullName: 'Nguyễn Văn A',
+      phone: '0901234567',
+      email: 'nguyenvana@email.com',
+      idCard: '001234567890',
+      driverLicense: 'B1-123456789',
+      licenseExpiry: '2028-12-31',
       verified: true,
-      bookingId: "BK001",
+      bookingId: 'BK001'
     },
     {
       id: 2,
-      fullName: "Trần Thị B",
-      phone: "0912345678",
-      email: "tranthib@email.com",
-      idCard: "001234567891",
-      driverLicense: "B1-987654321",
-      licenseExpiry: "2027-06-30",
+      fullName: 'Trần Thị B',
+      phone: '0912345678',
+      email: 'tranthib@email.com',
+      idCard: '001234567891',
+      driverLicense: 'B1-987654321',
+      licenseExpiry: '2027-06-30',
       verified: false,
-      bookingId: "BK002",
-    },
+      bookingId: 'BK002'
+    }
   ]);
 
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
 
-  const filteredCustomers = customers.filter(
-    (c) =>
-      c.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.phone.includes(searchTerm) ||
-      c.bookingId.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredCustomers = customers.filter(c => 
+    c.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.phone.includes(searchTerm) ||
+    c.bookingId.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleVerify = (customer) => {
@@ -608,7 +613,7 @@ function CustomerVerification() {
       <div className="section-header">
         <h2>🔐 Xác thực Khách hàng</h2>
         <div className="search-box">
-          <input
+          <input 
             type="text"
             placeholder="🔍 Tìm theo tên, SĐT, mã booking..."
             value={searchTerm}
@@ -619,19 +624,15 @@ function CustomerVerification() {
       </div>
 
       <div className="customer-list">
-        {filteredCustomers.map((customer) => (
+        {filteredCustomers.map(customer => (
           <div key={customer.id} className="customer-card">
             <div className="customer-header">
               <div className="customer-info">
                 <h3>{customer.fullName}</h3>
                 <span className="booking-badge">📋 {customer.bookingId}</span>
               </div>
-              <span
-                className={`verify-badge ${
-                  customer.verified ? "verified" : "pending"
-                }`}
-              >
-                {customer.verified ? "✅ Đã xác thực" : "⏳ Chưa xác thực"}
+              <span className={`verify-badge ${customer.verified ? 'verified' : 'pending'}`}>
+                {customer.verified ? '✅ Đã xác thực' : '⏳ Chưa xác thực'}
               </span>
             </div>
 
@@ -662,33 +663,35 @@ function CustomerVerification() {
 
             <div className="customer-actions">
               {!customer.verified && (
-                <button
+                <button 
                   className="btn-action btn-verify"
                   onClick={() => handleVerify(customer)}
                 >
                   ✅ Xác thực
                 </button>
               )}
-              <button className="btn-action btn-view">👁️ Xem hồ sơ</button>
-              <button className="btn-action btn-photo">📸 Chụp giấy tờ</button>
+              <button className="btn-action btn-view">
+                👁️ Xem hồ sơ
+              </button>
+              <button className="btn-action btn-photo">
+                📸 Chụp giấy tờ
+              </button>
             </div>
           </div>
         ))}
       </div>
 
       {showVerifyModal && selectedCustomer && (
-        <VerificationModal
+        <VerificationModal 
           customer={selectedCustomer}
           onClose={() => {
             setShowVerifyModal(false);
             setSelectedCustomer(null);
           }}
           onVerify={() => {
-            setCustomers(
-              customers.map((c) =>
-                c.id === selectedCustomer.id ? { ...c, verified: true } : c
-              )
-            );
+            setCustomers(customers.map(c => 
+              c.id === selectedCustomer.id ? { ...c, verified: true } : c
+            ));
             setShowVerifyModal(false);
             setSelectedCustomer(null);
           }}
@@ -705,97 +708,66 @@ function VerificationModal({ customer, onClose, onVerify }) {
     licensePhoto: false,
     facePhoto: false,
     idCardMatch: false,
-    licenseValid: false,
+    licenseValid: false
   });
 
-  const allVerified = Object.values(verification).every((v) => v);
+  const allVerified = Object.values(verification).every(v => v);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>🔐 Xác thực khách hàng</h2>
-          <button className="btn-close" onClick={onClose}>
-            ✕
-          </button>
+          <button className="btn-close" onClick={onClose}>✕</button>
         </div>
 
         <div className="modal-body">
           <div className="customer-info-box">
             <h3>{customer.fullName}</h3>
-            <p>
-              Mã booking: <strong>{customer.bookingId}</strong>
-            </p>
-            <p>
-              Số điện thoại: <strong>{customer.phone}</strong>
-            </p>
+            <p>Mã booking: <strong>{customer.bookingId}</strong></p>
+            <p>Số điện thoại: <strong>{customer.phone}</strong></p>
           </div>
 
           <div className="verification-section">
             <h3>📋 Checklist xác thực</h3>
             <div className="verification-items">
               <label className="verification-item">
-                <input
+                <input 
                   type="checkbox"
                   checked={verification.idCardPhoto}
-                  onChange={() =>
-                    setVerification((prev) => ({
-                      ...prev,
-                      idCardPhoto: !prev.idCardPhoto,
-                    }))
-                  }
+                  onChange={() => setVerification(prev => ({ ...prev, idCardPhoto: !prev.idCardPhoto }))}
                 />
                 <span>📸 Đã chụp ảnh CMND/CCCD</span>
               </label>
               <label className="verification-item">
-                <input
+                <input 
                   type="checkbox"
                   checked={verification.licensePhoto}
-                  onChange={() =>
-                    setVerification((prev) => ({
-                      ...prev,
-                      licensePhoto: !prev.licensePhoto,
-                    }))
-                  }
+                  onChange={() => setVerification(prev => ({ ...prev, licensePhoto: !prev.licensePhoto }))}
                 />
                 <span>📸 Đã chụp ảnh GPLX</span>
               </label>
               <label className="verification-item">
-                <input
+                <input 
                   type="checkbox"
                   checked={verification.facePhoto}
-                  onChange={() =>
-                    setVerification((prev) => ({
-                      ...prev,
-                      facePhoto: !prev.facePhoto,
-                    }))
-                  }
+                  onChange={() => setVerification(prev => ({ ...prev, facePhoto: !prev.facePhoto }))}
                 />
                 <span>📸 Đã chụp ảnh khuôn mặt</span>
               </label>
               <label className="verification-item">
-                <input
+                <input 
                   type="checkbox"
                   checked={verification.idCardMatch}
-                  onChange={() =>
-                    setVerification((prev) => ({
-                      ...prev,
-                      idCardMatch: !prev.idCardMatch,
-                    }))
-                  }
+                  onChange={() => setVerification(prev => ({ ...prev, idCardMatch: !prev.idCardMatch }))}
                 />
                 <span>✅ Thông tin CMND khớp với hồ sơ</span>
               </label>
               <label className="verification-item">
-                <input
+                <input 
                   type="checkbox"
                   checked={verification.licenseValid}
-                  onChange={() =>
-                    setVerification((prev) => ({
-                      ...prev,
-                      licenseValid: !prev.licenseValid,
-                    }))
-                  }
+                  onChange={() => setVerification(prev => ({ ...prev, licenseValid: !prev.licenseValid }))}
                 />
                 <span>✅ GPLX còn hạn và hợp lệ</span>
               </label>
@@ -825,8 +797,8 @@ function VerificationModal({ customer, onClose, onVerify }) {
           <button className="btn-cancel" onClick={onClose}>
             Hủy
           </button>
-          <button
-            className="btn-confirm"
+          <button 
+            className="btn-confirm" 
             disabled={!allVerified}
             onClick={onVerify}
           >
@@ -845,11 +817,12 @@ function PaymentManagement() {
   const [payments, setPayments] = useState([]);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentFilter, setPaymentFilter] = useState('pending'); // 'pending' hoặc 'verified'
 
   // Load bookings chờ xác nhận thanh toán
   useEffect(() => {
     loadPendingPayments();
-
+    
     // Auto refresh mỗi 5 giây
     const interval = setInterval(loadPendingPayments, 5000);
     return () => clearInterval(interval);
@@ -857,12 +830,9 @@ function PaymentManagement() {
 
   const loadPendingPayments = () => {
     const allBookings = getAllBookings();
-
-    console.log(
-      "🔍 PaymentManagement: Loading bookings...",
-      allBookings.length
-    );
-
+    
+    console.log('🔍 PaymentManagement: Loading bookings...', allBookings.length);
+    
     // Lấy tất cả bookings (bao gồm pending_payment, booked, completed)
     const paymentData = allBookings.map((booking) => ({
       id: booking.id,
@@ -872,22 +842,13 @@ function PaymentManagement() {
       customerEmail: booking.userEmail,
       vehicleName: booking.vehicleName,
       licensePlate: booking.licensePlate,
-      type: "rental", // Phí thuê xe
+      type: 'rental', // Phí thuê xe
       amount: booking.totalPrice,
-      status:
-        booking.status === "pending_payment"
-          ? "pending"
-          : booking.status === "cancelled"
-          ? "cancelled"
-          : "verified",
-      method:
-        booking.paymentMethod === "credit_card"
-          ? "card"
-          : booking.paymentMethod === "bank_transfer"
-          ? "transfer"
-          : booking.paymentMethod === "e_wallet"
-          ? "ewallet"
-          : "cash",
+      status: booking.status === 'pending_payment' ? 'pending' : 
+              booking.status === 'cancelled' ? 'cancelled' : 'verified',
+      method: booking.paymentMethod === 'credit_card' ? 'card' :
+              booking.paymentMethod === 'bank_transfer' ? 'transfer' : 
+              booking.paymentMethod === 'e_wallet' ? 'ewallet' : 'cash',
       date: booking.createdAt,
       pickupDate: `${booking.pickupDate} ${booking.pickupTime}`,
       returnDate: `${booking.returnDate} ${booking.returnTime}`,
@@ -902,43 +863,29 @@ function PaymentManagement() {
       rejectionReason: booking.rejectionReason,
     }));
 
-    console.log("✅ PaymentManagement: Loaded payments:", paymentData.length);
-    console.log(
-      "📊 Pending:",
-      paymentData.filter((p) => p.status === "pending").length
-    );
-    console.log(
-      "📊 Verified:",
-      paymentData.filter((p) => p.status === "verified").length
-    );
+    console.log('✅ PaymentManagement: Loaded payments:', paymentData.length);
+    console.log('📊 Pending:', paymentData.filter(p => p.status === 'pending').length);
+    console.log('📊 Verified:', paymentData.filter(p => p.status === 'verified').length);
 
     setPayments(paymentData);
   };
 
   const getTypeBadge = (type) => {
     const config = {
-      rental: { text: "Phí thuê", class: "type-rental", icon: "💰" },
+      rental: { text: 'Phí thuê', class: 'type-rental', icon: '💰' },
     };
     const c = config[type] || config.rental;
-    return (
-      <span className={`type-badge ${c.class}`}>
-        {c.icon} {c.text}
-      </span>
-    );
+    return <span className={`type-badge ${c.class}`}>{c.icon} {c.text}</span>;
   };
 
   const getStatusBadge = (status) => {
     const config = {
-      pending: { text: "Chờ xác nhận", class: "status-pending", icon: "⏳" },
-      verified: { text: "Đã xác nhận", class: "status-completed", icon: "✅" },
-      cancelled: { text: "Đã từ chối", class: "status-cancelled", icon: "❌" },
+      pending: { text: 'Chờ xác nhận', class: 'status-pending', icon: '⏳' },
+      verified: { text: 'Đã xác nhận', class: 'status-completed', icon: '✅' },
+      cancelled: { text: 'Đã từ chối', class: 'status-cancelled', icon: '❌' }
     };
     const c = config[status] || config.pending;
-    return (
-      <span className={`status-badge ${c.class}`}>
-        {c.icon} {c.text}
-      </span>
-    );
+    return <span className={`status-badge ${c.class}`}>{c.icon} {c.text}</span>;
   };
 
   const handleProcessPayment = (payment) => {
@@ -947,60 +894,60 @@ function PaymentManagement() {
   };
 
   const handleVerifyPayment = (paymentId) => {
-    const staffName = user?.fullName || user?.name || "Staff";
+    const staffName = user?.fullName || user?.name || 'Staff';
     verifyPayment(paymentId, staffName);
     loadPendingPayments();
     setShowPaymentModal(false);
     setSelectedPayment(null);
-    alert("✅ Đã xác nhận thanh toán! Booking chuyển sang tab Giao nhận xe.");
+    alert('✅ Đã xác nhận thanh toán! Booking chuyển sang tab Giao nhận xe.');
   };
 
   const handleRejectPayment = (paymentId, reason) => {
-    const staffName = user?.fullName || user?.name || "Staff";
+    const staffName = user?.fullName || user?.name || 'Staff';
     rejectPayment(paymentId, reason, staffName);
     loadPendingPayments();
     setShowPaymentModal(false);
     setSelectedPayment(null);
-    alert("❌ Đã từ chối thanh toán!");
+    alert('❌ Đã từ chối thanh toán!');
   };
 
   const handleDeletePayment = (payment) => {
-    if (
-      window.confirm(
-        `⚠️ Bạn có chắc muốn xóa đơn hàng #${payment.bookingId}?\nXe: ${payment.vehicleName}\nKhách hàng: ${payment.customerName}`
-      )
-    ) {
+    if (window.confirm(`⚠️ Bạn có chắc muốn xóa đơn hàng #${payment.bookingId}?\nXe: ${payment.vehicleName}\nKhách hàng: ${payment.customerName}`)) {
       try {
         // Lấy tất cả bookings
         const allBookings = getAllBookings();
-
+        
         // Xóa booking này
-        const updatedBookings = allBookings.filter((b) => b.id !== payment.id);
-
+        const updatedBookings = allBookings.filter(b => b.id !== payment.id);
+        
         // Lưu lại
-        localStorage.setItem(
-          "ev_rental_bookings",
-          JSON.stringify(updatedBookings)
-        );
-
+        localStorage.setItem('ev_rental_bookings', JSON.stringify(updatedBookings));
+        
         // Reload danh sách
         loadPendingPayments();
-
-        alert("🗑️ Đã xóa đơn hàng thành công!");
+        
+        alert('🗑️ Đã xóa đơn hàng thành công!');
       } catch (error) {
-        console.error("❌ Lỗi khi xóa booking:", error);
-        alert("❌ Có lỗi xảy ra khi xóa đơn hàng!");
+        console.error('❌ Lỗi khi xóa booking:', error);
+        alert('❌ Có lỗi xảy ra khi xóa đơn hàng!');
       }
     }
   };
 
   const totalPending = payments
-    .filter((p) => p.status === "pending")
+    .filter(p => p.status === 'pending')
     .reduce((sum, p) => sum + p.amount, 0);
 
   const totalVerified = payments
-    .filter((p) => p.status === "verified")
+    .filter(p => p.status === 'verified')
     .reduce((sum, p) => sum + p.amount, 0);
+
+  // Filter payments based on selected filter
+  const filteredPayments = payments.filter(p => {
+    if (paymentFilter === 'pending') return p.status === 'pending';
+    if (paymentFilter === 'verified') return p.status === 'verified';
+    return true;
+  });
 
   return (
     <div className="management-section">
@@ -1008,40 +955,50 @@ function PaymentManagement() {
         <h2>💰 Xác Nhận Thanh Toán</h2>
         <div className="section-stats">
           <div className="stat-card">
-            <span className="stat-number">
-              {totalPending.toLocaleString()} đ
-            </span>
-            <span className="stat-label">Chờ xác nhận</span>
+            <span className="stat-number">{totalPending.toLocaleString()} đ</span>
+            <span className="stat-label">Các đơn chưa xác nhận</span>
           </div>
           <div className="stat-card">
-            <span className="stat-number">
-              {totalVerified.toLocaleString()} đ
-            </span>
-            <span className="stat-label">Đã xác nhận</span>
+            <span className="stat-number">{totalVerified.toLocaleString()} đ</span>
+            <span className="stat-label">Các đơn đã xác nhận</span>
           </div>
         </div>
       </div>
 
+      {/* Filter Tabs */}
+      <div className="filter-tabs">
+        <button 
+          className={`filter-tab ${paymentFilter === 'pending' ? 'active' : ''}`}
+          onClick={() => setPaymentFilter('pending')}
+        >
+          ⏳ Chưa xác nhận ({payments.filter(p => p.status === 'pending').length})
+        </button>
+        <button 
+          className={`filter-tab ${paymentFilter === 'verified' ? 'active' : ''}`}
+          onClick={() => setPaymentFilter('verified')}
+        >
+          ✅ Đã xác nhận ({payments.filter(p => p.status === 'verified').length})
+        </button>
+      </div>
+
       <div className="payment-list">
-        {payments.length === 0 && (
+        {filteredPayments.length === 0 && (
           <div className="empty-state">
-            <p>📭 Chưa có booking nào cần xác nhận thanh toán</p>
+            {paymentFilter === 'pending' ? (
+              <p>📭 Chưa có booking nào cần xác nhận thanh toán</p>
+            ) : (
+              <p>📭 Chưa có booking nào đã xác nhận</p>
+            )}
           </div>
         )}
-
-        {payments.map((payment) => (
+        
+        {filteredPayments.map(payment => (
           <div key={payment.id} className="payment-card">
             <div className="payment-header">
               <div className="payment-info">
-                <h3>
-                  #{payment.bookingId} - {payment.customerName}
-                </h3>
-                <p className="vehicle-info">
-                  🏍️ {payment.vehicleName} ({payment.licensePlate})
-                </p>
-                <span className="payment-date">
-                  📅 {new Date(payment.date).toLocaleString("vi-VN")}
-                </span>
+                <h3>#{payment.bookingId} - {payment.customerName}</h3>
+                <p className="vehicle-info">🏍️ {payment.vehicleName} ({payment.licensePlate})</p>
+                <span className="payment-date">📅 {new Date(payment.date).toLocaleString('vi-VN')}</span>
               </div>
               <div className="payment-badges">
                 {getTypeBadge(payment.type)}
@@ -1052,17 +1009,15 @@ function PaymentManagement() {
             <div className="payment-details">
               <div className="payment-amount">
                 <span className="amount-label">Số tiền:</span>
-                <span className="amount-value">
-                  {payment.amount.toLocaleString()} VNĐ
-                </span>
+                <span className="amount-value">{payment.amount.toLocaleString()} VNĐ</span>
               </div>
               <div className="payment-method">
                 <span className="method-label">Phương thức:</span>
                 <span className="method-value">
-                  {payment.method === "card" && "� Thẻ tín dụng"}
-                  {payment.method === "transfer" && "🏦 Chuyển khoản"}
-                  {payment.method === "ewallet" && "📱 Ví điện tử"}
-                  {payment.method === "cash" && "💵 Tiền mặt"}
+                  {payment.method === 'card' && '� Thẻ tín dụng'}
+                  {payment.method === 'transfer' && '🏦 Chuyển khoản'}
+                  {payment.method === 'ewallet' && '📱 Ví điện tử'}
+                  {payment.method === 'cash' && '💵 Tiền mặt'}
                 </span>
               </div>
               <div className="rental-period">
@@ -1073,45 +1028,35 @@ function PaymentManagement() {
 
             {payment.paymentVerified && payment.paymentVerifiedAt && (
               <div className="verification-info">
-                <p>
-                  ✅ Xác nhận bởi: <strong>{payment.paymentVerifiedBy}</strong>
-                </p>
-                <p>
-                  🕐 Thời gian:{" "}
-                  {new Date(payment.paymentVerifiedAt).toLocaleString("vi-VN")}
-                </p>
+                <p>✅ Xác nhận bởi: <strong>{payment.paymentVerifiedBy}</strong></p>
+                <p>🕐 Thời gian: {new Date(payment.paymentVerifiedAt).toLocaleString('vi-VN')}</p>
               </div>
             )}
 
-            {payment.status === "cancelled" && payment.rejectionReason && (
+            {payment.status === 'cancelled' && payment.rejectionReason && (
               <div className="rejection-info">
-                <p>
-                  ❌ Từ chối bởi: <strong>{payment.rejectedBy}</strong>
-                </p>
-                <p>
-                  🕐 Thời gian:{" "}
-                  {new Date(payment.rejectedAt).toLocaleString("vi-VN")}
-                </p>
+                <p>❌ Từ chối bởi: <strong>{payment.rejectedBy}</strong></p>
+                <p>🕐 Thời gian: {new Date(payment.rejectedAt).toLocaleString('vi-VN')}</p>
                 <p>📝 Lý do: {payment.rejectionReason}</p>
               </div>
             )}
 
             <div className="payment-actions">
-              {payment.status === "pending" && (
-                <button
+              {payment.status === 'pending' && (
+                <button 
                   className="btn-action btn-pay"
                   onClick={() => handleProcessPayment(payment)}
                 >
                   ✅ Xác nhận thanh toán
                 </button>
               )}
-              <button
+              <button 
                 className="btn-action btn-view"
                 onClick={() => handleProcessPayment(payment)}
               >
                 👁️ Xem thông tin
               </button>
-              <button
+              <button 
                 className="btn-action btn-delete"
                 onClick={() => handleDeletePayment(payment)}
               >
@@ -1123,7 +1068,7 @@ function PaymentManagement() {
       </div>
 
       {showPaymentModal && selectedPayment && (
-        <PaymentModal
+        <PaymentModal 
           payment={selectedPayment}
           onClose={() => {
             setShowPaymentModal(false);
@@ -1139,14 +1084,14 @@ function PaymentManagement() {
 
 // Modal xác nhận thanh toán
 function PaymentModal({ payment, onClose, onVerify, onReject }) {
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState('');
   const [receiptPhoto, setReceiptPhoto] = useState(false);
-  const [rejectionReason, setRejectionReason] = useState("");
+  const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectForm, setShowRejectForm] = useState(false);
 
   const handleVerify = () => {
-    if (payment.method === "transfer" && !receiptPhoto) {
-      alert("⚠️ Vui lòng xác nhận đã kiểm tra biên lai chuyển khoản!");
+    if (payment.method === 'transfer' && !receiptPhoto) {
+      alert('⚠️ Vui lòng xác nhận đã kiểm tra biên lai chuyển khoản!');
       return;
     }
     onVerify(payment.id);
@@ -1154,7 +1099,7 @@ function PaymentModal({ payment, onClose, onVerify, onReject }) {
 
   const handleReject = () => {
     if (!rejectionReason.trim()) {
-      alert("⚠️ Vui lòng nhập lý do từ chối!");
+      alert('⚠️ Vui lòng nhập lý do từ chối!');
       return;
     }
     onReject(payment.id, rejectionReason);
@@ -1165,9 +1110,7 @@ function PaymentModal({ payment, onClose, onVerify, onReject }) {
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>💰 Xác nhận Thanh toán</h2>
-          <button className="btn-close" onClick={onClose}>
-            ✕
-          </button>
+          <button className="btn-close" onClick={onClose}>✕</button>
         </div>
 
         <div className="modal-body">
@@ -1188,9 +1131,7 @@ function PaymentModal({ payment, onClose, onVerify, onReject }) {
               </div>
               <div className="info-item">
                 <label>Xe thuê:</label>
-                <span>
-                  🏍️ {payment.vehicleName} ({payment.licensePlate})
-                </span>
+                <span>🏍️ {payment.vehicleName} ({payment.licensePlate})</span>
               </div>
               <div className="info-item">
                 <label>Thời gian thuê:</label>
@@ -1210,26 +1151,24 @@ function PaymentModal({ payment, onClose, onVerify, onReject }) {
               </div>
               <div className="info-item">
                 <label>Số tiền:</label>
-                <span className="amount-highlight">
-                  {payment.amount.toLocaleString()} VNĐ
-                </span>
+                <span className="amount-highlight">{payment.amount.toLocaleString()} VNĐ</span>
               </div>
               <div className="info-item">
                 <label>Phương thức:</label>
                 <span>
-                  {payment.method === "card" && "� Thẻ tín dụng"}
-                  {payment.method === "transfer" && "🏦 Chuyển khoản"}
-                  {payment.method === "ewallet" && "📱 Ví điện tử"}
-                  {payment.method === "cash" && "💵 Tiền mặt"}
+                  {payment.method === 'card' && '� Thẻ tín dụng'}
+                  {payment.method === 'transfer' && '🏦 Chuyển khoản'}
+                  {payment.method === 'ewallet' && '📱 Ví điện tử'}
+                  {payment.method === 'cash' && '💵 Tiền mặt'}
                 </span>
               </div>
             </div>
           </div>
 
-          {(payment.method === "transfer" || payment.method === "ewallet") && (
+          {(payment.method === 'transfer' || payment.method === 'ewallet') && (
             <div className="photo-section">
               <label className="photo-item">
-                <input
+                <input 
                   type="checkbox"
                   checked={receiptPhoto}
                   onChange={() => setReceiptPhoto(!receiptPhoto)}
@@ -1242,7 +1181,7 @@ function PaymentModal({ payment, onClose, onVerify, onReject }) {
           {!showRejectForm && (
             <div className="notes-section">
               <label>Ghi chú:</label>
-              <textarea
+              <textarea 
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Nhập ghi chú nếu có..."
@@ -1254,7 +1193,7 @@ function PaymentModal({ payment, onClose, onVerify, onReject }) {
           {showRejectForm && (
             <div className="rejection-section">
               <label>⚠️ Lý do từ chối thanh toán:</label>
-              <textarea
+              <textarea 
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
                 placeholder="Nhập lý do từ chối (bắt buộc)..."
@@ -1270,39 +1209,38 @@ function PaymentModal({ payment, onClose, onVerify, onReject }) {
           <button className="btn-cancel" onClick={onClose}>
             Hủy
           </button>
-
+          
           {!showRejectForm ? (
             <>
-              <button
+              <button 
                 className="btn-danger"
                 onClick={() => setShowRejectForm(true)}
               >
                 ❌ Từ chối
               </button>
-              <button
-                className="btn-confirm"
+              <button 
+                className="btn-confirm" 
                 onClick={handleVerify}
-                disabled={
-                  (payment.method === "transfer" ||
-                    payment.method === "ewallet") &&
-                  !receiptPhoto
-                }
+                disabled={(payment.method === 'transfer' || payment.method === 'ewallet') && !receiptPhoto}
               >
                 ✅ Xác nhận thanh toán
               </button>
             </>
           ) : (
             <>
-              <button
+              <button 
                 className="btn-secondary"
                 onClick={() => {
                   setShowRejectForm(false);
-                  setRejectionReason("");
+                  setRejectionReason('');
                 }}
               >
                 ← Quay lại
               </button>
-              <button className="btn-danger" onClick={handleReject}>
+              <button 
+                className="btn-danger"
+                onClick={handleReject}
+              >
                 ❌ Xác nhận từ chối
               </button>
             </>
@@ -1318,37 +1256,37 @@ function VehicleManagement() {
   const [vehicles, setVehicles] = useState([
     {
       id: 1,
-      name: "VinFast Klara S",
-      licensePlate: "59A-12345",
+      name: 'VinFast Klara S',
+      licensePlate: '59A-12345',
       battery: 95,
-      technicalStatus: "good",
-      lastMaintenance: "2025-09-15",
+      technicalStatus: 'good',
+      lastMaintenance: '2025-09-15',
       mileage: 1250,
-      status: "available",
-      issues: [],
+      status: 'available',
+      issues: []
     },
     {
       id: 2,
-      name: "DatBike Weaver 200",
-      licensePlate: "59B-67890",
+      name: 'DatBike Weaver 200',
+      licensePlate: '59B-67890',
       battery: 60,
-      technicalStatus: "good",
-      lastMaintenance: "2025-09-20",
+      technicalStatus: 'good',
+      lastMaintenance: '2025-09-20',
       mileage: 980,
-      status: "renting",
-      issues: [],
+      status: 'renting',
+      issues: []
     },
     {
       id: 3,
-      name: "VinFast Feliz S",
-      licensePlate: "59C-11111",
+      name: 'VinFast Feliz S',
+      licensePlate: '59C-11111',
       battery: 20,
-      technicalStatus: "issue",
-      lastMaintenance: "2025-08-10",
+      technicalStatus: 'issue',
+      lastMaintenance: '2025-08-10',
       mileage: 2100,
-      status: "maintenance",
-      issues: ["Phanh trước yếu", "Đèn pha phải không sáng"],
-    },
+      status: 'maintenance',
+      issues: ['Phanh trước yếu', 'Đèn pha phải không sáng']
+    }
   ]);
 
   const [selectedVehicle, setSelectedVehicle] = useState(null);
@@ -1357,36 +1295,28 @@ function VehicleManagement() {
 
   const getTechnicalBadge = (status) => {
     const config = {
-      good: { text: "Tốt", class: "tech-good", icon: "✅" },
-      issue: { text: "Có vấn đề", class: "tech-issue", icon: "⚠️" },
-      broken: { text: "Hỏng hóc", class: "tech-broken", icon: "❌" },
+      good: { text: 'Tốt', class: 'tech-good', icon: '✅' },
+      issue: { text: 'Có vấn đề', class: 'tech-issue', icon: '⚠️' },
+      broken: { text: 'Hỏng hóc', class: 'tech-broken', icon: '❌' }
     };
     const c = config[status] || config.good;
-    return (
-      <span className={`tech-badge ${c.class}`}>
-        {c.icon} {c.text}
-      </span>
-    );
+    return <span className={`tech-badge ${c.class}`}>{c.icon} {c.text}</span>;
   };
 
   const getStatusBadge = (status) => {
     const config = {
-      available: { text: "Sẵn sàng", class: "status-available", icon: "✅" },
-      renting: { text: "Đang cho thuê", class: "status-renting", icon: "🚗" },
-      maintenance: { text: "Bảo trì", class: "status-maintenance", icon: "�" },
+      available: { text: 'Sẵn sàng', class: 'status-available', icon: '✅' },
+      renting: { text: 'Đang cho thuê', class: 'status-renting', icon: '🚗' },
+      maintenance: { text: 'Bảo trì', class: 'status-maintenance', icon: '�' }
     };
     const c = config[status] || config.available;
-    return (
-      <span className={`status-badge ${c.class}`}>
-        {c.icon} {c.text}
-      </span>
-    );
+    return <span className={`status-badge ${c.class}`}>{c.icon} {c.text}</span>;
   };
 
   const getBatteryClass = (battery) => {
-    if (battery >= 80) return "battery-high";
-    if (battery >= 40) return "battery-medium";
-    return "battery-low";
+    if (battery >= 80) return 'battery-high';
+    if (battery >= 40) return 'battery-medium';
+    return 'battery-low';
   };
 
   return (
@@ -1396,30 +1326,21 @@ function VehicleManagement() {
         <div className="header-stats">
           <div className="stat-mini">
             <span className="stat-icon">✅</span>
-            <span className="stat-text">
-              {vehicles.filter((v) => v.status === "available").length} xe sẵn
-              sàng
-            </span>
+            <span className="stat-text">{vehicles.filter(v => v.status === 'available').length} xe sẵn sàng</span>
           </div>
           <div className="stat-mini">
             <span className="stat-icon">�</span>
-            <span className="stat-text">
-              {vehicles.filter((v) => v.status === "renting").length} đang cho
-              thuê
-            </span>
+            <span className="stat-text">{vehicles.filter(v => v.status === 'renting').length} đang cho thuê</span>
           </div>
           <div className="stat-mini">
             <span className="stat-icon">🔧</span>
-            <span className="stat-text">
-              {vehicles.filter((v) => v.status === "maintenance").length} bảo
-              trì
-            </span>
+            <span className="stat-text">{vehicles.filter(v => v.status === 'maintenance').length} bảo trì</span>
           </div>
         </div>
       </div>
 
       <div className="vehicles-grid-manage">
-        {vehicles.map((vehicle) => (
+        {vehicles.map(vehicle => (
           <div key={vehicle.id} className="vehicle-manage-card">
             <div className="vehicle-card-header">
               <div className="vehicle-title">
@@ -1437,10 +1358,8 @@ function VehicleManagement() {
                 <span className="label">🔋 Mức pin:</span>
                 <div className="battery-container">
                   <div className="battery-bar">
-                    <div
-                      className={`battery-fill ${getBatteryClass(
-                        vehicle.battery
-                      )}`}
+                    <div 
+                      className={`battery-fill ${getBatteryClass(vehicle.battery)}`}
                       style={{ width: `${vehicle.battery}%` }}
                     />
                   </div>
@@ -1469,7 +1388,7 @@ function VehicleManagement() {
             )}
 
             <div className="vehicle-actions">
-              <button
+              <button 
                 className="btn-action btn-update"
                 onClick={() => {
                   setSelectedVehicle(vehicle);
@@ -1478,7 +1397,7 @@ function VehicleManagement() {
               >
                 🔄 Cập nhật
               </button>
-              <button
+              <button 
                 className="btn-action btn-report"
                 onClick={() => {
                   setSelectedVehicle(vehicle);
@@ -1487,25 +1406,25 @@ function VehicleManagement() {
               >
                 📝 Báo cáo sự cố
               </button>
-              <button className="btn-action btn-view">👁️ Chi tiết</button>
+              <button className="btn-action btn-view">
+                👁️ Chi tiết
+              </button>
             </div>
           </div>
         ))}
       </div>
 
       {showUpdateModal && selectedVehicle && (
-        <UpdateVehicleModal
+        <UpdateVehicleModal 
           vehicle={selectedVehicle}
           onClose={() => {
             setShowUpdateModal(false);
             setSelectedVehicle(null);
           }}
           onUpdate={(updatedData) => {
-            setVehicles(
-              vehicles.map((v) =>
-                v.id === selectedVehicle.id ? { ...v, ...updatedData } : v
-              )
-            );
+            setVehicles(vehicles.map(v => 
+              v.id === selectedVehicle.id ? { ...v, ...updatedData } : v
+            ));
             setShowUpdateModal(false);
             setSelectedVehicle(null);
           }}
@@ -1513,24 +1432,18 @@ function VehicleManagement() {
       )}
 
       {showReportModal && selectedVehicle && (
-        <ReportIssueModal
+        <ReportIssueModal 
           vehicle={selectedVehicle}
           onClose={() => {
             setShowReportModal(false);
             setSelectedVehicle(null);
           }}
           onReport={(issue) => {
-            setVehicles(
-              vehicles.map((v) =>
-                v.id === selectedVehicle.id
-                  ? {
-                      ...v,
-                      issues: [...v.issues, issue],
-                      technicalStatus: "issue",
-                    }
-                  : v
-              )
-            );
+            setVehicles(vehicles.map(v => 
+              v.id === selectedVehicle.id 
+                ? { ...v, issues: [...v.issues, issue], technicalStatus: 'issue' }
+                : v
+            ));
             setShowReportModal(false);
             setSelectedVehicle(null);
           }}
@@ -1543,17 +1456,15 @@ function VehicleManagement() {
 // Modal cập nhật trạng thái xe
 function UpdateVehicleModal({ vehicle, onClose, onUpdate }) {
   const [battery, setBattery] = useState(vehicle.battery);
-  const [technicalStatus, setTechnicalStatus] = useState(
-    vehicle.technicalStatus
-  );
+  const [technicalStatus, setTechnicalStatus] = useState(vehicle.technicalStatus);
   const [mileage, setMileage] = useState(vehicle.mileage);
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState('');
 
   const handleUpdate = () => {
     onUpdate({
       battery: parseInt(battery),
       technicalStatus,
-      mileage: parseInt(mileage),
+      mileage: parseInt(mileage)
     });
   };
 
@@ -1562,23 +1473,19 @@ function UpdateVehicleModal({ vehicle, onClose, onUpdate }) {
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>🔄 Cập nhật Trạng thái Xe</h2>
-          <button className="btn-close" onClick={onClose}>
-            ✕
-          </button>
+          <button className="btn-close" onClick={onClose}>✕</button>
         </div>
 
         <div className="modal-body">
           <div className="vehicle-info-box">
             <h3>{vehicle.name}</h3>
-            <p className="license-plate-display">
-              🏍️ Biển số: <strong>{vehicle.licensePlate}</strong>
-            </p>
+            <p className="license-plate-display">🏍️ Biển số: <strong>{vehicle.licensePlate}</strong></p>
           </div>
 
           <div className="form-section">
             <div className="form-group">
               <label>🔋 Mức pin (%):</label>
-              <input
+              <input 
                 type="range"
                 min="0"
                 max="100"
@@ -1591,7 +1498,7 @@ function UpdateVehicleModal({ vehicle, onClose, onUpdate }) {
 
             <div className="form-group">
               <label>🔧 Tình trạng kỹ thuật:</label>
-              <select
+              <select 
                 value={technicalStatus}
                 onChange={(e) => setTechnicalStatus(e.target.value)}
                 className="status-select"
@@ -1604,7 +1511,7 @@ function UpdateVehicleModal({ vehicle, onClose, onUpdate }) {
 
             <div className="form-group">
               <label>📏 Số km đã đi:</label>
-              <input
+              <input 
                 type="number"
                 value={mileage}
                 onChange={(e) => setMileage(e.target.value)}
@@ -1614,7 +1521,7 @@ function UpdateVehicleModal({ vehicle, onClose, onUpdate }) {
 
             <div className="form-group">
               <label>📝 Ghi chú:</label>
-              <textarea
+              <textarea 
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Nhập ghi chú về tình trạng xe..."
@@ -1639,15 +1546,15 @@ function UpdateVehicleModal({ vehicle, onClose, onUpdate }) {
 
 // Modal báo cáo sự cố
 function ReportIssueModal({ vehicle, onClose, onReport }) {
-  const [issueType, setIssueType] = useState("");
-  const [description, setDescription] = useState("");
-  const [severity, setSeverity] = useState("medium");
+  const [issueType, setIssueType] = useState('');
+  const [description, setDescription] = useState('');
+  const [severity, setSeverity] = useState('medium');
   const [photos, setPhotos] = useState([]);
 
   const handleReport = () => {
     if (issueType && description) {
       onReport(description);
-      alert("Đã gửi báo cáo sự cố lên Admin!");
+      alert('Đã gửi báo cáo sự cố lên Admin!');
     }
   };
 
@@ -1656,23 +1563,19 @@ function ReportIssueModal({ vehicle, onClose, onReport }) {
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>📝 Báo cáo Sự cố / Hỏng hóc</h2>
-          <button className="btn-close" onClick={onClose}>
-            ✕
-          </button>
+          <button className="btn-close" onClick={onClose}>✕</button>
         </div>
 
         <div className="modal-body">
           <div className="vehicle-info-box">
             <h3>{vehicle.name}</h3>
-            <p className="license-plate-display">
-              🏍️ Biển số: <strong>{vehicle.licensePlate}</strong>
-            </p>
+            <p className="license-plate-display">🏍️ Biển số: <strong>{vehicle.licensePlate}</strong></p>
           </div>
 
           <div className="form-section">
             <div className="form-group">
               <label>🔧 Loại sự cố:</label>
-              <select
+              <select 
                 value={issueType}
                 onChange={(e) => setIssueType(e.target.value)}
                 className="issue-select"
@@ -1689,22 +1592,20 @@ function ReportIssueModal({ vehicle, onClose, onReport }) {
 
             <div className="form-group">
               <label>⚠️ Mức độ nghiêm trọng:</label>
-              <select
+              <select 
                 value={severity}
                 onChange={(e) => setSeverity(e.target.value)}
                 className="severity-select"
               >
                 <option value="low">🟢 Nhẹ - Có thể tiếp tục sử dụng</option>
                 <option value="medium">🟡 Trung bình - Cần sửa chữa sớm</option>
-                <option value="high">
-                  🔴 Nghiêm trọng - Dừng sử dụng ngay
-                </option>
+                <option value="high">🔴 Nghiêm trọng - Dừng sử dụng ngay</option>
               </select>
             </div>
 
             <div className="form-group">
               <label>📝 Mô tả chi tiết:</label>
-              <textarea
+              <textarea 
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Mô tả chi tiết về sự cố, hỏng hóc..."
@@ -1725,8 +1626,8 @@ function ReportIssueModal({ vehicle, onClose, onReport }) {
           <button className="btn-cancel" onClick={onClose}>
             Hủy
           </button>
-          <button
-            className="btn-confirm btn-danger"
+          <button 
+            className="btn-confirm btn-danger" 
             onClick={handleReport}
             disabled={!issueType || !description}
           >
