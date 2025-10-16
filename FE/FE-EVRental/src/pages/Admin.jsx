@@ -80,11 +80,11 @@ const Admin = () => {
     },
   ]);
 
-  const [customers, setCustomers] = useState([
-    { id: 1, name: 'Nguyễn Văn A', email: 'nguyenvana@email.com', phone: '0901234567', totalRentals: 12, riskLevel: 'low', status: 'active' },
-    { id: 2, name: 'Trần Thị B', email: 'tranthib@email.com', phone: '0907654321', totalRentals: 5, riskLevel: 'medium', status: 'active' },
-    { id: 3, name: 'Lê Văn C', email: 'levanc@email.com', phone: '0909876543', totalRentals: 18, riskLevel: 'high', status: 'warning' },
-  ]);
+  const [customers, setCustomers] = useState([]);
+  const [customersLoading, setCustomersLoading] = useState(false);
+  const [customersError, setCustomersError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   const [staff, setStaff] = useState([
     { id: 1, name: 'Phạm Văn D', station: 'Quận 1', role: 'Nhân viên giao xe', performance: 95, totalDeliveries: 156 },
@@ -110,6 +110,93 @@ const Admin = () => {
     logout();
     navigate('/login');
   };
+
+  // Fetch customers from API
+  useEffect(() => {
+    if (activeTab === 'customers') {
+      fetchCustomers();
+    }
+  }, [activeTab]);
+
+  const fetchCustomers = async () => {
+    setCustomersLoading(true);
+    setCustomersError(null);
+    
+    try {
+      // Lấy token từ localStorage
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        throw new Error('Vui lòng đăng nhập lại');
+      }
+
+      const response = await fetch('http://localhost:5168/api/Account/AccountList', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại');
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Lọc chỉ lấy accounts có roleID = 1 (khách hàng)
+      const customerAccounts = data.filter(account => account.roleID === 1);
+      
+      console.log('✅ Loaded customers:', customerAccounts);
+      setCustomers(customerAccounts);
+      
+    } catch (error) {
+      console.error('❌ Error fetching customers:', error);
+      setCustomersError(error.message);
+      
+      if (error.message.includes('đăng nhập')) {
+        alert(error.message);
+        handleLogout();
+      }
+    } finally {
+      setCustomersLoading(false);
+    }
+  };
+
+  // Get status badge and text
+  const getStatusInfo = (status) => {
+    switch(status) {
+      case 0:
+        return { text: 'Pending', class: 'status-pending', icon: '⏳' };
+      case 1:
+        return { text: 'Active', class: 'status-active', icon: '✅' };
+      case 2:
+        return { text: 'Suspended', class: 'status-suspended', icon: '🚫' };
+      default:
+        return { text: 'Unknown', class: 'status-unknown', icon: '❓' };
+    }
+  };
+
+  // Filter customers
+  const filteredCustomers = customers.filter(customer => {
+    // Filter by search term
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch = 
+      customer.fullName?.toLowerCase().includes(searchLower) ||
+      customer.email?.toLowerCase().includes(searchLower) ||
+      customer.phone?.includes(searchTerm) ||
+      customer.accountId?.toString().includes(searchTerm);
+    
+    // Filter by status
+    const matchesStatus = 
+      statusFilter === 'all' || 
+      customer.status === parseInt(statusFilter);
+    
+    return matchesSearch && matchesStatus;
+  });
 
   // Station management functions
   const handleAddStation = () => {
@@ -394,68 +481,171 @@ const Admin = () => {
   const renderCustomerManagement = () => (
     <div className="management-content">
       <div className="section-header">
-        <h2>Quản lý khách hàng</h2>
-        <button className="btn-primary">Xuất báo cáo</button>
+        <h2>👥 Quản lý khách hàng</h2>
+        <div className="header-actions">
+          <button className="btn-refresh" onClick={fetchCustomers} disabled={customersLoading}>
+            {customersLoading ? '🔄 Đang tải...' : '🔄 Làm mới'}
+          </button>
+          <button className="btn-primary">📊 Xuất báo cáo</button>
+        </div>
       </div>
 
       <div className="filters">
-        <select className="filter-select">
-          <option>Tất cả mức độ rủi ro</option>
-          <option>Thấp</option>
-          <option>Trung bình</option>
-          <option>Cao</option>
+        <select 
+          className="filter-select" 
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="all">Tất cả trạng thái</option>
+          <option value="0">⏳ Pending</option>
+          <option value="1">✅ Active</option>
+          <option value="2">🚫 Suspended</option>
         </select>
-        <select className="filter-select">
-          <option>Tất cả trạng thái</option>
-          <option>Hoạt động</option>
-          <option>Cảnh báo</option>
-          <option>Khóa</option>
-        </select>
-        <input type="text" className="search-input" placeholder="Tìm kiếm khách hàng..." />
+        <input 
+          type="text" 
+          className="search-input" 
+          placeholder="Tìm kiếm theo tên, email, SĐT..." 
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
       </div>
 
-      <div className="data-table">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Họ tên</th>
-              <th>Email</th>
-              <th>Điện thoại</th>
-              <th>Số lần thuê</th>
-              <th>Mức độ rủi ro</th>
-              <th>Trạng thái</th>
-              <th>Hành động</th>
-            </tr>
-          </thead>
-          <tbody>
-            {customers.map((customer) => (
-              <tr key={customer.id}>
-                <td>#{customer.id}</td>
-                <td className="customer-name">{customer.name}</td>
-                <td>{customer.email}</td>
-                <td>{customer.phone}</td>
-                <td>{customer.totalRentals}</td>
-                <td>
-                  <span className={`risk-badge ${customer.riskLevel}`}>
-                    {customer.riskLevel === 'low' ? 'Thấp' : 
-                     customer.riskLevel === 'medium' ? 'TB' : 'Cao'}
-                  </span>
-                </td>
-                <td>
-                  <span className={`status-badge ${customer.status}`}>
-                    {customer.status === 'active' ? 'Hoạt động' : 'Cảnh báo'}
-                  </span>
-                </td>
-                <td>
-                  <button className="btn-action">Xem</button>
-                  <button className="btn-action">Lịch sử</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {customersError && (
+        <div className="error-message">
+          <span className="error-icon">❌</span>
+          <span>{customersError}</span>
+          <button onClick={fetchCustomers}>Thử lại</button>
+        </div>
+      )}
+
+      {customersLoading ? (
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Đang tải danh sách khách hàng...</p>
+        </div>
+      ) : (
+        <>
+          <div className="stats-summary">
+            <div className="summary-item">
+              <span className="summary-label">Tổng khách hàng:</span>
+              <span className="summary-value">{customers.length}</span>
+            </div>
+            <div className="summary-item">
+              <span className="summary-label">⏳ Pending:</span>
+              <span className="summary-value pending">{customers.filter(c => c.status === 0).length}</span>
+            </div>
+            <div className="summary-item">
+              <span className="summary-label">✅ Active:</span>
+              <span className="summary-value active">{customers.filter(c => c.status === 1).length}</span>
+            </div>
+            <div className="summary-item">
+              <span className="summary-label">🚫 Suspended:</span>
+              <span className="summary-value suspended">{customers.filter(c => c.status === 2).length}</span>
+            </div>
+          </div>
+
+          <div className="data-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Avatar</th>
+                  <th>Họ tên</th>
+                  <th>Email</th>
+                  <th>Điện thoại</th>
+                  <th>Ngày tạo</th>
+                  <th>Cập nhật lần cuối</th>
+                  <th>Trạng thái</th>
+                  <th>Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredCustomers.length === 0 ? (
+                  <tr>
+                    <td colSpan="9" className="empty-state">
+                      {searchTerm || statusFilter !== 'all' 
+                        ? '🔍 Không tìm thấy khách hàng phù hợp' 
+                        : '📭 Chưa có khách hàng nào'}
+                    </td>
+                  </tr>
+                ) : (
+                  filteredCustomers.map((customer) => {
+                    const statusInfo = getStatusInfo(customer.status);
+                    return (
+                      <tr key={customer.accountId}>
+                        <td>#{customer.accountId}</td>
+                        <td>
+                          <div className="avatar-cell">
+                            {customer.avatar ? (
+                              <img 
+                                src={customer.avatar} 
+                                alt={customer.fullName} 
+                                className="customer-avatar"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = 'https://via.placeholder.com/40?text=N/A';
+                                }}
+                              />
+                            ) : (
+                              <div className="avatar-placeholder">
+                                {customer.fullName?.charAt(0).toUpperCase() || '?'}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="customer-name">
+                          <div className="name-cell">
+                            <span className="name">{customer.fullName || 'N/A'}</span>
+                          </div>
+                        </td>
+                        <td className="customer-email">{customer.email}</td>
+                        <td>{customer.phone || 'N/A'}</td>
+                        <td className="date-cell">
+                          {customer.createdAt 
+                            ? new Date(customer.createdAt).toLocaleDateString('vi-VN')
+                            : 'N/A'}
+                        </td>
+                        <td className="date-cell">
+                          {customer.updatedAt 
+                            ? new Date(customer.updatedAt).toLocaleDateString('vi-VN')
+                            : 'N/A'}
+                        </td>
+                        <td>
+                          <span className={`status-badge ${statusInfo.class}`}>
+                            {statusInfo.icon} {statusInfo.text}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="action-buttons">
+                            <button className="btn-action btn-view" title="Xem chi tiết">
+                              👁️
+                            </button>
+                            {customer.status === 1 && (
+                              <button className="btn-action btn-suspend" title="Khóa tài khoản">
+                                🚫
+                              </button>
+                            )}
+                            {customer.status === 2 && (
+                              <button className="btn-action btn-activate" title="Kích hoạt">
+                                ✅
+                              </button>
+                            )}
+                            {customer.status === 0 && (
+                              <button className="btn-action btn-approve" title="Phê duyệt">
+                                ✔️
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </div>
   );
 
