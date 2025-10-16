@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿dusing Microsoft.EntityFrameworkCore;
 using Repositories.DBContext;
 
 namespace Repositories.BaseRepository
