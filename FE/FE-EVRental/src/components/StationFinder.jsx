@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import stationsData from "../data/stations";
-import StationMap from "./StationMap";
 import "../styles/StationFinder.css";
 
 export default function StationFinder({ stations: stationsProp }) {
@@ -95,7 +94,7 @@ export default function StationFinder({ stations: stationsProp }) {
       </div>
 
       <div className="station-finder-content">
-        <div className="stations-list">
+        <div className="stations-list-fullwidth">
           <h3>📍 Danh sách trạm ({filteredStations.length})</h3>
 
           {filteredStations.length === 0 ? (
@@ -158,15 +157,6 @@ export default function StationFinder({ stations: stationsProp }) {
               ))}
             </div>
           )}
-        </div>
-
-        {/* Interactive Map */}
-        <div className="map-container">
-          <StationMap
-            stations={filteredStations}
-            onStationSelect={handleStationSelect}
-            selectedStation={selectedStation}
-          />
         </div>
       </div>
     </div>

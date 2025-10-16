@@ -2,47 +2,48 @@
   position: relative;
   background: white;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: box-shadow 0.3s ease;
 }
 
 .vehicle-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .vehicle-image-container {
   position: relative;
-  height: 280px;
+  width: 100%;
+  height: 320px;
   overflow: hidden;
   border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafafa;
 }
 
 .vehicle-image {
   width: 100%;
   height: 100%;
+  min-width: 100%;
+  min-height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
-}
-
-.vehicle-card:hover .vehicle-image {
-  transform: scale(1.05);
+  object-position: center;
 }
 
 .vehicle-badge {
   position: absolute;
   top: 10px;
   right: 10px;
-  background: linear-gradient(135deg, #2e7d32, #4caf50);
+  background: #4caf50;
   color: white;
   padding: 4px 12px;
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  z-index: 2;
 }
 
 .vehicle-info {
@@ -145,13 +146,12 @@
 }
 
 .btn.rent-now {
-  background: linear-gradient(135deg, #2e7d32, #4caf50);
+  background: #4caf50;
   color: white;
 }
 
 .btn.rent-now:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+  background: #45a049;
 }
 
 .vehicle-content {
@@ -251,11 +251,11 @@
 /* Vehicles page layout */
 .vehicles-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: #f5f7fa;
 }
 
 .vehicles-hero {
-  background: linear-gradient(135deg, #2e7d32, #4caf50);
+  background: #4caf50;
   color: white;
   padding: 60px 0;
   text-align: center;

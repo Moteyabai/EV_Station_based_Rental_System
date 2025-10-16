@@ -382,12 +382,15 @@ namespace API.Controllers
             {
                 var permission = User.FindFirst(UserClaimTypes.RoleID).Value;
                 var userID = int.Parse(User.FindFirst(UserClaimTypes.AccountID).Value);
-                if (permission != "3" && userID != id)
+
+                // Cho phép: Admin (3), Staff (2), hoặc chính user đó
+                if (permission != "3" && permission != "2" && userID != id)
                 {
                     var res = new ResponseDTO();
                     res.Message = "Không có quyền truy cập!";
                     return Unauthorized(res);
                 }
+
                 var account = await _accountService.GetByIdAsync(id);
                 if (account == null)
                 {

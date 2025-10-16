@@ -91,7 +91,7 @@ export default function Staff() {
 
 // Component Quản lý Giao - Nhận xe
 function VehicleHandover() {
-  const [selectedFilter, setSelectedFilter] = useState('all');
+  const [selectedFilter, setSelectedFilter] = useState('booked'); // 'booked', 'renting', 'completed'
   const [vehicles, setVehicles] = useState([]);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [showHandoverModal, setShowHandoverModal] = useState(false);
@@ -105,7 +105,50 @@ function VehicleHandover() {
     return () => clearInterval(interval);
   }, []);
 
-  const loadBookings = () => {
+  // Fetch user phone from backend API
+  const fetchUserPhone = async (userId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token || !userId) return null;
+
+      // Nếu userId là email hoặc không phải số, skip
+      if (typeof userId === 'string' && (userId.includes('@') || isNaN(userId))) {
+        console.log('⚠️ UserId không phải accountId (số):', userId);
+        return null;
+      }
+
+      const accountId = parseInt(userId);
+      if (isNaN(accountId)) {
+        console.log('⚠️ Không thể parse userId thành số:', userId);
+        return null;
+      }
+
+      const response = await fetch(`http://localhost:5168/api/Account/GetAccountById/${accountId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          console.error('❌ Token hết hạn hoặc không hợp lệ');
+        } else {
+          console.error('❌ Lỗi fetch user phone:', response.status);
+        }
+        return null;
+      }
+
+      const userData = await response.json();
+      console.log('✅ Fetched user phone for accountId', accountId, ':', userData.phone);
+      return userData.phone || userData.Phone || null;
+    } catch (error) {
+      console.error('❌ Error fetching user phone:', error);
+      return null;
+    }
+  };
+
+  const loadBookings = async () => {
     const allBookings = getAllBookings();
     
     // CHỈ LẤY BOOKINGS ĐÃ XÁC THỰC THANH TOÁN (status !== 'pending_payment')
@@ -114,25 +157,36 @@ function VehicleHandover() {
     );
     
     // Transform bookings to vehicle format for display
-    const transformedVehicles = verifiedBookings.map((booking) => {
+    const transformedVehicles = await Promise.all(verifiedBookings.map(async (booking) => {
       // Kiểm tra xe đã quá hạn chưa
       const returnDateTime = new Date(`${booking.returnDate} ${booking.returnTime}`);
       const now = new Date();
       const isOverdue = booking.status === 'renting' && returnDateTime < now;
+      
+      // Fetch phone from backend if not available or is placeholder
+      let userPhone = booking.userPhone;
+      
+      if (!userPhone || userPhone === 'Chưa cập nhật' || userPhone === 'N/A') {
+        const fetchedPhone = await fetchUserPhone(booking.userId);
+        if (fetchedPhone) {
+          userPhone = fetchedPhone;
+        }
+      }
       
       return {
         id: booking.id,
         vehicleName: booking.vehicleName,
         licensePlate: booking.licensePlate,
         customerName: booking.userName,
-        userPhone: booking.userPhone,
+        userId: booking.userId,
+        userPhone: userPhone,
         userEmail: booking.userEmail,
-        bookingId: booking.bookingId,
+        bookingId: booking.bookingId || booking.id,
         status: booking.status,
         pickupDate: `${booking.pickupDate} ${booking.pickupTime}`,
         returnDate: `${booking.returnDate} ${booking.returnTime}`,
-        pickupStation: booking.pickupStation?.name || 'Chưa xác định',
-        returnStation: booking.returnStation?.name || 'Chưa xác định',
+        pickupStation: booking.pickupStation || 'Chưa xác định',
+        returnStation: booking.returnStation || 'Chưa xác định',
         battery: booking.battery,
         lastCheck: booking.lastCheck,
         completedDate: booking.completedDate,
@@ -144,7 +198,7 @@ function VehicleHandover() {
         isOverdue: isOverdue, // Flag để đánh dấu xe quá hạn
         overdueHours: isOverdue ? Math.floor((now - returnDateTime) / (1000 * 60 * 60)) : 0
       };
-    });
+    }));
 
     setVehicles(transformedVehicles);
   };
@@ -153,6 +207,11 @@ function VehicleHandover() {
     if (selectedFilter === 'all') return true;
     return v.status === selectedFilter;
   });
+
+  // Count vehicles by status
+  const bookedCount = vehicles.filter(v => v.status === 'booked').length;
+  const rentingCount = vehicles.filter(v => v.status === 'renting').length;
+  const completedCount = vehicles.filter(v => v.status === 'completed').length;
 
   const getStatusBadge = (status) => {
     const config = {
@@ -190,35 +249,39 @@ function VehicleHandover() {
     <div className="management-section">
       <div className="section-header">
         <h2>🔄 Quản lý Giao - Nhận Xe</h2>
-        <div className="filter-buttons">
-          <button 
-            className={`filter-btn ${selectedFilter === 'all' ? 'active' : ''}`}
-            onClick={() => setSelectedFilter('all')}
-          >
-            Tất cả ({vehicles.length})
-          </button>
-          <button 
-            className={`filter-btn ${selectedFilter === 'completed' ? 'active' : ''}`}
-            onClick={() => setSelectedFilter('completed')}
-          >
-            Đã hoàn thành đơn ({vehicles.filter(v => v.status === 'completed').length})
-          </button>
-          <button 
-            className={`filter-btn ${selectedFilter === 'booked' ? 'active' : ''}`}
-            onClick={() => setSelectedFilter('booked')}
-          >
-            Đã đặt ({vehicles.filter(v => v.status === 'booked').length})
-          </button>
-          <button 
-            className={`filter-btn ${selectedFilter === 'renting' ? 'active' : ''}`}
-            onClick={() => setSelectedFilter('renting')}
-          >
-            Đang thuê ({vehicles.filter(v => v.status === 'renting').length})
-          </button>
-        </div>
+      </div>
+
+      {/* Filter Tabs */}
+      <div className="filter-tabs">
+        <button 
+          className={`filter-tab ${selectedFilter === 'booked' ? 'active' : ''}`}
+          onClick={() => setSelectedFilter('booked')}
+        >
+          📅 Chuẩn bị bàn giao ({bookedCount})
+        </button>
+        <button 
+          className={`filter-tab ${selectedFilter === 'renting' ? 'active' : ''}`}
+          onClick={() => setSelectedFilter('renting')}
+        >
+          🚗 Đang cho thuê ({rentingCount})
+        </button>
+        <button 
+          className={`filter-tab ${selectedFilter === 'completed' ? 'active' : ''}`}
+          onClick={() => setSelectedFilter('completed')}
+        >
+          ✅ Đã thu hồi ({completedCount})
+        </button>
       </div>
 
       <div className="vehicles-list">
+        {filteredVehicles.length === 0 && (
+          <div className="empty-state">
+            {selectedFilter === 'booked' && <p>📭 Chưa có xe nào cần bàn giao</p>}
+            {selectedFilter === 'renting' && <p>📭 Chưa có xe nào đang cho thuê</p>}
+            {selectedFilter === 'completed' && <p>📭 Chưa có xe nào đã hoàn thành</p>}
+          </div>
+        )}
+        
         {filteredVehicles.map(vehicle => (
           <div 
             key={vehicle.id} 
@@ -273,42 +336,34 @@ function VehicleHandover() {
                     <span className="label">👤 Khách hàng:</span>
                     <span className="value">{vehicle.customerName}</span>
                   </div>
-                  {vehicle.userPhone && (
-                    <div className="detail-row">
-                      <span className="label">📱 Số điện thoại:</span>
-                      <span className="value">{vehicle.userPhone}</span>
-                    </div>
-                  )}
-                  {vehicle.userEmail && (
-                    <div className="detail-row">
-                      <span className="label">� Email:</span>
-                      <span className="value">{vehicle.userEmail}</span>
-                    </div>
-                  )}
                   <div className="detail-row">
-                    <span className="label">�📋 Mã booking:</span>
-                    <span className="value">{vehicle.bookingId}</span>
+                    <span className="label">� Mã booking:</span>
+                    <span className="value booking-id">{vehicle.bookingId || 'N/A'}</span>
                   </div>
                   <div className="detail-row">
-                    <span className="label">📅 Nhận xe:</span>
+                    <span className="label">📱 Số điện thoại:</span>
+                    <span className="value">{vehicle.userPhone || 'Chưa cập nhật'}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">� Email:</span>
+                    <span className="value">{vehicle.userEmail || 'Chưa cập nhật'}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">� Điểm nhận xe:</span>
+                    <span className="value pickup-location">{vehicle.pickupStation || 'Chưa xác định'}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">� Điểm trả xe:</span>
+                    <span className="value return-location">{vehicle.returnStation || 'Chưa xác định'}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">� Ngày nhận xe:</span>
                     <span className="value">{vehicle.pickupDate}</span>
                   </div>
                   <div className="detail-row">
-                    <span className="label">📅 Trả xe:</span>
+                    <span className="label">� Ngày trả xe:</span>
                     <span className="value">{vehicle.returnDate}</span>
                   </div>
-                  {vehicle.pickupStation && (
-                    <div className="detail-row">
-                      <span className="label">📍 Điểm nhận:</span>
-                      <span className="value">{vehicle.pickupStation}</span>
-                    </div>
-                  )}
-                  {vehicle.returnStation && (
-                    <div className="detail-row">
-                      <span className="label">📍 Điểm trả:</span>
-                      <span className="value">{vehicle.returnStation}</span>
-                    </div>
-                  )}
                   {vehicle.status === 'completed' && vehicle.completedDate && (
                     <div className="detail-row">
                       <span className="label">✅ Hoàn thành:</span>
@@ -762,6 +817,7 @@ function PaymentManagement() {
   const [payments, setPayments] = useState([]);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentFilter, setPaymentFilter] = useState('pending'); // 'pending' hoặc 'verified'
 
   // Load bookings chờ xác nhận thanh toán
   useEffect(() => {
@@ -886,6 +942,13 @@ function PaymentManagement() {
     .filter(p => p.status === 'verified')
     .reduce((sum, p) => sum + p.amount, 0);
 
+  // Filter payments based on selected filter
+  const filteredPayments = payments.filter(p => {
+    if (paymentFilter === 'pending') return p.status === 'pending';
+    if (paymentFilter === 'verified') return p.status === 'verified';
+    return true;
+  });
+
   return (
     <div className="management-section">
       <div className="section-header">
@@ -893,23 +956,43 @@ function PaymentManagement() {
         <div className="section-stats">
           <div className="stat-card">
             <span className="stat-number">{totalPending.toLocaleString()} đ</span>
-            <span className="stat-label">Chờ xác nhận</span>
+            <span className="stat-label">Các đơn chưa xác nhận</span>
           </div>
           <div className="stat-card">
             <span className="stat-number">{totalVerified.toLocaleString()} đ</span>
-            <span className="stat-label">Đã xác nhận</span>
+            <span className="stat-label">Các đơn đã xác nhận</span>
           </div>
         </div>
       </div>
 
+      {/* Filter Tabs */}
+      <div className="filter-tabs">
+        <button 
+          className={`filter-tab ${paymentFilter === 'pending' ? 'active' : ''}`}
+          onClick={() => setPaymentFilter('pending')}
+        >
+          ⏳ Chưa xác nhận ({payments.filter(p => p.status === 'pending').length})
+        </button>
+        <button 
+          className={`filter-tab ${paymentFilter === 'verified' ? 'active' : ''}`}
+          onClick={() => setPaymentFilter('verified')}
+        >
+          ✅ Đã xác nhận ({payments.filter(p => p.status === 'verified').length})
+        </button>
+      </div>
+
       <div className="payment-list">
-        {payments.length === 0 && (
+        {filteredPayments.length === 0 && (
           <div className="empty-state">
-            <p>📭 Chưa có booking nào cần xác nhận thanh toán</p>
+            {paymentFilter === 'pending' ? (
+              <p>📭 Chưa có booking nào cần xác nhận thanh toán</p>
+            ) : (
+              <p>📭 Chưa có booking nào đã xác nhận</p>
+            )}
           </div>
         )}
         
-        {payments.map(payment => (
+        {filteredPayments.map(payment => (
           <div key={payment.id} className="payment-card">
             <div className="payment-header">
               <div className="payment-info">

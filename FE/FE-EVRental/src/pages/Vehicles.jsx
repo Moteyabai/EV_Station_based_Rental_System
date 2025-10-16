@@ -95,20 +95,6 @@ export default function Vehicles() {
             </div>
 
             <div className="filter-group">
-              <label htmlFor="category">Loại phương tiện</label>
-              <select
-                id="category"
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-              >
-                <option value="all">Tất cả</option>
-                <option value="scooter">Xe máy điện</option>
-                <option value="motorcycle">Xe máy</option>
-                <option value="bicycle">Xe đạp điện</option>
-              </select>
-            </div>
-
-            <div className="filter-group">
               <label htmlFor="sortOption">Sắp xếp theo</label>
               <select
                 id="sortOption"

@@ -95,7 +95,7 @@ export default function Checkout() {
         const itemBookingId = `${bookingId}-${itemIndex}`;
 
         const bookingData = {
-          userId: user.id || user.email,
+          userId: user.accountID || user.AccountID || user.id || user.email,
           userEmail: user.email,
           userName: user.fullName || user.name || user.email,
           userPhone: user.phone || 'Chưa cập nhật',
