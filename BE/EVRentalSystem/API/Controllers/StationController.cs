@@ -109,9 +109,6 @@ namespace API.Controllers
             }
         }
 
-        /// <summary>
-        /// Create new station
-        /// </summary>
         [HttpPost("CreateStation")]
         [Authorize]
         public async Task<ActionResult> CreateStation([FromBody] StationCreateDTO stationDto)
@@ -218,8 +215,8 @@ namespace API.Controllers
                     OpeningHours = stationDto.OpeningHours,
                     ContactNumber = stationDto.ContactNumber,
                     ImageUrl = imageUrl,
-                    ExteriorImageUrl = exteriorImageID,
-                    ThumbnailImageUrl = thumbnailImageID,
+                    ExteriorImageUrl = exteriorImageUrl,
+                    ThumbnailImageUrl = thumbnailImageUrl,
                     IsActive = stationDto.IsActive,
                     CreatedAt = DateTime.Now,
                     UpdatedAt = DateTime.Now

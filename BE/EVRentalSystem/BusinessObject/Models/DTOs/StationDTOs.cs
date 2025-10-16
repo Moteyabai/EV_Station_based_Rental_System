@@ -32,7 +32,7 @@ namespace BusinessObject.Models.DTOs
 
         public IFormFile ThumbnailImageUrl { get; set; }
 
-        public bool IsActive { get; set; } = true;
+        public bool IsActive { get; set; } = false;
     }
 
     public class StationUpdateDTO
