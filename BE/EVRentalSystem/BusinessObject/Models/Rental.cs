@@ -54,6 +54,8 @@ namespace BusinessObject.Models
         [Range(0, 50000000, ErrorMessage = "Phí thuê phải từ 0 đến 50,000,000 VNĐ")]
         public decimal? Fee { get; set; }
 
+        public int Status { get; set; } = 0; // 0: Reserved, 1: On-going, 2: Cancelled, 3: Completed
+
         // Navigation properties
         public EVBike EVBike { get; set; }
 

@@ -26,8 +26,15 @@ namespace Repositories.BaseRepository
 
         public async Task AddAsync(TEntity entity)
         {
+            try
+            {
             await _dbSet.AddAsync(entity);
             await _context.SaveChangesAsync();
+
+            }catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
 
         public async Task UpdateAsync(TEntity entity)
