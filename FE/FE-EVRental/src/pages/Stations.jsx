@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import StationFinder from "../components/StationFinder";
 import StationMap from "../components/StationMap";
 import stationsData from "../data/stations";
+import { fetchActiveStations } from "../api/stations";
 import { calculateDistance } from "../utils/helpers";
 import "../styles/Pages.css";
 
@@ -13,6 +14,42 @@ export default function Stations() {
   const [nearbyStations, setNearbyStations] = useState([]);
   const [locationPermission, setLocationPermission] = useState("pending"); // 'pending', 'granted', 'denied'
   const [isRequestingLocation, setIsRequestingLocation] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadStations() {
+      try {
+        const apiStations = await fetchActiveStations();
+        if (!isMounted) return;
+        // Map backend fields to frontend expected shape minimally
+        const mapped = apiStations.map((s) => ({
+          id: s.stationID || s.StationID || s.id,
+          name: s.name || s.Name,
+          address: s.address || s.Address,
+          description: s.description || s.Description,
+          openingHours: s.openingHours || s.OpeningHours || "24/7",
+          image: s.thumbnailImageUrl || s.ThumbnailImageUrl || s.imageUrl || s.ImageUrl,
+          location: { lat: 10.762622, lng: 106.660172 },
+          availableVehicles: s.availableBikes || 0,
+          chargingStations: 0,
+          amenities: [],
+          rating: 5,
+          reviews: 0
+        }));
+        setStations(mapped);
+      } catch (e) {
+        console.error(e);
+        setError("Không tải được dữ liệu trạm. Hiển thị dữ liệu mẫu.");
+        setStations(stationsData);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+    loadStations();
+    return () => { isMounted = false; };
+  }, []);
 
   // Yêu cầu quyền truy cập vị trí từ người dùng
   const requestLocationPermission = () => {
@@ -90,6 +127,27 @@ export default function Stations() {
           <h1>Điểm Thuê Xe Điện</h1>
           <p>Tìm điểm thuê gần nhất để bắt đầu hành trình xanh của bạn</p>
         </div>
+
+        {loading && (
+          <div className="location-request-banner">
+            <div className="banner-content">
+              <div className="banner-icon">⏳</div>
+              <div className="banner-text">
+                <h3>Đang tải dữ liệu trạm...</h3>
+              </div>
+            </div>
+          </div>
+        )}
+        {error && (
+          <div className="location-denied-banner">
+            <div className="banner-content">
+              <div className="banner-icon">⚠️</div>
+              <div className="banner-text">
+                <h3>{error}</h3>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Location Permission Request */}
         {locationPermission === "pending" && (
