@@ -29,7 +29,7 @@ export default function StationDetail() {
   });
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
-  const [activeImage, setActiveImage] = useState("exterior");
+  const [activeImage, setActiveImage] = useState("main");
   const [showReviewForm, setShowReviewForm] = useState(false);
 
   useEffect(() => {
@@ -166,65 +166,80 @@ export default function StationDetail() {
         </div>
 
         {/* Station Gallery */}
-        {station.images && (
-          <div className="station-gallery">
-            <div className="main-image">
-              {activeImage === "exterior" && station.images.exterior && (
-                <img
-                  src={station.images.exterior}
-                  alt={`${station.name} bên ngoài`}
-                />
-              )}
-              {activeImage === "chargers" && station.images.chargers && (
-                <img
-                  src={station.images.chargers}
-                  alt={`${station.name} trạm sạc`}
-                />
-              )}
-              {activeImage === "thumbnail" && station.images.thumbnail && (
-                <img
-                  src={station.images.thumbnail}
-                  alt={`${station.name} tổng quan`}
-                />
-              )}
-            </div>
-
-            <div className="gallery-thumbnails">
-              {station.images.exterior && (
-                <div
-                  className={`thumbnail ${
-                    activeImage === "exterior" ? "active" : ""
-                  }`}
-                  onClick={() => setActiveImage("exterior")}
-                >
-                  <img src={station.images.exterior} alt="Hình ảnh bên ngoài" />
-                </div>
-              )}
-
-              {station.images.chargers && (
-                <div
-                  className={`thumbnail ${
-                    activeImage === "chargers" ? "active" : ""
-                  }`}
-                  onClick={() => setActiveImage("chargers")}
-                >
-                  <img src={station.images.chargers} alt="Charging stations" />
-                </div>
-              )}
-
-              {station.images.thumbnail && (
-                <div
-                  className={`thumbnail ${
-                    activeImage === "thumbnail" ? "active" : ""
-                  }`}
-                  onClick={() => setActiveImage("thumbnail")}
-                >
-                  <img src={station.images.thumbnail} alt="Overview" />
-                </div>
-              )}
-            </div>
+        <div className="station-gallery">
+          <div className="main-image">
+            {activeImage === "main" && station.image && (
+              <img
+                src={station.image}
+                alt={`${station.name}`}
+              />
+            )}
+            {activeImage === "exterior" && station.images?.exterior && (
+              <img
+                src={station.images.exterior}
+                alt={`${station.name} bên ngoài`}
+              />
+            )}
+            {activeImage === "chargers" && station.images?.chargers && (
+              <img
+                src={station.images.chargers}
+                alt={`${station.name} trạm sạc`}
+              />
+            )}
+            {activeImage === "thumbnail" && station.images?.thumbnail && (
+              <img
+                src={station.images.thumbnail}
+                alt={`${station.name} tổng quan`}
+              />
+            )}
           </div>
-        )}
+
+          <div className="gallery-thumbnails">
+            {station.image && (
+              <div
+                className={`thumbnail ${
+                  activeImage === "main" ? "active" : ""
+                }`}
+                onClick={() => setActiveImage("main")}
+              >
+                <img src={station.image} alt="Hình ảnh chính" />
+              </div>
+            )}
+
+            {station.images?.exterior && (
+              <div
+                className={`thumbnail ${
+                  activeImage === "exterior" ? "active" : ""
+                }`}
+                onClick={() => setActiveImage("exterior")}
+              >
+                <img src={station.images.exterior} alt="Hình ảnh bên ngoài" />
+              </div>
+            )}
+
+            {station.images?.chargers && (
+              <div
+                className={`thumbnail ${
+                  activeImage === "chargers" ? "active" : ""
+                }`}
+                onClick={() => setActiveImage("chargers")}
+              >
+                <img src={station.images.chargers} alt="Charging stations" />
+              </div>
+            )}
+
+            {station.images?.thumbnail && (
+              <div
+                className={`thumbnail ${
+                  activeImage === "thumbnail" ? "active" : ""
+                }`}
+                onClick={() => setActiveImage("thumbnail")}
+              >
+                <img src={station.images.thumbnail} alt="Overview" />
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Station Description */}
         <div className="station-description">
