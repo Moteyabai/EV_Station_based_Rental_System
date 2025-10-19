@@ -36,12 +36,14 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    45deg,
-    rgba(45, 200, 150, 0.9),
-    rgba(45, 200, 150, 0.4)
-  );
-  mix-blend-mode: multiply;
+  border: 3px solid #4caf50;
+  border-radius: 12px;
+  box-shadow: 
+    0 10px 40px rgba(76, 175, 80, 0.4),
+    0 6px 20px rgba(76, 175, 80, 0.3),
+    inset 0 0 0 1px rgba(76, 175, 80, 0.2);
+  pointer-events: none;
+  transition: all 0.3s ease;
 }
 
 .dark-overlay {

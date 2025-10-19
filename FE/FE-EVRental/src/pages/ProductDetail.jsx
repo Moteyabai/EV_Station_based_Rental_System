@@ -69,40 +69,6 @@ export default function ProductDetail() {
         padding: "20px 0",
       }}
     >
-      <div
-        style={{
-          background: "white",
-          borderBottom: "1px solid #e2e8f0",
-          padding: "15px 0",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: "1200px",
-            margin: "0 auto",
-            padding: "0 20px",
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            fontSize: "14px",
-          }}
-        >
-          <Link to="/" style={{ color: "#6366f1", textDecoration: "none" }}>
-            Trang chủ
-          </Link>
-          <span style={{ color: "#9ca3af" }}></span>
-          <Link
-            to="/vehicles"
-            style={{ color: "#6366f1", textDecoration: "none" }}
-          >
-            Xe thuê
-          </Link>
-          <span style={{ color: "#9ca3af" }}></span>
-          <span style={{ color: "#374151", fontWeight: "500" }}>
-            {vehicle.name}
-          </span>
-        </div>
-      </div>
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px" }}>
         <div
           style={{
