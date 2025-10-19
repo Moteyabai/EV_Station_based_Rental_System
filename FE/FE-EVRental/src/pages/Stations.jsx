@@ -5,9 +5,11 @@ import stationsData from "../data/stations";
 import { fetchActiveStations } from "../api/stations";
 import { calculateDistance } from "../utils/helpers";
 import "../styles/Pages.css";
+import { useNavigate } from "react-router-dom";
+import { FaMapMarkerAlt, FaClock, FaMotorcycle } from "react-icons/fa";
 
 export default function Stations() {
-  const [selectedStation, setSelectedStation] = useState(null);
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = useState("map"); // 'map' or 'list'
   const [stations, setStations] = useState(stationsData);
   const [userLocation, setUserLocation] = useState(null);
@@ -16,6 +18,7 @@ export default function Stations() {
   const [isRequestingLocation, setIsRequestingLocation] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -102,21 +105,24 @@ export default function Stations() {
   };
 
   const handleStationSelect = (station) => {
-    setSelectedStation(station);
-    // Scroll đến phần chi tiết trạm khi người dùng chọn
-    document.querySelector(".selected-station-info")?.scrollIntoView({
-      behavior: "smooth",
-    });
+    navigate(`/stations/${station.id}`);
   };
 
   // Hàm tìm trạm gần nhất
   const findNearestStation = () => {
     if (nearbyStations.length > 0) {
-      setSelectedStation(nearbyStations[0]);
-      document.querySelector(".selected-station-info")?.scrollIntoView({
-        behavior: "smooth",
-      });
+      navigate(`/stations/${nearbyStations[0].id}`);
     }
+  };
+
+  const filteredStations = stations.filter(
+    (station) =>
+      station.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      station.address.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleStationClick = (stationId) => {
+    navigate(`/stations/${stationId}`);
   };
 
   return (
@@ -291,71 +297,69 @@ export default function Stations() {
         <StationMap
           stations={stations}
           onStationSelect={handleStationSelect}
-          selectedStation={selectedStation}
+          selectedStation={null}
           userLocation={userLocation}
         />
       ) : (
-        <StationFinder stations={stations} />
-      )}
-
-      {selectedStation && (
-        <div className="selected-station-info">
-          <h3>📍 Điểm thuê đã chọn: {selectedStation.name}</h3>
-          <p>{selectedStation.address}</p>
-          <div className="station-details-grid">
-            <div className="detail-item">
-              <span className="detail-label">Số xe có sẵn:</span>
-              <span className="detail-value">
-                {selectedStation.availableVehicles}
-              </span>
-            </div>
-            <div className="detail-item">
-              <span className="detail-label">Trạm sạc:</span>
-              <span className="detail-value">
-                {selectedStation.chargingStations || "Đang cập nhật"}
-              </span>
-            </div>
-            <div className="detail-item">
-              <span className="detail-label">Giờ mở cửa:</span>
-              <span className="detail-value">
-                {selectedStation.openingHours}
-              </span>
-            </div>
-            <div className="detail-item">
-              <span className="detail-label">Đánh giá:</span>
-              <span className="detail-value">
-                ⭐ {selectedStation.rating} ({selectedStation.reviews} đánh giá)
-              </span>
-            </div>
+        <div className="stations-list-section">
+          <div className="search-bar">
+            <input
+              type="text"
+              placeholder="Tìm kiếm điểm thuê..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
 
-          <div className="station-amenities">
-            <h4>Tiện ích:</h4>
-            <div className="amenity-tags">
-              {selectedStation.amenities.map((amenity, index) => (
-                <span key={index} className="amenity-tag">
-                  {amenity}
-                </span>
-              ))}
-            </div>
+          <div className="nearby-label">
+            <FaMapMarkerAlt className="nearby-icon" />
+            <span>Trạm gần bạn</span>
           </div>
 
-          <div className="station-actions">
-            <button
-              className="btn primary"
-              onClick={() =>
-                (window.location.href = `/stations/${selectedStation.id}`)
-              }
-            >
-              Xem chi tiết & đặt xe
-            </button>
-            <button
-              className="btn secondary"
-              onClick={() => setSelectedStation(null)}
-            >
-              Bỏ chọn
-            </button>
+          <div className="stations-list">
+            {filteredStations.map((station) => (
+              <div
+                key={station.id}
+                className="station-item"
+                onClick={() => handleStationClick(station.id)}
+              >
+                <div className="station-item-header">
+                  <h3>{station.name}</h3>
+                  <button
+                    className="direction-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleStationClick(station.id);
+                    }}
+                  >
+                    Chỉ đường
+                  </button>
+                </div>
+
+                <p className="station-address">{station.address}</p>
+
+                <div className="station-meta">
+                  <span className="distance">
+                    <FaMapMarkerAlt /> {station.distance}
+                  </span>
+                  <span className="travel-time">
+                    <FaClock /> {station.travelTime}
+                  </span>
+                </div>
+
+                <div className="station-availability">
+                  <FaMotorcycle className="bike-icon" />
+                  <span>{station.availableBikes} xe có sẵn</span>
+                </div>
+              </div>
+            ))}
           </div>
+
+          {filteredStations.length === 0 && (
+            <div className="no-results">
+              <p>Không tìm thấy điểm thuê phù hợp</p>
+            </div>
+          )}
         </div>
       )}
     </div>
