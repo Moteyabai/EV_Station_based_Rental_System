@@ -14,7 +14,7 @@ const stations = [
     openingHours: '24/7',
     amenities: ['Nhà vệ sinh', 'Quán cà phê', 'Phòng chờ', 'WiFi miễn phí'],
     images: {
-      exterior: "https://images.unsplash.com/photo-1593941707285-aae966bad0cf?auto=format&fit=crop&w=800&q=60",
+      exterior: "",
       chargers: "https://images.unsplash.com/photo-1635418421745-5e29b738d8e6?auto=format&fit=crop&w=800&q=60",
       thumbnail: "https://images.unsplash.com/photo-1647531257138-ff6ce2547643?auto=format&fit=crop&w=800&q=60"
     },
@@ -79,7 +79,7 @@ const stations = [
         range: '60 km',
         price: 120,
         available: true,
-        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60'
+        image: '/images/vehicles/vinfast-klara-s.jpg'
       },
       {
         id: 'v2',
@@ -89,7 +89,7 @@ const stations = [
         range: '120 km',
         price: 150,
         available: true,
-        image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=60'
+        image: '/images/vehicles/datbike-weaver-200.jpg'
       },
       {
         id: 'v3',
@@ -99,7 +99,7 @@ const stations = [
         range: '50 km',
         price: 100,
         available: true,
-        image: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?auto=format&fit=crop&w=800&q=60'
+        image: '/images/vehicles/vinfast-feliz-s.jpg'
       }
     ]
   },
@@ -131,7 +131,7 @@ const stations = [
         range: '60 km',
         price: 120,
         available: true,
-        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60'
+        image: '/images/vehicles/vinfast-klara-s.jpg'
       },
       {
         id: 'v2',
@@ -141,7 +141,7 @@ const stations = [
         range: '120 km',
         price: 150,
         available: true,
-        image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=60'
+        image: '/images/vehicles/datbike-weaver-200.jpg'
       },
       {
         id: 'v3',
@@ -151,7 +151,7 @@ const stations = [
         range: '50 km',
         price: 100,
         available: true,
-        image: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?auto=format&fit=crop&w=800&q=60'
+        image: '/images/vehicles/vinfast-feliz-s.jpg'
       }
     ]
   },
@@ -183,7 +183,7 @@ const stations = [
         range: '60 km',
         price: 120,
         available: true,
-        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60'
+        image: '/images/vehicles/vinfast-klara-s.jpg'
       },
       {
         id: 'v2',
@@ -193,7 +193,7 @@ const stations = [
         range: '120 km',
         price: 150,
         available: true,
-        image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=60'
+        image: '/images/vehicles/datbike-weaver-200.jpg'
       }
     ]
   },
@@ -225,7 +225,7 @@ const stations = [
         range: '60 km',
         price: 120,
         available: true,
-        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60'
+        image: '/images/vehicles/vinfast-klara-s.jpg'
       },
       {
         id: 'v2',
@@ -235,7 +235,7 @@ const stations = [
         range: '120 km',
         price: 150,
         available: true,
-        image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=60'
+        image: '/images/vehicles/datbike-weaver-200.jpg'
       },
       {
         id: 'v3',
@@ -245,7 +245,7 @@ const stations = [
         range: '50 km',
         price: 100,
         available: true,
-        image: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?auto=format&fit=crop&w=800&q=60'
+        image: '/images/vehicles/vinfast-feliz-s.jpg'
       }
     ]
   }

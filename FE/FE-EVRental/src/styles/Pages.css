@@ -21,6 +21,11 @@
   align-items: center;
   gap: 1rem;
   margin-bottom: 2rem;
+  background: rgb(77, 182, 172);
+  padding: 60px 0;
+  margin-left: -1rem;
+  margin-right: -1rem;
+  margin-top: -2rem;
 }
 
 .header-icon {
@@ -35,20 +40,17 @@
 
 .page-header h1 {
   margin: 0;
-  color: #0f172a;
+  color: white;
   font-size: 2.5rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .page-header p {
-  color: #64748b;
+  color: white;
   font-size: 1.1rem;
   max-width: 600px;
   margin: 0.5rem auto 0;
+  opacity: 0.9;
 }
 
 .view-toggle {

@@ -13,6 +13,49 @@ const stationImg =
   "https://images.unsplash.com/photo-1599593752325-ffa41031056e?auto=format&fit=crop&w=1200&q=80";
 
 export default function Home() {
+  const [currentBgIndex, setCurrentBgIndex] = React.useState(0);
+  const [currentStationIndex, setCurrentStationIndex] = React.useState(0);
+  
+  // Background images array with cache busting
+  const backgroundImages = [
+    `/images/background/background-1.jpg?v=${Date.now()}`,
+    `/images/background/background-2.jpg?v=${Date.now()}`,
+    `/images/background/background-3.jpg?v=${Date.now()}`,
+  ];
+
+  // Background slideshow effect
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentBgIndex((prevIndex) => 
+        (prevIndex + 1) % backgroundImages.length
+      );
+    }, 5000); // Chuyển ảnh mỗi 5 giây
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Station carousel controls
+  const stationsPerView = 3; // Số station hiển thị cùng lúc
+  const maxIndex = Math.max(0, stations.length - stationsPerView);
+
+  const handlePrevStation = () => {
+    setCurrentStationIndex((prev) => {
+      if (prev === 0) {
+        return maxIndex; // Quay về cuối khi ở đầu
+      }
+      return prev - 1;
+    });
+  };
+
+  const handleNextStation = () => {
+    setCurrentStationIndex((prev) => {
+      if (prev >= maxIndex) {
+        return 0; // Quay về đầu khi ở cuối
+      }
+      return prev + 1;
+    });
+  };
+
   // Add scroll reveal effect
   React.useEffect(() => {
     const observer = new IntersectionObserver(
@@ -43,6 +86,24 @@ export default function Home() {
   return (
     <div className="template-root">
       <section className="template-hero">
+        {/* Background slideshow */}
+        <div className="hero-background-slideshow">
+          {backgroundImages.map((image, index) => (
+            <div
+              key={index}
+              className={`hero-background-image ${
+                index === currentBgIndex ? "active" : ""
+              }`}
+              style={{
+                backgroundImage: `url(${image})`,
+              }}
+            />
+          ))}
+        </div>
+        
+        {/* Overlay */}
+        <div className="hero-overlay"></div>
+
         <div className="hero-inner ev-container">
           <div className="hero-text">
             <h1>Thuê xe máy điện - Khám phá thành phố</h1>
@@ -160,35 +221,77 @@ export default function Home() {
             Tìm điểm thuê xe máy điện phù hợp với lịch trình của bạn.
           </p>
 
-          <div className="stations-grid scroll-reveal fade-up">
-            {featuredStations.map((station) => (
-              <div key={station.id} className="station-card">
-                <img
-                  src={station.image}
-                  alt={station.name}
-                  className="station-img"
-                />
-                <div className="station-content">
-                  <h3>{station.name}</h3>
-                  <p className="station-address">{station.address}</p>
-                  <div className="station-meta">
-                    <span className="station-hours">
-                      {station.openingHours}
-                    </span>
-                    <span className="station-available">
-                      {station.availableVehicles} xe có sẵn
-                    </span>
+          <div className="stations-carousel-wrapper scroll-reveal fade-up">
+            {/* Previous Button */}
+            <button
+              className="carousel-btn carousel-btn-prev"
+              onClick={handlePrevStation}
+              aria-label="Trạm trước"
+            >
+              <span>&#8249;</span>
+            </button>
+
+            {/* Stations Carousel */}
+            <div className="stations-carousel">
+              <div
+                className="stations-carousel-track"
+                style={{
+                  transform: `translateX(-${currentStationIndex * (100 / stationsPerView)}%)`,
+                }}
+              >
+                {stations.map((station) => (
+                  <div key={station.id} className="station-card">
+                    <img
+                      src={station.image}
+                      alt={station.name}
+                      className="station-img"
+                    />
+                    <div className="station-content">
+                      <h3>{station.name}</h3>
+                      <p className="station-address">{station.address}</p>
+                      <div className="station-meta">
+                        <span className="station-hours">
+                          {station.openingHours}
+                        </span>
+                        <span className="station-available">
+                          {station.availableVehicles} xe có sẵn
+                        </span>
+                      </div>
+                      <Link
+                        to={`/stations/${station.id}`}
+                        className="btn primary sm"
+                      >
+                        Xem chi tiết
+                      </Link>
+                    </div>
                   </div>
-                  <Link
-                    to={`/stations/${station.id}`}
-                    className="btn primary sm"
-                  >
-                    Xem chi tiết
-                  </Link>
-                </div>
+                ))}
               </div>
-            ))}
+            </div>
+
+            {/* Next Button */}
+            <button
+              className="carousel-btn carousel-btn-next"
+              onClick={handleNextStation}
+              aria-label="Trạm tiếp theo"
+            >
+              <span>&#8250;</span>
+            </button>
           </div>
+
+          {/* Carousel Indicators */}
+          {maxIndex > 0 && (
+            <div className="carousel-indicators">
+              {Array.from({ length: maxIndex + 1 }).map((_, index) => (
+                <button
+                  key={index}
+                  className={`indicator ${index === currentStationIndex ? "active" : ""}`}
+                  onClick={() => setCurrentStationIndex(index)}
+                  aria-label={`Đi tới trang ${index + 1}`}
+                />
+              ))}
+            </div>
+          )}
 
           <div className="text-center mt-4">
             <Link to="/stations" className="btn primary">
