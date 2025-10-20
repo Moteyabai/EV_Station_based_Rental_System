@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Repositories.DBContext;
 
@@ -11,9 +12,11 @@ using Repositories.DBContext;
 namespace Repositories.Migrations
 {
     [DbContext(typeof(EVRenterDBContext))]
-    partial class EVRenterDBContextModelSnapshot : ModelSnapshot
+    [Migration("20251019065113_Change_PaymentID_To_Long")]
+    partial class Change_PaymentID_To_Long
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -292,7 +295,7 @@ namespace Repositories.Migrations
                     b.Property<decimal?>("Fee")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal?>("FinalBattery")
+                    b.Property<decimal>("FinalBattery")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("FinalBikeCondition")

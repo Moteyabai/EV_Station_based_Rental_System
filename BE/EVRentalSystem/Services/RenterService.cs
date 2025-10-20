@@ -27,5 +27,6 @@ namespace Services
         public async Task<Renter> GetByIdAsync(int id) => await _renterRepository.GetByIdAsync(id);
 
         public async Task UpdateAsync(Renter entity) => await _renterRepository.UpdateAsync(entity);
+        public async Task<Renter> GetRenterByAccountIDAsync(int accID) => await _renterRepository.GetRenterByAccountIDAsync(accID);    
     }
 }
