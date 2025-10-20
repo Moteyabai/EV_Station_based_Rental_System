@@ -22,4 +22,11 @@
         Cancelled = 2,
         Completed = 3
     }
+
+    public enum PaymentStatus
+    {
+        Pending = 0,
+        Completed = 1,
+        Failed = -1
+    }
 }
