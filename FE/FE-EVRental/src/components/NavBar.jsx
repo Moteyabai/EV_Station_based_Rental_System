@@ -53,7 +53,7 @@ export default function NavBar() {
         navigate("/profile");
         break;
       case "history":
-        navigate("/user-history");
+        navigate("/history");
         break;
       default:
         console.log("Unknown menu key:", key);
@@ -287,7 +287,7 @@ export default function NavBar() {
                     }
                     onClick={() => {
                       setUserMenuVisible(false);
-                      navigate("/user-history");
+                      navigate("/history");
                     }}
                   >
                     <HistoryOutlined />

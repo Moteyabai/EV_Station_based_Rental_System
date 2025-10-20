@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { CartProvider } from "./contexts/CartContext";
 import { ReviewProvider } from "./contexts/ReviewContext";
@@ -89,6 +89,7 @@ function App() {
                         <Route path="/register" element={<Register />} />
                         <Route path="/profile" element={<UserProfile />} />
                         <Route path="/history" element={<UserHistory />} />
+                        <Route path="/user-history" element={<Navigate to="/history" replace />} />
                         <Route
                           path="/test-dropdown"
                           element={<TestDropdown />}
