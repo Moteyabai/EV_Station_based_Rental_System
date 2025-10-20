@@ -155,10 +155,6 @@ export default function StationDetail() {
               <span className="value">{station.availableVehicles}</span>
             </div>
             <div className="info-item">
-              <span className="label">Trạm sạc:</span>
-              <span className="value">{station.chargingStations}</span>
-            </div>
-            <div className="info-item">
               <span className="label">Giờ mở cửa:</span>
               <span className="value">{station.openingHours}</span>
             </div>

@@ -60,10 +60,6 @@ export default function Checkout() {
 
     // Simulate payment processing
     try {
-      console.log('🔄 Bắt đầu xử lý thanh toán...');
-      console.log('Phương thức thanh toán:', paymentMethod);
-      console.log('User:', user);
-      console.log('Cart items:', cartItems);
 
       // Validate data trước khi xử lý
       if (!user || !user.email) {
@@ -78,7 +74,6 @@ export default function Checkout() {
 
       // Generate booking confirmation
       const bookingId = `BK${Date.now()}`;
-      console.log('📋 Booking ID:', bookingId);
 
       // Prepare booking data for each cart item
       const savedBookings = [];
@@ -87,7 +82,6 @@ export default function Checkout() {
       for (const item of cartItems) {
         // Validate item data
         if (!item.vehicle || !item.rentalDetails) {
-          console.error('❌ Invalid item:', item);
           continue;
         }
 
@@ -95,10 +89,10 @@ export default function Checkout() {
         const itemBookingId = `${bookingId}-${itemIndex}`;
 
         const bookingData = {
-          userId: user.accountID || user.AccountID || user.id || user.email,
+          userId: user.email, // Đơn giản hóa: chỉ dùng email làm userId
           userEmail: user.email,
           userName: user.fullName || user.name || user.email,
-          userPhone: user.phone || 'Chưa cập nhật',
+          userPhone: user.phone || user.phoneNumber || 'Chưa cập nhật',
           vehicleName: item.vehicle.name,
           vehicleId: item.vehicle.id,
           licensePlate: item.vehicle.licensePlate || `59${String.fromCharCode(65 + Math.floor(Math.random() * 26))}-${Math.floor(10000 + Math.random() * 90000)}`,
@@ -117,16 +111,12 @@ export default function Checkout() {
           lastCheck: new Date().toISOString(),
         };
 
-        console.log('💾 Đang lưu booking với ID:', itemBookingId);
-
         try {
           // Save each booking với ID cụ thể
           const savedBooking = saveBooking(bookingData, itemBookingId);
           savedBookings.push(savedBooking);
-          console.log('✅ Đã lưu booking:', savedBooking.id);
           itemIndex++;
         } catch (saveError) {
-          console.error('❌ Lỗi khi lưu booking:', saveError);
           throw new Error(`Không thể lưu booking cho xe ${item.vehicle.name}`);
         }
       }
@@ -134,8 +124,6 @@ export default function Checkout() {
       if (savedBookings.length === 0) {
         throw new Error('Không có booking nào được lưu thành công');
       }
-
-      console.log('🎉 Đã lưu tất cả bookings:', savedBookings);
 
       // Clear cart and redirect
       clearCart();
@@ -149,7 +137,6 @@ export default function Checkout() {
       
       navigate(`/booking-success/${bookingId}`);
     } catch (error) {
-      console.error("❌ Payment error:", error);
       alert(`❌ Lỗi: ${error.message || 'Có lỗi xảy ra trong quá trình thanh toán. Vui lòng thử lại!'}`);
     } finally {
       setIsProcessing(false);

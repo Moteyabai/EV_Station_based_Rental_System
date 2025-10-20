@@ -1,5 +1,19 @@
 /* User History Styles */
 
+/* Chỉnh màu chữ của Tag màu xanh dương và xanh lá thành màu trắng */
+.ant-tag.ant-tag-blue,
+.ant-tag.ant-tag-green {
+  color: white !important;
+}
+
+.ant-tag-blue {
+  color: white !important;
+}
+
+.ant-tag-green {
+  color: white !important;
+}
+
 .history-container {
   max-width: 1000px;
   margin: 0 auto;

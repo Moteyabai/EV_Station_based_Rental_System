@@ -144,16 +144,6 @@ export default function Stations() {
             </div>
           </div>
         )}
-        {error && (
-          <div className="location-denied-banner">
-            <div className="banner-content">
-              <div className="banner-icon">⚠️</div>
-              <div className="banner-text">
-                <h3>{error}</h3>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Location Permission Request */}
         {locationPermission === "pending" && (
@@ -175,27 +165,6 @@ export default function Stations() {
                 {isRequestingLocation
                   ? "⏳ Đang xử lý..."
                   : "📍 Chia sẻ vị trí"}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {locationPermission === "denied" && (
-          <div className="location-denied-banner">
-            <div className="banner-content">
-              <div className="banner-icon">⚠️</div>
-              <div className="banner-text">
-                <h3>Không có quyền truy cập vị trí</h3>
-                <p>
-                  Bạn có thể bật lại quyền truy cập vị trí trong cài đặt trình
-                  duyệt
-                </p>
-              </div>
-              <button
-                className="btn btn-outline"
-                onClick={requestLocationPermission}
-              >
-                🔄 Thử lại
               </button>
             </div>
           </div>

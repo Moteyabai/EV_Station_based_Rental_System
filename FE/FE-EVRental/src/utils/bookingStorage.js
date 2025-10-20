@@ -26,19 +26,18 @@ export const saveBooking = (bookingData, baseBookingId = null) => {
     const bookingId = baseBookingId || `BK${Date.now()}`;
     
     const newBooking = {
-      id: bookingId, // Sử dụng ID được truyền vào hoặc tạo mới
+      id: bookingId,
+      bookingId: bookingId,
       ...bookingData,
       createdAt: new Date().toISOString(),
-      status: 'pending_payment', // pending_payment, booked, renting, completed, cancelled
-      paymentVerified: false, // Staff chưa xác nhận thanh toán
+      status: 'pending_payment',
+      paymentVerified: false,
       paymentVerifiedAt: null,
       paymentVerifiedBy: null,
     };
     
     existingBookings.push(newBooking);
     localStorage.setItem(BOOKINGS_KEY, JSON.stringify(existingBookings));
-    
-    console.log('💾 Đã lưu booking:', newBooking.id);
     
     return newBooking;
   } catch (error) {
@@ -50,14 +49,34 @@ export const saveBooking = (bookingData, baseBookingId = null) => {
 /**
  * Cập nhật trạng thái booking
  */
-export const updateBookingStatus = (bookingId, newStatus) => {
+export const updateBookingStatus = (bookingId, newStatus, additionalData = {}) => {
   try {
     const bookings = getAllBookings();
-    const updatedBookings = bookings.map(booking => 
-      booking.id === bookingId 
-        ? { ...booking, status: newStatus, updatedAt: new Date().toISOString() }
-        : booking
-    );
+    const updatedBookings = bookings.map(booking => {
+      if (booking.id === bookingId) {
+        const updates = { 
+          ...booking, 
+          status: newStatus, 
+          updatedAt: new Date().toISOString(),
+          ...additionalData
+        };
+        
+        // Thêm thông tin đặc biệt cho các trạng thái
+        if (newStatus === 'renting') {
+          // Khi staff bàn giao xe cho khách
+          updates.handoverAt = new Date().toISOString();
+          updates.handoverCompleted = true;
+        } else if (newStatus === 'completed') {
+          // Khi khách trả xe và staff xác nhận
+          updates.returnedAt = new Date().toISOString();
+          updates.completedAt = new Date().toISOString();
+          updates.returnCompleted = true;
+        }
+        
+        return updates;
+      }
+      return booking;
+    });
     
     localStorage.setItem(BOOKINGS_KEY, JSON.stringify(updatedBookings));
     return true;
