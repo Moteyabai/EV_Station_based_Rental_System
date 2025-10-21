@@ -60,35 +60,12 @@ export default function NavBar() {
     }
   };
 
-  const userMenuContent = (
-    <Menu
-      onClick={handleUserMenuClick}
-      style={{ minWidth: 200 }}
-      items={[
-        {
-          key: "profile",
-          icon: <UserOutlined />,
-          label: "Thông tin cá nhân",
-        },
-        {
-          key: "history",
-          icon: <HistoryOutlined />,
-          label: "Lịch sử thuê xe",
-        },
-        {
-          type: "divider",
-        },
-        {
-          key: "logout",
-          icon: <LogoutOutlined />,
-          label: "Đăng xuất",
-          danger: true,
-        },
-      ]}
-    />
-  );
+  // Kiểm tra role để hiển thị menu phù hợp
+  const userRoleId = user?.roleID || user?.RoleID;
+  const isStaffOrAdmin = userRoleId === 2 || userRoleId === 3;
 
-  const userMenuItems = [
+  // Menu items cho User (không hiển thị cho Staff/Admin)
+  const profileHistoryItems = isStaffOrAdmin ? [] : [
     {
       key: "profile",
       icon: <UserOutlined />,
@@ -99,9 +76,12 @@ export default function NavBar() {
       icon: <HistoryOutlined />,
       label: "Lịch sử thuê xe",
     },
-    {
-      type: "divider",
-    },
+  ];
+
+  // Tạo menu items đầy đủ
+  const allMenuItems = [
+    ...profileHistoryItems,
+    ...(profileHistoryItems.length > 0 ? [{ type: "divider" }] : []),
     {
       key: "logout",
       icon: <LogoutOutlined />,
@@ -109,6 +89,16 @@ export default function NavBar() {
       danger: true,
     },
   ];
+
+  const userMenuContent = (
+    <Menu
+      onClick={handleUserMenuClick}
+      style={{ minWidth: 200 }}
+      items={allMenuItems}
+    />
+  );
+
+  const userMenuItems = allMenuItems;
 
   const menuItems = [
     {

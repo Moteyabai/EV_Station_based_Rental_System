@@ -28,6 +28,18 @@ export default function UserHistory() {
       return;
     }
     
+    // Chặn Staff (roleID = 2) và Admin (roleID = 3)
+    const userRoleId = user?.roleID || user?.RoleID;
+    if (userRoleId === 2 || userRoleId === 3) {
+      console.log('UserHistory: Access denied for Staff/Admin, redirecting...');
+      if (userRoleId === 2) {
+        navigate("/staff");
+      } else {
+        navigate("/admin");
+      }
+      return;
+    }
+    
     const allBookings = JSON.parse(localStorage.getItem("ev_rental_bookings") || "[]");
     const userEmail = user.email;
     
