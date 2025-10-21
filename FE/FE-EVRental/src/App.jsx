@@ -10,6 +10,7 @@ import "./styles/leaflet-fix.css";
 import NavBar from "./components/NavBar";
 import Cart from "./components/Cart";
 import ProtectedRoute from "./components/ProtectedRoute";
+import RoleBasedRoute from "./components/RoleBasedRoute";
 
 // Pages
 import Home from "./pages/Home";
@@ -87,9 +88,43 @@ function App() {
                         <Route path="/about" element={<About />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
-                        <Route path="/profile" element={<UserProfile />} />
-                        <Route path="/history" element={<UserHistory />} />
+                        
+                        {/* Trang chỉ dành cho User (Customer), chặn Staff và Admin */}
+                        <Route
+                          path="/profile"
+                          element={
+                            <RoleBasedRoute blockedRoles={[2, 3]}>
+                              <UserProfile />
+                            </RoleBasedRoute>
+                          }
+                        />
+                        <Route
+                          path="/history"
+                          element={
+                            <RoleBasedRoute blockedRoles={[2, 3]}>
+                              <UserHistory />
+                            </RoleBasedRoute>
+                          }
+                        />
                         <Route path="/user-history" element={<Navigate to="/history" replace />} />
+                        
+                        <Route
+                          path="/checkout"
+                          element={
+                            <RoleBasedRoute blockedRoles={[2, 3]}>
+                              <Checkout />
+                            </RoleBasedRoute>
+                          }
+                        />
+                        <Route
+                          path="/booking-success/:bookingId"
+                          element={
+                            <RoleBasedRoute blockedRoles={[2, 3]}>
+                              <BookingSuccess />
+                            </RoleBasedRoute>
+                          }
+                        />
+                        
                         <Route
                           path="/test-dropdown"
                           element={<TestDropdown />}
@@ -97,26 +132,37 @@ function App() {
 
                         <Route
                           path="/pickup/:vehicleId/:stationId"
-                          element={<VehiclePickup />}
+                          element={
+                            <RoleBasedRoute blockedRoles={[2, 3]}>
+                              <VehiclePickup />
+                            </RoleBasedRoute>
+                          }
                         />
                         <Route
                           path="/return/:vehicleId/:stationId"
-                          element={<VehicleReturn />}
+                          element={
+                            <RoleBasedRoute blockedRoles={[2, 3]}>
+                              <VehicleReturn />
+                            </RoleBasedRoute>
+                          }
                         />
                         <Route
                           path="/pickup-success"
-                          element={<PickupSuccess />}
+                          element={
+                            <RoleBasedRoute blockedRoles={[2, 3]}>
+                              <PickupSuccess />
+                            </RoleBasedRoute>
+                          }
                         />
                         <Route
                           path="/return-success"
-                          element={<ReturnSuccess />}
+                          element={
+                            <RoleBasedRoute blockedRoles={[2, 3]}>
+                              <ReturnSuccess />
+                            </RoleBasedRoute>
+                          }
                         />
                         <Route path="/cart" element={<Cart />} />
-                        <Route path="/checkout" element={<Checkout />} />
-                        <Route
-                          path="/booking-success/:bookingId"
-                          element={<BookingSuccess />}
-                        />
                       </Routes>
                     </main>
                     <footer className="app-footer">

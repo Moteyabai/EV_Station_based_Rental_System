@@ -17,8 +17,42 @@ export default function Staff() {
     if (!user || userRoleId !== 2) {
       console.log('Staff page: Access denied, redirecting to home');
       navigate('/');
+      return;
     }
+
+    // Thay thế history state để ngăn back về trang trước
+    window.history.replaceState(null, '', '/staff');
   }, [user, navigate]);
+
+  // Xử lý nút back của trình duyệt
+  useEffect(() => {
+    const handlePopState = (event) => {
+      const userRoleId = user?.roleID || user?.RoleID;
+      
+      // Nếu là Staff, ngăn không cho back về trang user
+      if (userRoleId === 2) {
+        console.log('Staff trying to go back - preventing navigation');
+        event.preventDefault();
+        
+        // Giữ lại ở trang staff
+        window.history.pushState(null, '', '/staff');
+        
+        // Hiển thị cảnh báo (tùy chọn)
+        alert('⚠️ Bạn không thể quay lại trang trước. Vui lòng sử dụng menu điều hướng hoặc đăng xuất.');
+      }
+    };
+
+    // Thêm state ban đầu để có thể catch popstate
+    window.history.pushState(null, '', window.location.pathname);
+    
+    // Lắng nghe sự kiện popstate (nút back/forward)
+    window.addEventListener('popstate', handlePopState);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [user]);
 
   const handleLogout = () => {
     logout();
@@ -452,6 +486,37 @@ function HandoverModal({ vehicle, onClose, onComplete }) {
     onClose();
   };
 
+  const handleSendToVehicleManagement = () => {
+    // Tạo danh sách các vấn đề từ checklist
+    const issues = [];
+    if (!checklist.bodyCondition) issues.push('Thân xe trầy xước, móp méo');
+    if (!checklist.tireCondition) issues.push('Lốp xe có vấn đề');
+    if (!checklist.lightsWorking) issues.push('Đèn chiếu sáng không hoạt động');
+    if (!checklist.brakeWorking) issues.push('Phanh có vấn đề');
+    if (!checklist.batteryCharged) issues.push('Pin không đầy hoặc sạc kém');
+    if (!checklist.documentsChecked) issues.push('Giấy tờ xe thiếu');
+
+    // Lưu thông tin xe cần bảo trì vào localStorage
+    const maintenanceData = {
+      vehicleId: vehicle.id,
+      vehicleName: vehicle.vehicleName,
+      licensePlate: vehicle.licensePlate,
+      bookingId: vehicle.bookingId,
+      issues: issues,
+      reportedAt: new Date().toISOString(),
+      status: 'pending_maintenance',
+      reportedBy: 'Staff'
+    };
+
+    // Lấy danh sách xe cần bảo trì hiện có
+    const maintenanceList = JSON.parse(localStorage.getItem('ev_maintenance_vehicles') || '[]');
+    maintenanceList.push(maintenanceData);
+    localStorage.setItem('ev_maintenance_vehicles', JSON.stringify(maintenanceList));
+
+    alert(`🔧 Đã gửi xe ${vehicle.licensePlate} về mục Quản lý xe!\n\nVấn đề phát hiện:\n${issues.join('\n')}`);
+    onClose();
+  };
+
   const allChecked = Object.values(checklist).every(v => v);
 
   return (
@@ -524,6 +589,12 @@ function HandoverModal({ vehicle, onClose, onComplete }) {
             </div>
           </div>
 
+          {!allChecked && (
+            <div className="checklist-warning">
+              <p className="warning-text">⚠️ Một số hạng mục chưa đạt yêu cầu. Xe có thể cần bảo trì hoặc sửa chữa.</p>
+            </div>
+          )}
+
           <div className="photo-section">
             <h3>📸 Tình trạng xe (Trước/Sau/Trái/Phải)</h3>
             <div className="photo-upload">
@@ -553,6 +624,14 @@ function HandoverModal({ vehicle, onClose, onComplete }) {
           <button className="btn-cancel" onClick={onClose}>
             Hủy
           </button>
+          {!allChecked && (
+            <button 
+              className="btn-maintenance"
+              onClick={handleSendToVehicleManagement}
+            >
+              🔧 Gửi về Quản lý xe
+            </button>
+          )}
           <button 
             className="btn-confirm" 
             disabled={!allChecked || !signature}
