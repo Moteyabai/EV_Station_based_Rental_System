@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import '../styles/UserProfile.css';
@@ -19,11 +19,25 @@ export default function UserProfile() {
     driverLicense: user?.driverLicense || 'Chưa cập nhật'
   });
 
-  // If user is not logged in, redirect to login
-  if (!user) {
-    navigate('/login');
-    return null;
-  }
+  // Check authentication and role
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    // Chặn Staff (roleID = 2) và Admin (roleID = 3)
+    const userRoleId = user?.roleID || user?.RoleID;
+    if (userRoleId === 2 || userRoleId === 3) {
+      console.log('UserProfile: Access denied for Staff/Admin, redirecting...');
+      if (userRoleId === 2) {
+        navigate("/staff");
+      } else {
+        navigate("/admin");
+      }
+      return;
+    }
+  }, [user, navigate]);
 
   const handleInputChange = (field, value) => {
     setProfileData(prev => ({

@@ -5,7 +5,7 @@ import '../styles/Admin.css';
 
 const Admin = () => {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showAddStationModal, setShowAddStationModal] = useState(false);
   const [newStation, setNewStation] = useState({
@@ -14,6 +14,61 @@ const Admin = () => {
     totalVehicles: 0,
     chargingStations: 0
   });
+
+  // Check role access for Admin
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    const userRoleId = user?.roleID || user?.RoleID;
+    console.log('Admin page: User:', user, 'RoleID:', userRoleId);
+    
+    // Chỉ cho phép Admin (roleID = 3)
+    if (userRoleId !== 3) {
+      console.log('Admin page: Access denied, redirecting...');
+      if (userRoleId === 2) {
+        navigate('/staff');
+      } else {
+        navigate('/');
+      }
+      return;
+    }
+
+    // Thay thế history state để ngăn back về trang trước
+    window.history.replaceState(null, '', '/admin');
+  }, [user, navigate]);
+
+  // Xử lý nút back của trình duyệt
+  useEffect(() => {
+    const handlePopState = (event) => {
+      const userRoleId = user?.roleID || user?.RoleID;
+      
+      // Nếu là Admin, ngăn không cho back về trang user/staff
+      if (userRoleId === 3) {
+        console.log('Admin trying to go back - preventing navigation');
+        event.preventDefault();
+        
+        // Giữ lại ở trang admin
+        window.history.pushState(null, '', '/admin');
+        
+        // Hiển thị cảnh báo (tùy chọn)
+        alert('⚠️ Bạn không thể quay lại trang trước. Vui lòng sử dụng menu điều hướng hoặc đăng xuất.');
+      }
+    };
+
+    // Thêm state ban đầu để có thể catch popstate
+    window.history.pushState(null, '', window.location.pathname);
+    
+    // Lắng nghe sự kiện popstate (nút back/forward)
+    window.addEventListener('popstate', handlePopState);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [user]);
   
   const [stats, setStats] = useState({
     totalVehicles: 125,
