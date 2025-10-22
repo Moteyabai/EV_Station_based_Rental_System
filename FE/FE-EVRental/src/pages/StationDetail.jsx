@@ -4,6 +4,7 @@ import stations from "../data/stations";
 import { useAuth } from "../contexts/AuthContext";
 import { useCart } from "../contexts/CartContext";
 import { useReviews } from "../contexts/ReviewContext";
+import { formatPrice } from "../utils/helpers";
 import ReviewDisplay from "../components/ReviewDisplay";
 import ReviewForm from "../components/ReviewForm";
 import "../styles/StationDetail.css";
@@ -285,7 +286,7 @@ export default function StationDetail() {
                     <div className="vehicle-meta">
                       <span className="vehicle-type">{vehicle.type}</span>
                       <span className="vehicle-price">
-                        {vehicle.price}k/ngày
+                        {formatPrice(vehicle.price)}/ngày
                       </span>
                     </div>
 
@@ -445,7 +446,7 @@ export default function StationDetail() {
                       )}
                       onChange={handleCheckboxChange}
                     />
-                    Bảo hiểm (+15k/ngày)
+                    Bảo hiểm (+{formatPrice(15000)}/ngày)
                   </label>
 
                   <label className="checkbox-label">
@@ -457,7 +458,7 @@ export default function StationDetail() {
                       )}
                       onChange={handleCheckboxChange}
                     />
-                    Bộ sạc di động (+10k/ngày)
+                    Bộ sạc di động (+{formatPrice(10000)}/ngày)
                   </label>
 
                   <label className="checkbox-label">
@@ -467,7 +468,7 @@ export default function StationDetail() {
                       checked={bookingData.additionalServices.includes("gps")}
                       onChange={handleCheckboxChange}
                     />
-                    Hệ thống định vị GPS (+5k/ngày)
+                    Hệ thống định vị GPS (+{formatPrice(5000)}/ngày)
                   </label>
                 </div>
               </div>
@@ -476,24 +477,24 @@ export default function StationDetail() {
                 <h3>Thông tin đặt xe</h3>
                 <div className="summary-item">
                   <span>Thuê xe:</span>
-                  <span>{selectedVehicle.price}k/ngày</span>
+                  <span>{formatPrice(selectedVehicle.price)}/ngày</span>
                 </div>{" "}
                 {bookingData.additionalServices.includes("insurance") && (
                   <div className="summary-item">
                     <span>Bảo hiểm:</span>
-                    <span>15k/ngày</span>
+                    <span>{formatPrice(15000)}/ngày</span>
                   </div>
                 )}
                 {bookingData.additionalServices.includes("charger") && (
                   <div className="summary-item">
                     <span>Bộ sạc di động:</span>
-                    <span>10k/ngày</span>
+                    <span>{formatPrice(10000)}/ngày</span>
                   </div>
                 )}
                 {bookingData.additionalServices.includes("gps") && (
                   <div className="summary-item">
                     <span>Định vị GPS:</span>
-                    <span>5k/ngày</span>
+                    <span>{formatPrice(5000)}/ngày</span>
                   </div>
                 )}
                 <div className="summary-total">

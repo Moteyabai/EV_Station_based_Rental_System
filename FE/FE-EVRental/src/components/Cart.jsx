@@ -93,10 +93,10 @@ export default function Cart() {
               <div className="cart-item-price">
                 <div className="price-breakdown">
                   <div className="daily-price">
-                    {formatPrice(item.vehicle.price, "VNĐ")}/ngày
+                    {formatPrice(item.vehicle.price)}/ngày
                   </div>
                   <div className="total-price">
-                    = {formatPrice(item.totalPrice, "VNĐ")}
+                    = {formatPrice(item.totalPrice)}
                   </div>
                 </div>
 
@@ -123,7 +123,7 @@ export default function Cart() {
 
               <div className="summary-row">
                 <span>Tổng tiền thuê:</span>
-                <span>{formatPrice(getTotalPrice(), "VNĐ")}</span>
+                <span>{formatPrice(getTotalPrice())}</span>
               </div>
             </div>
 

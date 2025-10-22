@@ -30,15 +30,17 @@ export const formatPrice = (price, priceUnit = "VNĐ") => {
   // Đảm bảo price là số
   const numPrice = typeof price === "string" ? parseFloat(price) : price;
   
-  // Nếu price unit không có hoặc đã là VNĐ đầy đủ, không nhân thêm
-  // Chỉ nhân × 1000 nếu priceUnit rõ ràng có chữ "k" VÀ giá < 10000 (tức là đơn vị nghìn)
-  let finalPrice = numPrice;
-  if (priceUnit && (priceUnit.toLowerCase().includes("k") || priceUnit.toLowerCase().includes("k/")) && numPrice < 10000) {
-    finalPrice = numPrice * 1000;
+  // Kiểm tra nếu giá trị không hợp lệ
+  if (isNaN(numPrice) || numPrice === null || numPrice === undefined) {
+    return "0 VNĐ";
   }
   
-  // Format number with Vietnamese locale and add VNĐ
-  const formattedNumber = new Intl.NumberFormat("vi-VN").format(finalPrice);
+  // Format number with Vietnamese locale and add VNĐ with thousands separator
+  const formattedNumber = new Intl.NumberFormat("vi-VN", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(numPrice);
+  
   return `${formattedNumber} VNĐ`;
 };
 
