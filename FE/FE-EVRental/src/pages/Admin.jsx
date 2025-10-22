@@ -8,6 +8,16 @@ const Admin = () => {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showAddStationModal, setShowAddStationModal] = useState(false);
+  const [showEditStationModal, setShowEditStationModal] = useState(false);
+  const [showStationDetailModal, setShowStationDetailModal] = useState(false);
+  const [showStationVehiclesModal, setShowStationVehiclesModal] = useState(false);
+  const [showStationStaffModal, setShowStationStaffModal] = useState(false);
+  const [selectedStation, setSelectedStation] = useState(null);
+  
+  // Search and filter states for stations
+  const [stationSearchTerm, setStationSearchTerm] = useState('');
+  const [stationStatusFilter, setStationStatusFilter] = useState('all');
+  
   const [newStation, setNewStation] = useState({
     name: '',
     address: '',
@@ -142,9 +152,11 @@ const Admin = () => {
   const [statusFilter, setStatusFilter] = useState('all');
 
   const [staff, setStaff] = useState([
-    { id: 1, name: 'Phạm Văn D', station: 'Quận 1', role: 'Nhân viên giao xe', performance: 95, totalDeliveries: 156 },
-    { id: 2, name: 'Hoàng Thị E', station: 'Quận 3', role: 'Nhân viên kỹ thuật', performance: 88, totalDeliveries: 98 },
-    { id: 3, name: 'Võ Văn F', station: 'Quận 7', role: 'Quản lý điểm', performance: 92, totalDeliveries: 142 },
+    { id: 1, name: 'Phạm Văn D', stationId: 's1', station: 'Trạm EV Công Viên Tao Đàn', role: 'Nhân viên giao xe', performance: 95, totalDeliveries: 156 },
+    { id: 2, name: 'Hoàng Thị E', stationId: 's1', station: 'Trạm EV Công Viên Tao Đàn', role: 'Nhân viên kỹ thuật', performance: 88, totalDeliveries: 98 },
+    { id: 3, name: 'Võ Văn F', stationId: 's2', station: 'Trạm EV Bờ Sông Sài Gòn', role: 'Quản lý điểm', performance: 92, totalDeliveries: 142 },
+    { id: 4, name: 'Trần Văn G', stationId: 's3', station: 'Trạm EV Trung Tâm Quận 1', role: 'Nhân viên giao xe', performance: 87, totalDeliveries: 120 },
+    { id: 5, name: 'Nguyễn Thị H', stationId: 's4', station: 'Trạm EV Khu Công Nghệ Cao', role: 'Nhân viên kỹ thuật', performance: 91, totalDeliveries: 134 },
   ]);
 
   const [reports, setReports] = useState({
@@ -276,6 +288,67 @@ const Admin = () => {
     alert('✅ Đã thêm trạm mới thành công!');
   };
 
+  const handleViewStationDetail = (station) => {
+    console.log('View station detail:', station);
+    setSelectedStation(station);
+    setShowStationDetailModal(true);
+  };
+
+  const handleEditStation = (station) => {
+    console.log('Edit station:', station);
+    setSelectedStation(station);
+    setNewStation({
+      name: station.name,
+      address: station.address,
+      totalVehicles: station.totalVehicles,
+      chargingStations: station.chargingStations
+    });
+    setShowEditStationModal(true);
+  };
+
+  const handleUpdateStation = () => {
+    if (!newStation.name || !newStation.address) {
+      alert('Vui lòng điền đầy đủ thông tin trạm');
+      return;
+    }
+
+    setStations(stations.map(s => 
+      s.id === selectedStation.id 
+        ? { 
+            ...s, 
+            name: newStation.name,
+            address: newStation.address,
+            totalVehicles: parseInt(newStation.totalVehicles),
+            chargingStations: parseInt(newStation.chargingStations)
+          }
+        : s
+    ));
+    
+    setShowEditStationModal(false);
+    setSelectedStation(null);
+    setNewStation({ name: '', address: '', totalVehicles: 0, chargingStations: 0 });
+    alert('✅ Đã cập nhật thông tin trạm!');
+  };
+
+  const handleManageStationVehicles = (station) => {
+    console.log('Manage station vehicles:', station);
+    setSelectedStation(station);
+    setShowStationVehiclesModal(true);
+  };
+
+  const handleManageStationStaff = (station) => {
+    console.log('Manage station staff:', station);
+    setSelectedStation(station);
+    setShowStationStaffModal(true);
+  };
+
+  const handleDeleteStation = (stationId) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa trạm này?')) {
+      setStations(stations.filter(s => s.id !== stationId));
+      alert('✅ Đã xóa trạm!');
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewStation(prev => ({
@@ -367,22 +440,73 @@ const Admin = () => {
     </div>
   );
 
-  const renderVehicleManagement = () => (
+  const renderVehicleManagement = () => {
+    // Filter stations based on search and status
+    const filteredStations = stations.filter((station) => {
+      if (stationStatusFilter !== 'all' && station.status !== stationStatusFilter) {
+        return false;
+      }
+      if (stationSearchTerm) {
+        const searchLower = stationSearchTerm.toLowerCase();
+        const matchesSearch = (
+          station.name.toLowerCase().includes(searchLower) ||
+          station.address.toLowerCase().includes(searchLower)
+        );
+        console.log('Search:', searchLower, 'Station:', station.name, 'Matches:', matchesSearch);
+        return matchesSearch;
+      }
+      return true;
+    });
+
+    console.log('Filter - Search term:', stationSearchTerm, 'Status:', stationStatusFilter);
+    console.log('Total stations:', stations.length, 'Filtered:', filteredStations.length);
+
+    return (
     <div className="management-content">
       <div className="section-header">
-        <h2>Quản lý trạm thuê xe</h2>
-        <button className="btn-primary" onClick={() => setShowAddStationModal(true)}>
-          + Thêm trạm mới
-        </button>
+        <h2>Quản lý trạm thuê xe <span style={{ color: '#6b7280', fontSize: '0.9rem', fontWeight: 'normal' }}>({filteredStations.length} trạm)</span></h2>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button 
+            className="btn-primary" 
+            onClick={() => {
+              console.log('TEST: Opening detail modal for first station');
+              if (stations.length > 0) {
+                handleViewStationDetail(stations[0]);
+              }
+            }}
+            style={{ background: '#10b981' }}
+          >
+            🧪 Test Chi tiết
+          </button>
+          <button className="btn-primary" onClick={() => setShowAddStationModal(true)}>
+            + Thêm trạm mới
+          </button>
+        </div>
       </div>
 
       <div className="filters">
-        <select className="filter-select">
-          <option>Tất cả trạng thái</option>
-          <option>Hoạt động</option>
-          <option>Không hoạt động</option>
+        <select 
+          className="filter-select"
+          value={stationStatusFilter}
+          onChange={(e) => {
+            console.log('Status filter changed to:', e.target.value);
+            setStationStatusFilter(e.target.value);
+          }}
+        >
+          <option value="all">Tất cả trạng thái</option>
+          <option value="active">Hoạt động</option>
+          <option value="maintenance">Bảo trì</option>
         </select>
-        <input type="text" className="search-input" placeholder="Tìm kiếm trạm..." />
+        <input 
+          type="text" 
+          className="search-input" 
+          placeholder="Tìm kiếm trạm..." 
+          value={stationSearchTerm}
+          onChange={(e) => {
+            console.log('Search term changed to:', e.target.value);
+            setStationSearchTerm(e.target.value);
+          }}
+        />
       </div>
 
       {/* Stations Table */}
@@ -398,7 +522,7 @@ const Admin = () => {
             </tr>
           </thead>
           <tbody>
-            {stations.map((station) => {
+            {filteredStations.map((station) => {
               const usageRate = ((station.totalVehicles - station.availableVehicles) / station.totalVehicles * 100);
               return (
                 <tr key={station.id}>
@@ -437,14 +561,57 @@ const Admin = () => {
                   </td>
                   <td>
                     <div className="table-actions">
-                      <button className="btn-table-action btn-view" title="Chi tiết">📊</button>
-                      <button className="btn-table-action btn-edit" title="Sửa">✏️</button>
-                      <button className="btn-table-action btn-manage" title="Quản lý xe">🏍️</button>
+                      <button 
+                        className="btn-table-action btn-view" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          console.log('Chi tiết button clicked for station:', station);
+                          handleViewStationDetail(station);
+                        }}
+                        title="Chi tiết"
+                      >
+                        📊
+                      </button>
+                      <button 
+                        className="btn-table-action btn-edit" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          console.log('Sửa button clicked for station:', station);
+                          handleEditStation(station);
+                        }}
+                        title="Sửa"
+                      >
+                        ✏️
+                      </button>
+                      <button 
+                        className="btn-table-action btn-manage" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          console.log('Quản lý nhân viên button clicked for station:', station);
+                          handleManageStationStaff(station);
+                        }}
+                        title="Quản lý nhân viên"
+                      >
+                        👥
+                      </button>
                     </div>
                   </td>
                 </tr>
               );
             })}
+            {filteredStations.length === 0 && (
+              <tr>
+                <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+                  <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔍</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: '500' }}>
+                    Không tìm thấy trạm nào
+                  </div>
+                  <div style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                    Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm
+                  </div>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -530,8 +697,343 @@ const Admin = () => {
           </div>
         </div>
       )}
+
+      {/* Edit Station Modal */}
+      {showEditStationModal && (
+        <div className="modal-overlay" onClick={() => setShowEditStationModal(false)}>
+          <div className="modal-content add-station-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>✏️ Sửa thông tin trạm</h2>
+              <button className="btn-close" onClick={() => setShowEditStationModal(false)}>✕</button>
+            </div>
+
+            <div className="modal-body">
+              <div className="form-group">
+                <label>Tên trạm <span className="required">*</span></label>
+                <input
+                  type="text"
+                  name="name"
+                  value={newStation.name}
+                  onChange={handleInputChange}
+                  placeholder="Ví dụ: Trạm EV Quận 1"
+                  className="form-input"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Địa chỉ <span className="required">*</span></label>
+                <textarea
+                  name="address"
+                  value={newStation.address}
+                  onChange={handleInputChange}
+                  placeholder="Nhập địa chỉ đầy đủ của trạm"
+                  className="form-textarea"
+                  rows="3"
+                  required
+                />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Số lượng xe</label>
+                  <input
+                    type="number"
+                    name="totalVehicles"
+                    value={newStation.totalVehicles}
+                    onChange={handleInputChange}
+                    placeholder="0"
+                    className="form-input"
+                    min="0"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Số trạm sạc</label>
+                  <input
+                    type="number"
+                    name="chargingStations"
+                    value={newStation.chargingStations}
+                    onChange={handleInputChange}
+                    placeholder="0"
+                    className="form-input"
+                    min="0"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={() => setShowEditStationModal(false)}>
+                Hủy
+              </button>
+              <button className="btn-confirm" onClick={handleUpdateStation}>
+                Cập nhật
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Station Detail Modal */}
+      {console.log('showStationDetailModal:', showStationDetailModal, 'selectedStation:', selectedStation)}
+      {showStationDetailModal && selectedStation && (
+        <div className="modal-overlay" onClick={() => setShowStationDetailModal(false)}>
+          <div className="modal-content station-detail-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>📊 Chi tiết trạm</h2>
+              <button className="btn-close" onClick={() => setShowStationDetailModal(false)}>✕</button>
+            </div>
+
+            <div className="modal-body">
+              <div className="station-detail-info">
+                <h3>⚡ {selectedStation.name}</h3>
+                <div className="detail-row">
+                  <span className="detail-label">📍 Địa chỉ:</span>
+                  <span className="detail-value">{selectedStation.address}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">🏍️ Tổng số xe:</span>
+                  <span className="detail-value">{selectedStation.totalVehicles} xe</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">✅ Xe khả dụng:</span>
+                  <span className="detail-value">{selectedStation.availableVehicles} xe</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">🚴 Xe đang cho thuê:</span>
+                  <span className="detail-value">{selectedStation.totalVehicles - selectedStation.availableVehicles} xe</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">🔌 Trạm sạc:</span>
+                  <span className="detail-value">{selectedStation.chargingStations} trạm</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">📊 Trạng thái:</span>
+                  <span className={`status-badge ${selectedStation.status}`}>
+                    {selectedStation.status === 'active' ? '✅ Hoạt động' : '🚫 Không hoạt động'}
+                  </span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">📈 Tỷ lệ sử dụng:</span>
+                  <span className="detail-value">
+                    {((selectedStation.totalVehicles - selectedStation.availableVehicles) / selectedStation.totalVehicles * 100).toFixed(1)}%
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={() => setShowStationDetailModal(false)}>
+                Đóng
+              </button>
+              <button className="btn-primary" onClick={() => {
+                setShowStationDetailModal(false);
+                handleEditStation(selectedStation);
+              }}>
+                ✏️ Chỉnh sửa
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Station Vehicles Management Modal */}
+      {showStationVehiclesModal && selectedStation && (
+        <div className="modal-overlay" onClick={() => setShowStationVehiclesModal(false)}>
+          <div className="modal-content station-vehicles-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>🏍️ Quản lý xe tại {selectedStation.name}</h2>
+              <button className="btn-close" onClick={() => setShowStationVehiclesModal(false)}>✕</button>
+            </div>
+
+            <div className="modal-body">
+              <div className="vehicles-info">
+                <div className="info-summary">
+                  <div className="summary-item">
+                    <span className="summary-icon">🏍️</span>
+                    <div>
+                      <p className="summary-label">Tổng số xe</p>
+                      <p className="summary-number">{selectedStation.totalVehicles}</p>
+                    </div>
+                  </div>
+                  <div className="summary-item">
+                    <span className="summary-icon">✅</span>
+                    <div>
+                      <p className="summary-label">Khả dụng</p>
+                      <p className="summary-number">{selectedStation.availableVehicles}</p>
+                    </div>
+                  </div>
+                  <div className="summary-item">
+                    <span className="summary-icon">🚴</span>
+                    <div>
+                      <p className="summary-label">Đang thuê</p>
+                      <p className="summary-number">{selectedStation.totalVehicles - selectedStation.availableVehicles}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="vehicles-actions">
+                  <p className="info-text">
+                    💡 Vui lòng chuyển sang tab "Quản lý xe điện" để thêm/sửa/xóa xe cho trạm này.
+                  </p>
+                  <button 
+                    className="btn-primary btn-full-width" 
+                    onClick={() => {
+                      setShowStationVehiclesModal(false);
+                      setActiveTab('vehicles');
+                    }}
+                  >
+                    🏍️ Đi đến Quản lý xe điện
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={() => setShowStationVehiclesModal(false)}>
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Station Staff Management Modal */}
+      {showStationStaffModal && selectedStation && (
+        <div className="modal-overlay" onClick={() => setShowStationStaffModal(false)}>
+          <div className="modal-content station-staff-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>👥 Quản lý nhân viên tại {selectedStation.name}</h2>
+              <button className="btn-close" onClick={() => setShowStationStaffModal(false)}>✕</button>
+            </div>
+
+            <div className="modal-body">
+              <div className="staff-info">
+                {(() => {
+                  const stationStaff = staff.filter(s => s.stationId === selectedStation.id);
+                  const avgPerformance = stationStaff.length > 0 
+                    ? (stationStaff.reduce((sum, s) => sum + s.performance, 0) / stationStaff.length).toFixed(0)
+                    : 0;
+                  
+                  return (
+                    <>
+                      <div className="info-summary">
+                        <div className="summary-item">
+                          <span className="summary-icon">👥</span>
+                          <div>
+                            <p className="summary-label">Tổng nhân viên</p>
+                            <p className="summary-number">{stationStaff.length}</p>
+                          </div>
+                        </div>
+                        <div className="summary-item">
+                          <span className="summary-icon">📊</span>
+                          <div>
+                            <p className="summary-label">Hiệu suất TB</p>
+                            <p className="summary-number">{avgPerformance}%</p>
+                          </div>
+                        </div>
+                        <div className="summary-item">
+                          <span className="summary-icon">🚚</span>
+                          <div>
+                            <p className="summary-label">Tổng giao/nhận</p>
+                            <p className="summary-number">{stationStaff.reduce((sum, s) => sum + s.totalDeliveries, 0)}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="staff-list-section">
+                        <h3>Danh sách nhân viên</h3>
+                        {stationStaff.length === 0 ? (
+                          <div className="empty-state">
+                            <p>⚠️ Chưa có nhân viên nào tại trạm này</p>
+                          </div>
+                        ) : (
+                          <div className="staff-table-wrapper">
+                            <table className="staff-table">
+                              <thead>
+                                <tr>
+                                  <th>Họ tên</th>
+                                  <th>Vai trò</th>
+                                  <th>Hiệu suất</th>
+                                  <th>Số lượt</th>
+                                  <th>Thao tác</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {stationStaff.map((member) => (
+                                  <tr key={member.id}>
+                                    <td className="staff-name">{member.name}</td>
+                                    <td>{member.role}</td>
+                                    <td>
+                                      <div className="performance-bar">
+                                        <div 
+                                          className="performance-fill" 
+                                          style={{ 
+                                            width: `${member.performance}%`,
+                                            backgroundColor: member.performance > 90 ? '#4caf50' : 
+                                                           member.performance > 70 ? '#ff9800' : '#f44336'
+                                          }}
+                                        >
+                                          {member.performance}%
+                                        </div>
+                                      </div>
+                                    </td>
+                                    <td>{member.totalDeliveries}</td>
+                                    <td>
+                                      <div className="table-actions">
+                                        <button className="btn-action btn-detail" title="Chi tiết">👁️</button>
+                                        <button className="btn-action btn-edit" title="Chỉnh sửa">✏️</button>
+                                        <button 
+                                          className="btn-action btn-delete" 
+                                          title="Xóa"
+                                          onClick={() => {
+                                            if (window.confirm(`Bạn có chắc muốn xóa nhân viên ${member.name}?`)) {
+                                              setStaff(staff.filter(s => s.id !== member.id));
+                                              alert('✅ Đã xóa nhân viên!');
+                                            }
+                                          }}
+                                        >
+                                          🗑️
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="staff-actions">
+                        <button 
+                          className="btn-primary btn-full-width" 
+                          onClick={() => {
+                            setShowStationStaffModal(false);
+                            setActiveTab('staff');
+                          }}
+                        >
+                          👥 Đi đến Quản lý toàn bộ nhân viên
+                        </button>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={() => setShowStationStaffModal(false)}>
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
+  };
 
   const renderCustomerManagement = () => (
     <div className="management-content">
