@@ -96,6 +96,23 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
     return basePrice * days;
   };
 
+  // Cập nhật giá khi thay đổi ngày từ form
+  const handleDateChange = () => {
+    const pickupDate = form.getFieldValue('pickupDate');
+    const returnDate = form.getFieldValue('returnDate');
+    
+    if (pickupDate && returnDate) {
+      const days = calculateRentalDays(pickupDate, returnDate);
+      setRentalDays(days);
+      
+      const basePrice =
+        typeof vehicle.price === "string"
+          ? parseFloat(vehicle.price.replace(/[^\d]/g, ""))
+          : vehicle.price;
+      setTotalPrice(basePrice * days);
+    }
+  };
+
   // Cập nhật giá khi thay đổi ngày
   useEffect(() => {
     setRentalDays(getRentalDays());
@@ -289,12 +306,12 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
           style={{ marginBottom: 24 }}
         >
           <Row gutter={16}>
-            <Col span={12}>
+            <Col span={24}>
               <Form.Item
                 name="pickupStationId"
-                label="Điểm nhận xe"
+                label="Điểm nhận và trả xe"
                 rules={[
-                  { required: true, message: "Vui lòng chọn điểm nhận xe!" },
+                  { required: true, message: "Vui lòng chọn điểm nhận và trả xe!" },
                 ]}
               >
                 <select
@@ -307,43 +324,11 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
                   }}
                   onChange={(e) => {
                     form.setFieldValue("pickupStationId", e.target.value);
+                    form.setFieldValue("returnStationId", e.target.value);
                     console.log("Selected station:", e.target.value);
                   }}
                 >
-                  <option value="">Chọn điểm nhận xe</option>
-                  {stations && stations.length > 0 ? (
-                    stations.map((station) => (
-                      <option key={station.id} value={station.id}>
-                        {station.name} - {station.address}
-                      </option>
-                    ))
-                  ) : (
-                    <option disabled>Không có trạm nào</option>
-                  )}
-                </select>
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="returnStationId"
-                label="Điểm trả xe"
-                rules={[
-                  { required: true, message: "Vui lòng chọn điểm trả xe!" },
-                ]}
-              >
-                <select
-                  style={{
-                    width: "100%",
-                    padding: "8px",
-                    borderRadius: "6px",
-                    border: "1px solid #d9d9d9",
-                    fontSize: "14px",
-                  }}
-                  onChange={(e) => {
-                    form.setFieldValue("returnStationId", e.target.value);
-                  }}
-                >
-                  <option value="">Chọn điểm trả xe</option>
+                  <option value="">Chọn điểm nhận và trả xe</option>
                   {stations && stations.length > 0 ? (
                     stations.map((station) => (
                       <option key={station.id} value={station.id}>
@@ -379,6 +364,7 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
                   min={new Date().toISOString().split("T")[0]}
                   onChange={(e) => {
                     form.setFieldValue("pickupDate", e.target.value);
+                    handleDateChange();
                   }}
                 />
               </Form.Item>
@@ -430,6 +416,7 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
                   min={new Date().toISOString().split("T")[0]}
                   onChange={(e) => {
                     form.setFieldValue("returnDate", e.target.value);
+                    handleDateChange();
                   }}
                 />
               </Form.Item>
