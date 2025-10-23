@@ -522,11 +522,14 @@
 #vehicles-showcase .gallery-item {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(77, 182, 172, 0.2);
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 #vehicles-showcase .gallery-item:hover {
   box-shadow: 0 15px 40px rgba(77, 182, 172, 0.3);
   border-color: rgba(77, 182, 172, 0.4);
+  transform: translateY(-8px);
 }
 
 #vehicles-showcase .gallery-content {

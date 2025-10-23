@@ -8,6 +8,7 @@ import BookingForm from "../components/BookingForm";
 import ReviewList from "../components/ReviewList";
 import ReviewForm from "../components/ReviewForm";
 import { formatPrice } from "../utils/helpers";
+import "../styles/ProductDetail.css";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -62,182 +63,158 @@ export default function ProductDetail() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)",
-        padding: "20px 0",
-      }}
-    >
-      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px" }}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "40px",
-            padding: "40px 0",
-            alignItems: "start",
-          }}
-        >
-          <div className="vehicle-image-section">
-            <div className="main-image">
-              <img
-                src={vehicle.image}
-                alt={vehicle.name}
-                onError={(e) => {
-                  e.target.src =
-                    "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60";
-                }}
-              />
-              <div
-                className="brand-badge"
-                style={{ backgroundColor: getBrandColor(vehicle.brand) }}
-              >
-                {vehicle.brand}
-              </div>
-              {!vehicle.available && (
-                <div className="unavailable-overlay">
-                  <span>Hiện không có sẵn</span>
-                </div>
-              )}
+    <div className="product-detail-container">
+      <div className="product-layout">
+          {/* Image Section */}
+          <div className="main-image">
+            <img
+              src={vehicle.image}
+              alt={vehicle.name}
+              onError={(e) => {
+                e.target.src =
+                  "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60";
+              }}
+            />
+            <div
+              className="brand-badge"
+              style={{ backgroundColor: getBrandColor(vehicle.brand) }}
+            >
+              {vehicle.brand}
             </div>
+            {!vehicle.available && (
+              <div className="unavailable-overlay">
+                <span>Hiện không có sẵn</span>
+              </div>
+            )}
           </div>
-          <div className="vehicle-info-section">
+
+          {/* Info Section */}
+          <div className="product-info">
             <div className="vehicle-header">
+              <div className="vehicle-badge">{vehicle.category === "scooter" ? "Xe máy điện" : vehicle.category}</div>
               <h1 className="vehicle-name">{vehicle.name}</h1>
               <p className="vehicle-category">{vehicle.short}</p>
-              <div className="price-section">
-                <span className="current-price">
-                  {formatPrice(vehicle.price, vehicle.priceUnit)}
-                </span>
-                <span className="price-unit">
-                  / {vehicle.priceUnit.split("/")[1]}
+            </div>
+
+            <div className="price-section">
+              <h2 className="current-price">
+                {formatPrice(vehicle.price, vehicle.priceUnit)}
+              </h2>
+              <span className="price-unit">/ {vehicle.priceUnit.split("/")[1]}</span>
+            </div>
+
+            <div className="vehicle-status">
+              <div className="status-item">
+                <span className="status-icon">●</span>
+                <span className="status-label">Trạng thái:</span>
+                <span className={`status-value ${vehicle.available ? "available" : "unavailable"}`}>
+                  {vehicle.available ? "Có sẵn" : "Không có sẵn"}
                 </span>
               </div>
+              <div className="status-item">
+                <span className="status-icon">🏷️</span>
+                <span className="status-label">Hãng:</span>
+                <span className="status-value">{vehicle.brand}</span>
+              </div>
             </div>
+
             <div className="description-section">
-              <h3>Mô tả xe</h3>
-              <p>{vehicle.description}</p>
+              <h3 className="section-title">Mô tả sản phẩm</h3>
+              <p className="section-content">{vehicle.description}</p>
             </div>
+
             <div className="specs-section">
-              <h3>Thông số kỹ thuật</h3>
+              <h3 className="section-title">Thông số kỹ thuật</h3>
               <div className="specs-grid">
                 <div className="spec-item">
-                  <div className="spec-icon"></div>
-                  <div className="spec-content">
-                    <span className="spec-label">Dung lượng pin</span>
-                    <span className="spec-value">{vehicle.specs.battery}</span>
-                  </div>
+                  <span className="spec-icon">🔋</span>
+                  <span className="spec-label">Dung lượng pin</span>
+                  <span className="spec-value">{vehicle.specs.battery}</span>
                 </div>
                 <div className="spec-item">
-                  <div className="spec-icon"></div>
-                  <div className="spec-content">
-                    <span className="spec-label">Tầm xa</span>
-                    <span className="spec-value">{vehicle.specs.range}</span>
-                  </div>
+                  <span className="spec-icon">📏</span>
+                  <span className="spec-label">Tầm xa</span>
+                  <span className="spec-value">{vehicle.specs.range}</span>
                 </div>
                 <div className="spec-item">
-                  <div className="spec-icon"></div>
-                  <div className="spec-content">
-                    <span className="spec-label">Tốc độ tối đa</span>
-                    <span className="spec-value">{vehicle.specs.maxSpeed}</span>
-                  </div>
+                  <span className="spec-icon">⚡</span>
+                  <span className="spec-label">Tốc độ tối đa</span>
+                  <span className="spec-value">{vehicle.specs.maxSpeed}</span>
                 </div>
                 <div className="spec-item">
-                  <div className="spec-icon"></div>
-                  <div className="spec-content">
-                    <span className="spec-label">Thời gian sạc</span>
-                    <span className="spec-value">
-                      {vehicle.specs.chargingTime}
-                    </span>
-                  </div>
+                  <span className="spec-icon">⏱️</span>
+                  <span className="spec-label">Thời gian sạc</span>
+                  <span className="spec-value">{vehicle.specs.chargingTime}</span>
                 </div>
                 <div className="spec-item">
-                  <div className="spec-icon"></div>
-                  <div className="spec-content">
-                    <span className="spec-label">Trọng lượng</span>
-                    <span className="spec-value">{vehicle.specs.weight}</span>
-                  </div>
+                  <span className="spec-icon">⚖️</span>
+                  <span className="spec-label">Trọng lượng</span>
+                  <span className="spec-value">{vehicle.specs.weight}</span>
                 </div>
               </div>
             </div>
+
             <div className="action-buttons">
               <button
                 className="btn btn-primary rent-btn"
                 onClick={handleRentNow}
                 disabled={!vehicle.available}
               >
-                {vehicle.available ? " Thuê ngay" : "Không có sẵn"}
+                {vehicle.available ? "🚀 Thuê ngay" : "❌ Không có sẵn"}
               </button>
               <button
                 className="btn btn-secondary cart-btn"
                 onClick={() => navigate("/cart")}
               >
-                {" "}
-                Giỏ hàng ({getItemCount()})
+                🛒 Giỏ hàng ({getItemCount()})
               </button>
               <Button
                 icon={<StarOutlined />}
                 onClick={() => setShowReviewForm(true)}
-                style={{
-                  marginLeft: "12px",
-                  color: "#4db6ac",
-                  borderColor: "#4db6ac",
-                }}
+                className="review-btn"
               >
                 Viết đánh giá
               </Button>
             </div>
-            <div className="vehicle-status">
-              <div className="status-item">
-                <span className="status-label">Trạng thái:</span>
-                <span
-                  className={`status-value ${
-                    vehicle.available ? "available" : "unavailable"
-                  }`}
-                >
-                  {vehicle.available ? " Có sẵn" : " Không có sẵn"}
-                </span>
-              </div>
-              <div className="status-item">
-                <span className="status-label">Danh mục:</span>
-                <span className="status-value">
-                  {vehicle.category === "scooter"
-                    ? " Xe máy điện"
-                    : vehicle.category}
-                </span>
+          </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className="vehicle-content">
+          <ReviewList vehicleId={vehicle.id} />
+        </div>
+
+        {/* Success Notification */}
+        {showBookingSuccess && (
+          <div className="success-notification">
+            <div className="success-content">
+              <div className="success-icon"></div>
+              <div className="success-message">
+                <h4>Đã thêm vào giỏ hàng!</h4>
+                <p>Xe {vehicle.name} đã được thêm vào giỏ hàng của bạn.</p>
               </div>
             </div>
           </div>
-        </div>
-        <ReviewList vehicleId={vehicle.id} />
+        )}
+
+        {/* Booking Form Modal */}
+        {showBookingForm && (
+          <BookingForm
+            vehicle={vehicle}
+            onSubmit={handleBookingSubmit}
+            onCancel={() => setShowBookingForm(false)}
+          />
+        )}
+
+        {/* Review Form Modal */}
+        {showReviewForm && (
+          <ReviewForm
+            visible={showReviewForm}
+            onClose={() => setShowReviewForm(false)}
+            vehicleId={vehicle.id}
+            vehicleName={vehicle.name}
+          />
+        )}
       </div>
-      {showBookingSuccess && (
-        <div className="success-notification">
-          <div className="success-content">
-            <div className="success-icon"></div>
-            <div className="success-message">
-              <h4>Đã thêm vào giỏ hàng!</h4>
-              <p>Xe {vehicle.name} đã được thêm vào giỏ hàng của bạn.</p>
-            </div>
-          </div>
-        </div>
-      )}
-      {showBookingForm && (
-        <BookingForm
-          vehicle={vehicle}
-          onSubmit={handleBookingSubmit}
-          onCancel={() => setShowBookingForm(false)}
-        />
-      )}
-      {showReviewForm && (
-        <ReviewForm
-          visible={showReviewForm}
-          onClose={() => setShowReviewForm(false)}
-          vehicleId={vehicle.id}
-          vehicleName={vehicle.name}
-        />
-      )}
-    </div>
   );
 }

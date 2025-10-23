@@ -1,3 +1,7 @@
+// ⚠️ DEPRECATED: This mock data file will be removed soon
+// Please migrate to use API: import { fetchAllStations, fetchStationById } from "../api/stations"
+// See MIGRATION_PLAN.md for details
+
 const stations = [
   {
     id: 's1',

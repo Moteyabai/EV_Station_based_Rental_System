@@ -103,7 +103,7 @@ namespace API.Controllers
 
         [HttpPost("CreatePayment")]
         [Authorize]
-        public async Task<ActionResult> RenterCreatePayment(PaymentCreateDTO paymentDto)
+        public async Task<ActionResult> RenterCreatePayment([FromBody] PaymentCreateDTO paymentDto)
         {
             if (!ModelState.IsValid)
             {

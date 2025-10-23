@@ -133,9 +133,11 @@ export default function Home() {
           </p>
           <div className="image-gallery">
             {featuredVehicles.map((vehicle, index) => (
-              <div
+              <Link
+                to={`/vehicles/${vehicle.id}`}
                 key={vehicle.id}
                 className="gallery-item scroll-reveal fade-up"
+                style={{ textDecoration: 'none', color: 'inherit' }}
               >
                 <img src={vehicle.image} alt={vehicle.name} loading="lazy" />
                 <div className="gradient-overlay"></div>
@@ -143,7 +145,7 @@ export default function Home() {
                   <h3>{vehicle.name}</h3>
                   <p>{vehicle.short}</p>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
           <div className="text-center mt-4">
