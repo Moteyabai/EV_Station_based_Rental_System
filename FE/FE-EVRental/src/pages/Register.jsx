@@ -265,10 +265,10 @@ export default function Register() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <h2>Đăng ký</h2>
+        <h2>Đăng ký tài khoản</h2>
         <p className="step-indicator">Bước {step} / 2</p>
 
-        <form onSubmit={handleSubmit} className="auth-form">
+        <form onSubmit={handleSubmit} className={`auth-form ${step === 2 ? 'step-2' : ''}`}>
           {step === 1 ? (
             <>
               <label>
@@ -337,47 +337,52 @@ export default function Register() {
                 {errors.confirmPassword && <span className="error">{errors.confirmPassword}</span>}
               </label>
 
-              <button type="button" className="btn primary" onClick={nextStep}>Tiếp theo</button>
+              <div className="form-actions">
+                <button type="button" className="btn primary" onClick={nextStep} style={{width: '100%'}}>
+                  Tiếp theo →
+                </button>
+              </div>
             </>
           ) : (
             <>
               <div className="document-upload">
-                <h3>Xác Thực Giấy Tờ</h3>
-                <p>Vui lòng upload ảnh rõ nét của các giấy tờ để xác thực</p>
+                <h3>📋 Xác Thực Giấy Tờ</h3>
+                <p>Vui lòng upload ảnh rõ nét của các giấy tờ để xác thực tài khoản</p>
+              </div>
                 
-                {/* Ảnh đại diện */}
-                <label className="file-upload">
-                  <span>📸 Ảnh đại diện</span>
-                  <input 
-                    type="file" 
-                    name="avatarPicture" 
-                    accept="image/jpeg,image/jpg,image/png,image/webp" 
-                    onChange={handleFileChange} 
-                    required 
-                  />
-                  <FilePreview file={formData.avatarPicture} label="ảnh đại diện" />
-                  {errors.avatarPicture && <span className="error">{errors.avatarPicture}</span>}
-                </label>
+              {/* Ảnh đại diện */}
+              <label className="file-upload">
+                <span>📸 Ảnh đại diện</span>
+                <input 
+                  type="file" 
+                  name="avatarPicture" 
+                  accept="image/jpeg,image/jpg,image/png,image/webp" 
+                  onChange={handleFileChange} 
+                  required 
+                />
+                <FilePreview file={formData.avatarPicture} label="ảnh đại diện" />
+                {errors.avatarPicture && <span className="error">{errors.avatarPicture}</span>}
+              </label>
 
-                {/* CMND/CCCD mặt trước */}
-                <label className="file-upload">
-                  <span>🆔 CMND/CCCD - Mặt trước</span>
-                  <input 
-                    type="file" 
-                    name="idCardFront" 
-                    accept="image/jpeg,image/jpg,image/png,image/webp" 
-                    onChange={handleFileChange} 
-                    required 
-                  />
-                  <FilePreview file={formData.idCardFront} label="CMND/CCCD mặt trước" />
-                  {errors.idCardFront && <span className="error">{errors.idCardFront}</span>}
-                </label>
+              {/* CMND/CCCD mặt trước */}
+              <label className="file-upload">
+                <span>🆔 CMND/CCCD - Mặt trước</span>
+                <input 
+                  type="file" 
+                  name="idCardFront" 
+                  accept="image/jpeg,image/jpg,image/png,image/webp" 
+                  onChange={handleFileChange} 
+                  required 
+                />
+                <FilePreview file={formData.idCardFront} label="CMND/CCCD mặt trước" />
+                {errors.idCardFront && <span className="error">{errors.idCardFront}</span>}
+              </label>
 
-                {/* CMND/CCCD mặt sau */}
-                <label className="file-upload">
-                  <span>🆔 CMND/CCCD - Mặt sau</span>
-                  <input 
-                    type="file" 
+              {/* CMND/CCCD mặt sau */}
+              <label className="file-upload">
+                <span>🆔 CMND/CCCD - Mặt sau</span>
+                <input 
+                  type="file" 
                     name="idCardBack" 
                     accept="image/jpeg,image/jpg,image/png,image/webp" 
                     onChange={handleFileChange} 
@@ -387,67 +392,83 @@ export default function Register() {
                   {errors.idCardBack && <span className="error">{errors.idCardBack}</span>}
                 </label>
 
-                {/* GPLX mặt trước */}
-                <label className="file-upload">
-                  <span>🪪 Giấy phép lái xe - Mặt trước</span>
-                  <input 
-                    type="file" 
-                    name="licenseCardFront" 
-                    accept="image/jpeg,image/jpg,image/png,image/webp" 
-                    onChange={handleFileChange} 
-                    required 
-                  />
-                  <FilePreview file={formData.licenseCardFront} label="GPLX mặt trước" />
-                  {errors.licenseCardFront && <span className="error">{errors.licenseCardFront}</span>}
-                </label>
+              {/* GPLX mặt trước */}
+              <label className="file-upload">
+                <span>🪪 Giấy phép lái xe - Mặt trước</span>
+                <input 
+                  type="file" 
+                  name="licenseCardFront" 
+                  accept="image/jpeg,image/jpg,image/png,image/webp" 
+                  onChange={handleFileChange} 
+                  required 
+                />
+                <FilePreview file={formData.licenseCardFront} label="GPLX mặt trước" />
+                {errors.licenseCardFront && <span className="error">{errors.licenseCardFront}</span>}
+              </label>
 
-                {/* GPLX mặt sau */}
-                <label className="file-upload">
-                  <span>🪪 Giấy phép lái xe - Mặt sau</span>
-                  <input 
-                    type="file" 
-                    name="licenseCardBack" 
-                    accept="image/jpeg,image/jpg,image/png,image/webp" 
-                    onChange={handleFileChange} 
-                    required 
-                  />
-                  <FilePreview file={formData.licenseCardBack} label="GPLX mặt sau" />
-                  {errors.licenseCardBack && <span className="error">{errors.licenseCardBack}</span>}
-                </label>
+              {/* GPLX mặt sau */}
+              <label className="file-upload">
+                <span>🪪 Giấy phép lái xe - Mặt sau</span>
+                <input 
+                  type="file" 
+                  name="licenseCardBack" 
+                  accept="image/jpeg,image/jpg,image/png,image/webp" 
+                  onChange={handleFileChange} 
+                  required 
+                />
+                <FilePreview file={formData.licenseCardBack} label="GPLX mặt sau" />
+                {errors.licenseCardBack && <span className="error">{errors.licenseCardBack}</span>}
+              </label>
 
-                <div className="document-info">
-                  <h4>💡 Lưu ý quan trọng:</h4>
-                  <ul>
-                    <li>Đảm bảo ảnh rõ nét, không bị mờ hay lóa sáng</li>
-                    <li>Chụp toàn bộ giấy tờ, không cắt xén</li>
-                    <li>Giấy tờ phải còn hiệu lực và không bị hư hỏng</li>
-                    <li>Tất cả ảnh đều là bắt buộc để hoàn tất đăng ký</li>
-                  </ul>
-                </div>
+              <div className="document-info">
+                <h4>💡 Lưu ý quan trọng:</h4>
+                <ul>
+                  <li>Đảm bảo ảnh rõ nét, không bị mờ hay lóa sáng</li>
+                  <li>Chụp toàn bộ giấy tờ, không cắt xén</li>
+                  <li>Giấy tờ phải còn hiệu lực và không bị hư hỏng</li>
+                  <li>Tất cả ảnh đều là bắt buộc để hoàn tất đăng ký</li>
+                </ul>
               </div>
 
               {errors.submit && (
                 <div className="error-message" style={{
-                  padding: '0.75rem 1rem',
-                  marginBottom: '1rem',
+                  gridColumn: '1 / -1',
+                  padding: '1rem 1.5rem',
+                  marginTop: '1rem',
                   backgroundColor: '#fee',
                   border: '1px solid #fcc',
                   borderRadius: '8px',
                   color: '#c33',
-                  fontSize: '0.9rem',
-                  lineHeight: '1.5',
+                  fontSize: '0.95rem',
+                  lineHeight: '1.6',
                   whiteSpace: 'pre-line'
                 }}>
                   {errors.submit}
                 </div>
               )}
 
-              <div className="button-group">
-                <button type="button" className="btn secondary" onClick={prevStep} disabled={loading}>
-                  Quay lại
+              <div className="form-actions" style={{
+                gridColumn: '1 / -1',
+                display: 'flex',
+                gap: '1rem',
+                marginTop: '1rem'
+              }}>
+                <button 
+                  type="button" 
+                  className="btn secondary" 
+                  onClick={prevStep} 
+                  disabled={loading}
+                  style={{flex: 1}}
+                >
+                  ← Quay lại
                 </button>
-                <button type="submit" className="btn primary" disabled={loading}>
-                  {loading ? 'Đang đăng ký...' : 'Hoàn tất đăng ký'}
+                <button 
+                  type="submit" 
+                  className="btn primary" 
+                  disabled={loading}
+                  style={{flex: 2}}
+                >
+                  {loading ? '⏳ Đang đăng ký...' : '✅ Hoàn tất đăng ký'}
                 </button>
               </div>
             </>

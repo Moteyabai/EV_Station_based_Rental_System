@@ -4,7 +4,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding: 2rem 1rem;
+  padding: 2rem;
   width: 100%;
   background-image: linear-gradient(to right, rgba(255, 255, 255, 0.9), rgba(77, 182, 172, 0.15));
   overflow-y: auto;
@@ -13,7 +13,8 @@
 .auth-hero {
   text-align: center;
   margin-bottom: 2rem;
-  max-width: 600px;
+  max-width: 100%;
+  width: 100%;
 }
 
 .auth-title {
@@ -33,24 +34,31 @@
 }
 
 .auth-card { 
-  max-width: 420px; 
+  max-width: 1400px; 
   width: 100%;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
-  padding: 2rem; 
-  border-radius: 12px; 
+  padding: 3rem; 
+  border-radius: 16px; 
   color: var(--text-primary); 
-  box-shadow: var(--shadow-md); 
+  box-shadow: var(--shadow-lg); 
   animation: cardIn 260ms ease both; 
   border: 1px solid rgba(255, 255, 255, 0.4);
   position: relative;
   z-index: 1;
-  margin: 2rem auto;
+  margin: 0 auto;
 }
 
 .auth-form { 
   display: grid; 
-  gap: 0.9rem; 
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem 2rem; 
+  align-items: start;
+}
+
+/* Step 2 form - 3 columns for document uploads */
+.auth-form.step-2 {
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .auth-form label { 
@@ -60,6 +68,13 @@
   color: var(--text-primary);
   margin-bottom: 0.25rem;
   font-weight: 500;
+}
+
+/* Full width cho tiêu đề và buttons */
+.auth-form h3,
+.auth-form .document-upload,
+.auth-form .form-actions {
+  grid-column: 1 / -1;
 }
 
 .form-row {
@@ -73,28 +88,38 @@
   color: var(--primary-color);
   font-weight: 600;
   margin-bottom: 1.5rem;
+  font-size: 1.1rem;
 }
 
 .error {
   color: #e74c3c;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   margin-top: 0.25rem;
+  font-weight: 500;
 }
 
 .document-upload {
-  background: rgba(255, 255, 255, 0.5);
-  padding: 1.5rem;
-  border-radius: 8px;
+  background: rgba(77, 182, 172, 0.05);
+  padding: 2rem;
+  border-radius: 12px;
   margin-bottom: 1.5rem;
+  border: 2px dashed var(--primary-color);
 }
 
 .document-upload h3 {
   margin-top: 0;
   color: var(--primary-dark);
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.document-upload p {
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
 }
 
 .file-upload {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
 }
 
 .upload-preview {
@@ -390,6 +415,32 @@
 }
 
 /* Responsive Design */
+@media (max-width: 1200px) {
+  .auth-card {
+    max-width: 1000px;
+    padding: 2.5rem;
+  }
+  
+  .auth-form.step-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .auth-form {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+  }
+  
+  .auth-form.step-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .auth-card {
+    padding: 2rem;
+  }
+}
+
 @media (max-height: 800px) {
   .auth-page {
     justify-content: flex-start;
@@ -413,6 +464,13 @@
     max-width: 100%;
   }
   
+  .auth-title {
+    font-size: 2rem;
+  }
+  
+  .auth-form {
+    gap: 1rem;
+  }
   .form-row {
     grid-template-columns: 1fr;
   }
