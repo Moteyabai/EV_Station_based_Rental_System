@@ -25,8 +25,6 @@ namespace BusinessObject.Models.DTOs
         [Range(1, 3, ErrorMessage = "Loại thanh toán phải là 1 (Tiền cọc), 2 (Phí), hoặc 3 (Hoàn tiền)")]
         public int PaymentType { get; set; } // 1: Deposit, 2: Fee, 3: Refund
 
-        [Range(-1, 1, ErrorMessage = "Trạng thái phải là -1 (Thất bại), 0 (Đang xử lý), hoặc 1 (Hoàn thành)")]
-        public int Status { get; set; } = 0; // 1: Completed, 0: Pending, -1: Failed
     }
 
     public class PaymentUpdateDTO
