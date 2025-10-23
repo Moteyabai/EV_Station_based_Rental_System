@@ -10,21 +10,22 @@ using Services;
 namespace API.Controllers
 {
     [Route("api/[controller]")]
-    /*[ApiController]*/
     public class PaymentController : ControllerBase
     {
         private readonly PaymentService _paymentService;
         private readonly RenterService _renterService;
         private readonly RentalService _rentalService;
         private readonly AccountService _accountService;
+        private readonly EVBikeService _evbikeService;
 
         public PaymentController(PaymentService paymentService, RenterService renterService, RentalService rentalService
-            , AccountService accountService)
+            , AccountService accountService, EVBikeService evbikeService)
         {
             _paymentService = paymentService;
             _renterService = renterService;
             _rentalService = rentalService;
             _accountService = accountService;
+            _evbikeService = evbikeService;
         }
 
         [HttpGet("GetAllPayments")]
@@ -107,28 +108,31 @@ namespace API.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var res = new ResponseDTO
-                {
-                    Message = "Dữ liệu không hợp lệ!"
-                };
+                var res = new ResponseDTO();
+                res.Message = "Dữ liệu không hợp lệ!";
                 return BadRequest(res);
             }
 
             try
             {
+                var res = new ResponseDTO();
                 var account = await _accountService.GetByIdAsync(paymentDto.AccountID);
                 if (account == null)
                 {
-                    var res = new ResponseDTO
-                    {
-                        Message = "Không tìm thấy thông tin tài khoản!"
-                    };
+                    res.Message = "Không tìm thấy thông tin tài khoản!";
+                    return NotFound(res);
+                }
+
+                var bike = await _evbikeService.GetByIdAsync(paymentDto.BikeID);
+                if (bike == null)
+                {
+                    res.Message = "Không tìm thấy thông tin xe!";
                     return NotFound(res);
                 }
                 var renter = await _renterService.GetRenterByAccountIDAsync(paymentDto.AccountID);
 
                 var rental = new Rental();
-                rental.BikeID = paymentDto.BikeID;
+                rental.BikeID = bike.BikeID;
                 rental.RenterID = renter.RenterID;
                 rental.StationID = paymentDto.StationID;
                 rental.InitialBattery = 100; // Default initial battery
@@ -156,21 +160,28 @@ namespace API.Controllers
 
                 int expiredAt = (int)(DateTimeOffset.Now.ToUnixTimeSeconds() + (60 * 5));
 
-                var paymentData = new CreatePaymentLinkRequest(
+                if (paymentDto.PaymentMethod == (int)PaymentMethod.PayOS)
+                {
+                    var paymentData = new CreatePaymentLinkRequest(
 
-                orderCode,
-                "Thuê xe",
-                (int)paymentDto.Amount,
-                account.FullName,
-                account.Email,
-                expiredAt
-                );
+                        orderCode,
+                        "Thuê xe",
+                        (int)paymentDto.Amount,
+                        account.FullName,
+                        account.Email,
+                        expiredAt
+                    );
 
-                var paymentUrl = await _paymentService.CreatePaymentLink(paymentData);
+                    var paymentUrl = await _paymentService.CreatePaymentLink(paymentData);
 
-                var returnUrl = new PaymentLinkDTO();
-                returnUrl.PaymentUrl = paymentUrl;
-                return Ok(returnUrl);
+                    var returnUrl = new PaymentLinkDTO();
+                    returnUrl.PaymentUrl = paymentUrl;
+                    return Ok(returnUrl);
+                }
+
+                res.Message = "Tạo thông tin thanh toán thành công!";
+
+                return Ok(res);
             }
             catch (Exception ex)
             {
@@ -204,11 +215,66 @@ namespace API.Controllers
                 payment.Status = (int)PaymentStatus.Completed;
                 payment.UpdatedAt = DateTime.Now;
                 await _paymentService.UpdateAsync(payment);
+
+                // Also update rental status to Reserved
+                var rental = await _rentalService.GetByIdAsync(payment.RentalID);
+                if (rental != null)
+                {
+                    rental.Status = (int)RentalStatus.Reserved;
+                    rental.ReservedDate = DateTime.Now;
+                    await _rentalService.UpdateAsync(rental);
+                }
+
                 var successRes = new ResponseDTO
                 {
                     Message = "Thanh toán thành công!"
                 };
                 return Ok(successRes);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpPut("failed")]
+        [Authorize]
+        public async Task<ActionResult> RenterPaymentFailed(int orderID)
+        {
+            if (!ModelState.IsValid)
+            {
+                var res = new ResponseDTO
+                {
+                    Message = "Dữ liệu không hợp lệ!"
+                };
+                return BadRequest(res);
+            }
+            try
+            {
+                var payment = await _paymentService.GetByIdAsync(orderID);
+                if (payment == null)
+                {
+                    var res = new ResponseDTO
+                    {
+                        Message = "Không tìm thấy thông tin thanh toán!"
+                    };
+                    return NotFound(res);
+                }
+                payment.Status = (int)PaymentStatus.Failed;
+                payment.UpdatedAt = DateTime.Now;
+                await _paymentService.UpdateAsync(payment);
+                // Also update rental status to Cancelled
+                var rental = await _rentalService.GetByIdAsync(payment.RentalID);
+                if (rental != null)
+                {
+                    rental.Status = (int)RentalStatus.Cancelled;
+                    await _rentalService.UpdateAsync(rental);
+                }
+                var failedRes = new ResponseDTO
+                {
+                    Message = "Thanh toán thất bại!"
+                };
+                return Ok(failedRes);
             }
             catch (Exception ex)
             {

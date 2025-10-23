@@ -2,7 +2,7 @@
 {
     public enum AccountStatus
     {
-        Inactive = 0,
+        Pending = 0,
         Active = 1,
         Suspended = 2,
         Deleted = 3
@@ -17,10 +17,11 @@
 
     public enum RentalStatus
     {
-        Reserved = 0,
-        OnGoing = 1,
-        Cancelled = 2,
-        Completed = 3
+        Pending = 0,
+        Reserved = 1,
+        OnGoing = 2,
+        Cancelled = 3,
+        Completed = 4
     }
 
     public enum PaymentStatus
@@ -28,5 +29,11 @@
         Pending = 0,
         Completed = 1,
         Failed = -1
+    }
+
+    public enum PaymentMethod
+    {
+        PayOS = 1,
+        Cash = 2
     }
 }
