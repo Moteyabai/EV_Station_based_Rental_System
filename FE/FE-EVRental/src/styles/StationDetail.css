@@ -182,8 +182,6 @@
   transition: all 0.3s ease;
   border: 2px solid transparent;
   cursor: pointer;
-  display: flex;
-  flex-direction: row;
 }
 
 .vehicle-card:hover {
