@@ -11,6 +11,7 @@ import NavBar from "./components/NavBar";
 import Cart from "./components/Cart";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RoleBasedRoute from "./components/RoleBasedRoute";
+import SessionTimer from "./components/SessionTimer";
 
 // Pages
 import Home from "./pages/Home";
@@ -42,6 +43,9 @@ function App() {
       <CartProvider>
         <ReviewProvider>
           <Router>
+            {/* Session Timer - hiển thị cảnh báo trước 5 phút */}
+            <SessionTimer />
+            
             <Routes>
               {/* Admin Route - Layout riêng không có NavBar/Footer */}
               <Route

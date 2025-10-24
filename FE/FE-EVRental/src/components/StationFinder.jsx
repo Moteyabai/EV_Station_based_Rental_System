@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import stationsData from "../data/stations";
-import "../styles/StationFinder.css";
+import "../styles/Stations.css";
 
 export default function StationFinder({ stations: stationsProp }) {
   const [stations, setStations] = useState([]);
