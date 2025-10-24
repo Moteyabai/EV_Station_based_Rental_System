@@ -4,7 +4,7 @@ import StationMap from "../components/StationMap";
 import stationsData from "../data/stations";
 import { fetchActiveStations } from "../api/stations";
 import { calculateDistance } from "../utils/helpers";
-import "../styles/Pages.css";
+import "../styles/Stations.css";
 import { useNavigate } from "react-router-dom";
 import { FaMapMarkerAlt, FaClock, FaMotorcycle } from "react-icons/fa";
 
