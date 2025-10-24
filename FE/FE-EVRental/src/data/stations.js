@@ -1,3 +1,7 @@
+// ⚠️ DEPRECATED: This mock data file will be removed soon
+// Please migrate to use API: import { fetchAllStations, fetchStationById } from "../api/stations"
+// See MIGRATION_PLAN.md for details
+
 const stations = [
   {
     id: 's1',
@@ -14,7 +18,7 @@ const stations = [
     openingHours: '24/7',
     amenities: ['Nhà vệ sinh', 'Quán cà phê', 'Phòng chờ', 'WiFi miễn phí'],
     images: {
-      exterior: "https://images.unsplash.com/photo-1593941707285-aae966bad0cf?auto=format&fit=crop&w=800&q=60",
+      exterior: "",
       chargers: "https://images.unsplash.com/photo-1635418421745-5e29b738d8e6?auto=format&fit=crop&w=800&q=60",
       thumbnail: "https://images.unsplash.com/photo-1647531257138-ff6ce2547643?auto=format&fit=crop&w=800&q=60"
     },
@@ -25,7 +29,7 @@ const stations = [
         type: 'Xe máy điện cao cấp',
         batteryCapacity: '1.2 kWh',
         range: '60 km',
-        price: 120,
+        price: 120000,
         available: true,
         image: '/images/vehicles/vinfast-klara-s.jpg'
       },
@@ -35,7 +39,7 @@ const stations = [
         type: 'Xe máy điện thể thao',
         batteryCapacity: '2.5 kWh',
         range: '120 km',
-        price: 150,
+        price: 150000,
         available: true,
         image: '/images/vehicles/datbike-weaver-200.jpg'
       },
@@ -45,7 +49,7 @@ const stations = [
         type: 'Xe máy điện nhỏ gọn',
         batteryCapacity: '0.9 kWh',
         range: '50 km',
-        price: 100,
+        price: 100000,
         available: true,
         image: '/images/vehicles/vinfast-feliz-s.jpg'
       }
@@ -77,9 +81,9 @@ const stations = [
         type: 'Xe máy điện cao cấp',
         batteryCapacity: '1.2 kWh',
         range: '60 km',
-        price: 120,
+        price: 120000,
         available: true,
-        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60'
+        image: '/images/vehicles/vinfast-klara-s.jpg'
       },
       {
         id: 'v2',
@@ -87,9 +91,9 @@ const stations = [
         type: 'Xe máy điện thể thao',
         batteryCapacity: '2.5 kWh',
         range: '120 km',
-        price: 150,
+        price: 150000,
         available: true,
-        image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=60'
+        image: '/images/vehicles/datbike-weaver-200.jpg'
       },
       {
         id: 'v3',
@@ -97,9 +101,9 @@ const stations = [
         type: 'Xe máy điện nhỏ gọn',
         batteryCapacity: '0.9 kWh',
         range: '50 km',
-        price: 100,
+        price: 100000,
         available: true,
-        image: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?auto=format&fit=crop&w=800&q=60'
+        image: '/images/vehicles/vinfast-feliz-s.jpg'
       }
     ]
   },
@@ -129,9 +133,9 @@ const stations = [
         type: 'Xe máy điện cao cấp',
         batteryCapacity: '1.2 kWh',
         range: '60 km',
-        price: 120,
+        price: 120000,
         available: true,
-        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60'
+        image: '/images/vehicles/vinfast-klara-s.jpg'
       },
       {
         id: 'v2',
@@ -139,9 +143,9 @@ const stations = [
         type: 'Xe máy điện thể thao',
         batteryCapacity: '2.5 kWh',
         range: '120 km',
-        price: 150,
+        price: 150000,
         available: true,
-        image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=60'
+        image: '/images/vehicles/datbike-weaver-200.jpg'
       },
       {
         id: 'v3',
@@ -149,9 +153,9 @@ const stations = [
         type: 'Xe máy điện nhỏ gọn',
         batteryCapacity: '0.9 kWh',
         range: '50 km',
-        price: 100,
+        price: 100000,
         available: true,
-        image: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?auto=format&fit=crop&w=800&q=60'
+        image: '/images/vehicles/vinfast-feliz-s.jpg'
       }
     ]
   },
@@ -181,9 +185,9 @@ const stations = [
         type: 'Xe máy điện cao cấp',
         batteryCapacity: '1.2 kWh',
         range: '60 km',
-        price: 120,
+        price: 120000,
         available: true,
-        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60'
+        image: '/images/vehicles/vinfast-klara-s.jpg'
       },
       {
         id: 'v2',
@@ -191,9 +195,9 @@ const stations = [
         type: 'Xe máy điện thể thao',
         batteryCapacity: '2.5 kWh',
         range: '120 km',
-        price: 150,
+        price: 150000,
         available: true,
-        image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=60'
+        image: '/images/vehicles/datbike-weaver-200.jpg'
       }
     ]
   },
@@ -223,9 +227,9 @@ const stations = [
         type: 'Xe máy điện cao cấp',
         batteryCapacity: '1.2 kWh',
         range: '60 km',
-        price: 120,
+        price: 120000,
         available: true,
-        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60'
+        image: '/images/vehicles/vinfast-klara-s.jpg'
       },
       {
         id: 'v2',
@@ -233,9 +237,9 @@ const stations = [
         type: 'Xe máy điện thể thao',
         batteryCapacity: '2.5 kWh',
         range: '120 km',
-        price: 150,
+        price: 150000,
         available: true,
-        image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=60'
+        image: '/images/vehicles/datbike-weaver-200.jpg'
       },
       {
         id: 'v3',
@@ -243,9 +247,9 @@ const stations = [
         type: 'Xe máy điện nhỏ gọn',
         batteryCapacity: '0.9 kWh',
         range: '50 km',
-        price: 100,
+        price: 100000,
         available: true,
-        image: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?auto=format&fit=crop&w=800&q=60'
+        image: '/images/vehicles/vinfast-feliz-s.jpg'
       }
     ]
   }

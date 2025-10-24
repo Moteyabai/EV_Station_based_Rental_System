@@ -1,10 +1,6 @@
 ﻿using BusinessObject.Models;
+using Microsoft.EntityFrameworkCore;
 using Repositories.BaseRepository;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Repositories
 {
@@ -30,6 +26,24 @@ namespace Repositories
                     return instance;
                 }
             }
+        }
+
+        public async Task<Renter> GetRenterByAccountIDAsync(int accID)
+        {
+            var renter = new Renter();
+            try
+            {
+                using (var context = _context)
+                {
+                    renter = await context.Renters.Include(a => a.Account).SingleOrDefaultAsync(r => r.AccountID == accID);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+
+            return renter;
         }
     }
 }

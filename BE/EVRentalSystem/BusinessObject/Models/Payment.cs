@@ -5,8 +5,8 @@ namespace BusinessObject.Models
 {
     public class Payment
     {
-        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int PaymentID { get; set; }
+        [Key]
+        public long PaymentID { get; set; }
 
         [Required(ErrorMessage = "Mã người thuê là bắt buộc")]
         [ForeignKey("Renter")]

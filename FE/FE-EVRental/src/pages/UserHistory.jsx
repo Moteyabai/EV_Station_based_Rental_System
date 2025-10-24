@@ -14,6 +14,7 @@ import {
   HistoryOutlined,
 } from "@ant-design/icons";
 import { formatPrice, formatDate } from "../utils/helpers";
+import "../styles/UserHistory.css";
 
 export default function UserHistory() {
   const { user } = useAuth();
@@ -26,12 +27,26 @@ export default function UserHistory() {
       navigate("/login");
       return;
     }
-    const allBookings = JSON.parse(localStorage.getItem("ev_bookings") || "[]");
-
+    
+    // Chặn Staff (roleID = 2) và Admin (roleID = 3)
+    const userRoleId = user?.roleID || user?.RoleID;
+    if (userRoleId === 2 || userRoleId === 3) {
+      console.log('UserHistory: Access denied for Staff/Admin, redirecting...');
+      if (userRoleId === 2) {
+        navigate("/staff");
+      } else {
+        navigate("/admin");
+      }
+      return;
+    }
+    
+    const allBookings = JSON.parse(localStorage.getItem("ev_rental_bookings") || "[]");
+    const userEmail = user.email;
+    
     const userBookings = allBookings.filter(
-      (booking) => booking.userId === user.email
+      (booking) => booking.userId === userEmail || booking.userEmail === userEmail
     );
-
+    
     userBookings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     setBookings(userBookings);
   }, [user, navigate]);
@@ -51,7 +66,9 @@ export default function UserHistory() {
   const getFilteredBookings = () => {
     if (activeTab === "all") return bookings;
     if (activeTab === "confirmed")
-      return bookings.filter((b) => b.status === "confirmed");
+      return bookings.filter((b) => b.status === "confirmed" || b.status === "booked");
+    if (activeTab === "renting")
+      return bookings.filter((b) => b.status === "renting");
     if (activeTab === "completed")
       return bookings.filter((b) => b.status === "completed");
     return bookings;
@@ -61,8 +78,14 @@ export default function UserHistory() {
 
   const getStatusBadge = (status) => {
     switch (status) {
+      case "pending_payment":
+        return <Badge status="warning" text="Chờ thanh toán" />;
+      case "booked":
+        return <Badge status="processing" text="Đã đặt xe" />;
       case "confirmed":
         return <Badge status="processing" text="Đã xác nhận" />;
+      case "renting":
+        return <Badge status="success" text="Đang thuê xe" />;
       case "completed":
         return <Badge status="success" text="Hoàn thành" />;
       case "cancelled":
@@ -74,8 +97,14 @@ export default function UserHistory() {
 
   const getStatusIcon = (status) => {
     switch (status) {
+      case "pending_payment":
+        return <ClockCircleOutlined style={{ color: "#faad14" }} />;
+      case "booked":
+        return <CheckCircleOutlined style={{ color: "#1890ff" }} />;
       case "confirmed":
         return <SyncOutlined spin style={{ color: "#1890ff" }} />;
+      case "renting":
+        return <CarOutlined style={{ color: "#52c41a" }} />;
       case "completed":
         return <CheckCircleOutlined style={{ color: "#52c41a" }} />;
       case "cancelled":
@@ -152,8 +181,14 @@ export default function UserHistory() {
               { key: "all", label: `Tất cả (${bookings.length})` },
               {
                 key: "confirmed",
-                label: `Đã xác nhận (${
-                  bookings.filter((b) => b.status === "confirmed").length
+                label: `Đã đặt xe (${
+                  bookings.filter((b) => b.status === "confirmed" || b.status === "booked").length
+                })`,
+              },
+              {
+                key: "renting",
+                label: `Đang thuê (${
+                  bookings.filter((b) => b.status === "renting").length
                 })`,
               },
               {
@@ -228,111 +263,267 @@ export default function UserHistory() {
                     </div>
                     <div>{getStatusBadge(booking.status)}</div>
                   </div>
+                  {/* Thông tin xe thuê */}
                   <div
                     style={{
+                      display: "flex",
+                      gap: "20px",
+                      marginBottom: "20px",
+                      padding: "16px",
                       background: "#f8fafc",
                       borderRadius: "8px",
-                      padding: "16px",
-                      marginBottom: "16px",
                     }}
                   >
-                    <h4
-                      style={{
-                        margin: "0 0 12px 0",
-                        fontSize: "14px",
-                        color: "#666",
-                        fontWeight: 600,
-                      }}
-                    >
-                      Thông tin xe thuê:
-                    </h4>
-                    {booking.items &&
-                      booking.items.map((item, index) => (
+                    {/* Hình ảnh xe */}
+                    <div style={{ flexShrink: 0 }}>
+                      <img
+                        src={booking.vehicleImage || booking.image}
+                        alt={booking.vehicleName}
+                        style={{
+                          width: "150px",
+                          height: "150px",
+                          objectFit: "cover",
+                          borderRadius: "8px",
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                        }}
+                        onError={(e) => {
+                          e.target.src =
+                            "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=300&q=60";
+                        }}
+                      />
+                    </div>
+
+                    {/* Thông tin chi tiết */}
+                    <div style={{ flex: 1 }}>
+                      <h3
+                        style={{
+                          margin: "0 0 12px 0",
+                          fontSize: "20px",
+                          fontWeight: 600,
+                          color: "#1a1a1a",
+                        }}
+                      >
+                        <CarOutlined style={{ color: "#4db6ac", marginRight: "8px" }} />
+                        {booking.vehicleName}
+                      </h3>
+
+                      {/* Grid thông tin */}
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "repeat(2, 1fr)",
+                          gap: "12px",
+                        }}
+                      >
+                        {/* Ngày giờ nhận xe */}
                         <div
-                          key={index}
                           style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            padding: "12px",
                             background: "white",
+                            padding: "12px",
                             borderRadius: "6px",
-                            marginBottom:
-                              index < booking.items.length - 1 ? "8px" : 0,
+                            border: "1px solid #e8e8e8",
                           }}
                         >
                           <div
                             style={{
-                              display: "flex",
-                              gap: "12px",
-                              alignItems: "center",
-                              flex: 1,
+                              fontSize: "12px",
+                              color: "#999",
+                              marginBottom: "4px",
                             }}
                           >
-                            <img
-                              src={item.vehicle.image}
-                              alt={item.vehicle.name}
-                              style={{
-                                width: "60px",
-                                height: "60px",
-                                objectFit: "cover",
-                                borderRadius: "6px",
-                              }}
-                              onError={(e) => {
-                                e.target.src =
-                                  "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=200&q=60";
-                              }}
-                            />
-                            <div style={{ flex: 1 }}>
-                              <div
-                                style={{
-                                  fontWeight: 600,
-                                  color: "#1a1a1a",
-                                  marginBottom: "4px",
-                                }}
-                              >
-                                {item.vehicle.name}
-                              </div>
-                              <div style={{ fontSize: "13px", color: "#666" }}>
-                                <EnvironmentOutlined />{" "}
-                                {item.rentalDetails.pickupStation?.name ||
-                                  "Chưa chọn trạm"}
-                              </div>
-                              <div
-                                style={{
-                                  fontSize: "13px",
-                                  color: "#666",
-                                  marginTop: "2px",
-                                }}
-                              >
-                                <ClockCircleOutlined />{" "}
-                                {item.rentalDetails.pickupDate}{" "}
-                                {item.rentalDetails.returnDate}{" "}
-                                <Tag color="blue" style={{ marginLeft: "8px" }}>
-                                  {item.rentalDetails.days} ngày
-                                </Tag>
-                              </div>
-                            </div>
+                            <CalendarOutlined /> Nhận xe
                           </div>
                           <div
-                            style={{ textAlign: "right", marginLeft: "16px" }}
+                            style={{
+                              fontSize: "14px",
+                              fontWeight: 600,
+                              color: "#1a1a1a",
+                            }}
                           >
-                            <div
-                              style={{
-                                fontSize: "18px",
-                                fontWeight: "bold",
-                                color: "#4db6ac",
-                              }}
-                            >
-                              {formatPrice(item.totalPrice, "VNĐ")}
-                            </div>
-                            <div style={{ fontSize: "13px", color: "#999" }}>
-                              {formatPrice(item.vehicle.price, "VNĐ")}/ngày
-                            </div>
+                            {formatDate(booking.pickupDate)}
+                          </div>
+                          <div style={{ fontSize: "13px", color: "#666" }}>
+                            <ClockCircleOutlined /> {booking.pickupTime || "09:00"}
                           </div>
                         </div>
-                      ))}
+
+                        {/* Ngày giờ trả xe */}
+                        <div
+                          style={{
+                            background: "white",
+                            padding: "12px",
+                            borderRadius: "6px",
+                            border: "1px solid #e8e8e8",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: "12px",
+                              color: "#999",
+                              marginBottom: "4px",
+                            }}
+                          >
+                            <CalendarOutlined /> Trả xe
+                          </div>
+                          <div
+                            style={{
+                              fontSize: "14px",
+                              fontWeight: 600,
+                              color: "#1a1a1a",
+                            }}
+                          >
+                            {formatDate(booking.returnDate)}
+                          </div>
+                          <div style={{ fontSize: "13px", color: "#666" }}>
+                            <ClockCircleOutlined /> {booking.returnTime || "18:00"}
+                          </div>
+                        </div>
+
+                        {/* Điểm nhận xe */}
+                        <div
+                          style={{
+                            background: "white",
+                            padding: "12px",
+                            borderRadius: "6px",
+                            border: "1px solid #e8e8e8",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: "12px",
+                              color: "#999",
+                              marginBottom: "4px",
+                            }}
+                          >
+                            <EnvironmentOutlined style={{ color: "#52c41a" }} /> Điểm nhận
+                          </div>
+                          <div
+                            style={{
+                              fontSize: "14px",
+                              fontWeight: 500,
+                              color: "#1a1a1a",
+                            }}
+                          >
+                            {booking.pickupStation || "Chưa xác định"}
+                          </div>
+                        </div>
+
+                        {/* Điểm trả xe */}
+                        <div
+                          style={{
+                            background: "white",
+                            padding: "12px",
+                            borderRadius: "6px",
+                            border: "1px solid #e8e8e8",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: "12px",
+                              color: "#999",
+                              marginBottom: "4px",
+                            }}
+                          >
+                            <EnvironmentOutlined style={{ color: "#1890ff" }} /> Điểm trả
+                          </div>
+                          <div
+                            style={{
+                              fontSize: "14px",
+                              fontWeight: 500,
+                              color: "#1a1a1a",
+                            }}
+                          >
+                            {booking.returnStation || booking.pickupStation || "Chưa xác định"}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Số ngày thuê */}
+                      {booking.days && (
+                        <div style={{ marginTop: "12px" }}>
+                          <Tag
+                            color="blue"
+                            style={{ fontSize: "14px", padding: "4px 12px" }}
+                          >
+                            <ClockCircleOutlined /> Thời gian thuê: {booking.days} ngày
+                          </Tag>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Giá tiền */}
+                    <div
+                      style={{
+                        flexShrink: 0,
+                        textAlign: "right",
+                        minWidth: "120px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: "24px",
+                          fontWeight: "bold",
+                          color: "#4db6ac",
+                          marginBottom: "4px",
+                        }}
+                      >
+                        {formatPrice(booking.totalPrice || 0, "VNĐ")}
+                      </div>
+                      <div style={{ fontSize: "13px", color: "#999" }}>
+                        Tổng thanh toán
+                      </div>
+                    </div>
                   </div>
+                  
+                  {/* Thông tin bàn giao xe */}
+                  {booking.status === "renting" && booking.handoverAt && (
+                    <div
+                      style={{
+                        background: "#e6f7ff",
+                        border: "1px solid #91d5ff",
+                        borderRadius: "8px",
+                        padding: "12px",
+                        marginBottom: "16px",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                        <CheckCircleOutlined style={{ color: "#1890ff", fontSize: "18px" }} />
+                        <strong style={{ color: "#1890ff" }}>Xe đã được bàn giao</strong>
+                      </div>
+                      <div style={{ fontSize: "13px", color: "#666", marginLeft: "26px" }}>
+                        <CalendarOutlined /> Thời gian nhận xe: {formatDate(booking.handoverAt)}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Thông tin hoàn thành */}
+                  {booking.status === "completed" && booking.completedAt && (
+                    <div
+                      style={{
+                        background: "#f6ffed",
+                        border: "1px solid #b7eb8f",
+                        borderRadius: "8px",
+                        padding: "12px",
+                        marginBottom: "16px",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                        <CheckCircleOutlined style={{ color: "#52c41a", fontSize: "18px" }} />
+                        <strong style={{ color: "#52c41a" }}>Đã hoàn thành thuê xe</strong>
+                      </div>
+                      {booking.handoverAt && (
+                        <div style={{ fontSize: "13px", color: "#666", marginLeft: "26px" }}>
+                          <CalendarOutlined /> Nhận xe: {formatDate(booking.handoverAt)}
+                        </div>
+                      )}
+                      {booking.returnedAt && (
+                        <div style={{ fontSize: "13px", color: "#666", marginLeft: "26px" }}>
+                          <CalendarOutlined /> Trả xe: {formatDate(booking.returnedAt)}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <div
                     style={{
                       display: "flex",

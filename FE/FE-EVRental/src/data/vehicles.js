@@ -1,3 +1,7 @@
+// ⚠️ DEPRECATED: This mock data file will be removed soon
+// Please migrate to use API: import { getAllBikes, getBikeById } from "../api/bikes"
+// See MIGRATION_PLAN.md for details
+
 const vehicles = [
   {
     id: 'v1',

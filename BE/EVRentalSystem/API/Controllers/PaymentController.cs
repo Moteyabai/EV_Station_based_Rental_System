@@ -1,6 +1,8 @@
 ﻿using BusinessObject.Models;
 using BusinessObject.Models.DTOs;
+using BusinessObject.Models.Enum;
 using BusinessObject.Models.JWT;
+using BusinessObject.Models.PayOS;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services;
@@ -8,14 +10,22 @@ using Services;
 namespace API.Controllers
 {
     [Route("api/[controller]")]
-    [ApiController]
     public class PaymentController : ControllerBase
     {
         private readonly PaymentService _paymentService;
+        private readonly RenterService _renterService;
+        private readonly RentalService _rentalService;
+        private readonly AccountService _accountService;
+        private readonly EVBikeService _evbikeService;
 
-        public PaymentController(PaymentService paymentService)
+        public PaymentController(PaymentService paymentService, RenterService renterService, RentalService rentalService
+            , AccountService accountService, EVBikeService evbikeService)
         {
             _paymentService = paymentService;
+            _renterService = renterService;
+            _rentalService = rentalService;
+            _accountService = accountService;
+            _evbikeService = evbikeService;
         }
 
         [HttpGet("GetAllPayments")]
@@ -94,7 +104,94 @@ namespace API.Controllers
 
         [HttpPost("CreatePayment")]
         [Authorize]
-        public async Task<ActionResult> CreatePayment([FromBody] PaymentCreateDTO paymentDto)
+        public async Task<ActionResult> RenterCreatePayment([FromBody] PaymentCreateDTO paymentDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var res = new ResponseDTO();
+                res.Message = "Dữ liệu không hợp lệ!";
+                return BadRequest(res);
+            }
+
+            try
+            {
+                var res = new ResponseDTO();
+                var account = await _accountService.GetByIdAsync(paymentDto.AccountID);
+                if (account == null)
+                {
+                    res.Message = "Không tìm thấy thông tin tài khoản!";
+                    return NotFound(res);
+                }
+
+                var bike = await _evbikeService.GetByIdAsync(paymentDto.BikeID);
+                if (bike == null)
+                {
+                    res.Message = "Không tìm thấy thông tin xe!";
+                    return NotFound(res);
+                }
+                var renter = await _renterService.GetRenterByAccountIDAsync(paymentDto.AccountID);
+
+                var rental = new Rental();
+                rental.BikeID = bike.BikeID;
+                rental.RenterID = renter.RenterID;
+                rental.StationID = paymentDto.StationID;
+                rental.InitialBattery = 100; // Default initial battery
+                rental.RentalDate = DateTime.Now;
+                rental.Deposit = paymentDto.Amount;
+                rental.Status = (int)RentalStatus.Reserved;
+
+                await _rentalService.AddAsync(rental);
+                long orderCode = int.Parse(DateTimeOffset.Now.ToString("ffffff"));
+
+                var payment = new Payment
+                {
+                    PaymentID = orderCode,
+                    RenterID = renter.RenterID,
+                    Amount = paymentDto.Amount,
+                    RentalID = rental.RentalID,
+                    PaymentMethod = paymentDto.PaymentMethod,
+                    PaymentType = paymentDto.PaymentType,
+                    Status = (int)PaymentStatus.Pending,
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
+                };
+
+                await _paymentService.AddAsync(payment);
+
+                int expiredAt = (int)(DateTimeOffset.Now.ToUnixTimeSeconds() + (60 * 5));
+
+                if (paymentDto.PaymentMethod == (int)PaymentMethod.PayOS)
+                {
+                    var paymentData = new CreatePaymentLinkRequest(
+
+                        orderCode,
+                        "Thuê xe",
+                        (int)paymentDto.Amount,
+                        account.FullName,
+                        account.Email,
+                        expiredAt
+                    );
+
+                    var paymentUrl = await _paymentService.CreatePaymentLink(paymentData);
+
+                    var returnUrl = new PaymentLinkDTO();
+                    returnUrl.PaymentUrl = paymentUrl;
+                    return Ok(returnUrl);
+                }
+
+                res.Message = "Tạo thông tin thanh toán thành công!";
+
+                return Ok(res);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpPut("success")]
+        [Authorize]
+        public async Task<ActionResult> RenterPaymentSuccess(int orderID)
         {
             if (!ModelState.IsValid)
             {
@@ -104,28 +201,80 @@ namespace API.Controllers
                 };
                 return BadRequest(res);
             }
-
             try
             {
-                var payment = new Payment
+                var payment = await _paymentService.GetByIdAsync(orderID);
+                if (payment == null)
                 {
-                    RenterID = paymentDto.RenterID,
-                    Amount = paymentDto.Amount,
-                    RentalID = paymentDto.RentalID,
-                    PaymentMethod = paymentDto.PaymentMethod,
-                    PaymentType = paymentDto.PaymentType,
-                    Status = paymentDto.Status,
-                    CreatedAt = DateTime.Now,
-                    UpdatedAt = DateTime.Now
-                };
+                    var res = new ResponseDTO
+                    {
+                        Message = "Không tìm thấy thông tin thanh toán!"
+                    };
+                    return NotFound(res);
+                }
+                payment.Status = (int)PaymentStatus.Completed;
+                payment.UpdatedAt = DateTime.Now;
+                await _paymentService.UpdateAsync(payment);
 
-                await _paymentService.AddAsync(payment);
+                // Also update rental status to Reserved
+                var rental = await _rentalService.GetByIdAsync(payment.RentalID);
+                if (rental != null)
+                {
+                    rental.Status = (int)RentalStatus.Reserved;
+                    rental.ReservedDate = DateTime.Now;
+                    await _rentalService.UpdateAsync(rental);
+                }
 
                 var successRes = new ResponseDTO
                 {
-                    Message = "Tạo giao dịch thanh toán thành công!"
+                    Message = "Thanh toán thành công!"
                 };
                 return Ok(successRes);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpPut("failed")]
+        [Authorize]
+        public async Task<ActionResult> RenterPaymentFailed(int orderID)
+        {
+            if (!ModelState.IsValid)
+            {
+                var res = new ResponseDTO
+                {
+                    Message = "Dữ liệu không hợp lệ!"
+                };
+                return BadRequest(res);
+            }
+            try
+            {
+                var payment = await _paymentService.GetByIdAsync(orderID);
+                if (payment == null)
+                {
+                    var res = new ResponseDTO
+                    {
+                        Message = "Không tìm thấy thông tin thanh toán!"
+                    };
+                    return NotFound(res);
+                }
+                payment.Status = (int)PaymentStatus.Failed;
+                payment.UpdatedAt = DateTime.Now;
+                await _paymentService.UpdateAsync(payment);
+                // Also update rental status to Cancelled
+                var rental = await _rentalService.GetByIdAsync(payment.RentalID);
+                if (rental != null)
+                {
+                    rental.Status = (int)RentalStatus.Cancelled;
+                    await _rentalService.UpdateAsync(rental);
+                }
+                var failedRes = new ResponseDTO
+                {
+                    Message = "Thanh toán thất bại!"
+                };
+                return Ok(failedRes);
             }
             catch (Exception ex)
             {
@@ -252,7 +401,6 @@ namespace API.Controllers
             }
         }
 
-
         [HttpDelete("DeletePayment/{id}")]
         [Authorize]
         public async Task<ActionResult> DeletePayment(int id)
@@ -293,199 +441,6 @@ namespace API.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-
-
-        [HttpGet("GetPaymentsByRenter/{renterId}")]
-        [Authorize]
-        public async Task<ActionResult<IEnumerable<Payment>>> GetPaymentsByRenter(int renterId)
-        {
-            try
-            {
-                // Check permission (Renter can only see their own, staff/admin can see all)
-                var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-                var userId = User.FindFirst(UserClaimTypes.AccountID)?.Value;
-
-                if (permission == "1" && renterId.ToString() != userId)
-                {
-                    var res = new ResponseDTO
-                    {
-                        Message = "Không có quyền truy cập thông tin này!"
-                    };
-                    return Forbid();
-                }
-
-                var payments = await _paymentService.GetPaymentsByRenterAsync(renterId);
-                return Ok(payments);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        [HttpGet("GetPaymentsByRental/{rentalId}")]
-        [Authorize]
-        public async Task<ActionResult<IEnumerable<Payment>>> GetPaymentsByRental(int rentalId)
-        {
-            // Check user permission (Staff and Admin only)
-            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-            if (permission != "3" && permission != "2")
-            {
-                var res = new ResponseDTO
-                {
-                    Message = "Không có quyền truy cập!"
-                };
-                return Unauthorized(res);
-            }
-
-            try
-            {
-                var payments = await _paymentService.GetPaymentsByRentalAsync(rentalId);
-                return Ok(payments);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Get payments by method
-        /// </summary>
-        [HttpGet("GetPaymentsByMethod/{method}")]
-        [Authorize]
-        public async Task<ActionResult<IEnumerable<Payment>>> GetPaymentsByMethod(int method)
-        {
-            // Check user permission (Staff and Admin only)
-            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-            if (permission != "3" && permission != "2")
-            {
-                var res = new ResponseDTO
-                {
-                    Message = "Không có quyền truy cập!"
-                };
-                return Unauthorized(res);
-            }
-
-            try
-            {
-                var payments = await _paymentService.GetPaymentsByMethodAsync(method);
-                return Ok(payments);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-
-        [HttpGet("GetPaymentsByType/{type}")]
-        [Authorize]
-        public async Task<ActionResult<IEnumerable<Payment>>> GetPaymentsByType(int type)
-        {
-            // Check user permission (Staff and Admin only)
-            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-            if (permission != "3" && permission != "2")
-            {
-                var res = new ResponseDTO
-                {
-                    Message = "Không có quyền truy cập!"
-                };
-                return Unauthorized(res);
-            }
-
-            try
-            {
-                var payments = await _paymentService.GetPaymentsByTypeAsync(type);
-                return Ok(payments);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-
-        [HttpGet("GetPendingPayments")]
-        [Authorize]
-        public async Task<ActionResult<IEnumerable<Payment>>> GetPendingPayments()
-        {
-            // Check user permission (Staff and Admin only)
-            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-            if (permission != "3" && permission != "2")
-            {
-                var res = new ResponseDTO
-                {
-                    Message = "Không có quyền truy cập!"
-                };
-                return Unauthorized(res);
-            }
-
-            try
-            {
-                var payments = await _paymentService.GetPendingPaymentsAsync();
-                return Ok(payments);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-
-        [HttpGet("GetCompletedPayments")]
-        [Authorize]
-        public async Task<ActionResult<IEnumerable<Payment>>> GetCompletedPayments()
-        {
-            // Check user permission (Staff and Admin only)
-            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-            if (permission != "3" && permission != "2")
-            {
-                var res = new ResponseDTO
-                {
-                    Message = "Không có quyền truy cập!"
-                };
-                return Unauthorized(res);
-            }
-
-            try
-            {
-                var payments = await _paymentService.GetCompletedPaymentsAsync();
-                return Ok(payments);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-
-        [HttpGet("GetFailedPayments")]
-        [Authorize]
-        public async Task<ActionResult<IEnumerable<Payment>>> GetFailedPayments()
-        {
-            // Check user permission (Staff and Admin only)
-            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-            if (permission != "3" && permission != "2")
-            {
-                var res = new ResponseDTO
-                {
-                    Message = "Không có quyền truy cập!"
-                };
-                return Unauthorized(res);
-            }
-
-            try
-            {
-                var payments = await _paymentService.GetFailedPaymentsAsync();
-                return Ok(payments);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
 
         [HttpPost("SearchPayments")]
         [Authorize]
@@ -560,7 +515,6 @@ namespace API.Controllers
             }
         }
 
-
         [HttpGet("GetPaymentStatistics")]
         [Authorize]
         public async Task<ActionResult<PaymentStatisticsDTO>> GetPaymentStatistics()
@@ -604,34 +558,6 @@ namespace API.Controllers
                     .ToDictionary(g => g.Key, g => g.Where(p => p.Status == 1).Sum(p => p.Amount));
 
                 return Ok(statistics);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        [HttpGet("GetTotalAmountByRenter/{renterId}")]
-        [Authorize]
-        public async Task<ActionResult<decimal>> GetTotalAmountByRenter(int renterId)
-        {
-            try
-            {
-                // Check permission (Renter can only see their own, staff/admin can see all)
-                var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-                var userId = User.FindFirst(UserClaimTypes.AccountID)?.Value;
-
-                if (permission == "1" && renterId.ToString() != userId)
-                {
-                    var res = new ResponseDTO
-                    {
-                        Message = "Không có quyền truy cập thông tin này!"
-                    };
-                    return Forbid();
-                }
-
-                var totalAmount = await _paymentService.GetTotalAmountByRenterAsync(renterId);
-                return Ok(new { RenterID = renterId, TotalAmount = totalAmount });
             }
             catch (Exception ex)
             {

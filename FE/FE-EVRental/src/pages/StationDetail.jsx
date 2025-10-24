@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import stations from "../data/stations";
-import { formatVehiclesForStation } from "../utils/stationHelpers";
 import { useAuth } from "../contexts/AuthContext";
 import { useCart } from "../contexts/CartContext";
 import { useReviews } from "../contexts/ReviewContext";
+import { formatPrice } from "../utils/helpers";
 import ReviewDisplay from "../components/ReviewDisplay";
 import ReviewForm from "../components/ReviewForm";
 import "../styles/StationDetail.css";
@@ -20,11 +20,6 @@ export default function StationDetail() {
   const navigate = useNavigate();
   const [reviews, setReviews] = useState([]);
 
-  // Lấy danh sách xe đầy đủ từ vehicleIds
-  const stationVehicles = station
-    ? formatVehiclesForStation(station.vehicleIds)
-    : [];
-
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [bookingData, setBookingData] = useState({
     pickupDate: "",
@@ -35,6 +30,7 @@ export default function StationDetail() {
   });
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
+  const [activeImage, setActiveImage] = useState("main");
   const [showReviewForm, setShowReviewForm] = useState(false);
 
   useEffect(() => {
@@ -160,25 +156,87 @@ export default function StationDetail() {
               <span className="value">{station.availableVehicles}</span>
             </div>
             <div className="info-item">
-              <span className="label">Trạm sạc:</span>
-              <span className="value">{station.chargingStations}</span>
-            </div>
-            <div className="info-item">
               <span className="label">Giờ mở cửa:</span>
               <span className="value">{station.openingHours}</span>
             </div>
           </div>
         </div>
 
-        {/* Station Image - Chỉ hiển thị 1 ảnh chính */}
-        {(station.images?.thumbnail || station.image) && (
-          <div className="station-main-image">
-            <img
-              src={station.images?.thumbnail || station.image}
-              alt={station.name}
-            />
+        {/* Station Gallery */}
+        <div className="station-gallery">
+          <div className="main-image">
+            {activeImage === "main" && station.image && (
+              <img
+                src={station.image}
+                alt={`${station.name}`}
+              />
+            )}
+            {activeImage === "exterior" && station.images?.exterior && (
+              <img
+                src={station.images.exterior}
+                alt={`${station.name} bên ngoài`}
+              />
+            )}
+            {activeImage === "chargers" && station.images?.chargers && (
+              <img
+                src={station.images.chargers}
+                alt={`${station.name} trạm sạc`}
+              />
+            )}
+            {activeImage === "thumbnail" && station.images?.thumbnail && (
+              <img
+                src={station.images.thumbnail}
+                alt={`${station.name} tổng quan`}
+              />
+            )}
           </div>
-        )}
+
+          <div className="gallery-thumbnails">
+            {station.image && (
+              <div
+                className={`thumbnail ${
+                  activeImage === "main" ? "active" : ""
+                }`}
+                onClick={() => setActiveImage("main")}
+              >
+                <img src={station.image} alt="Hình ảnh chính" />
+              </div>
+            )}
+
+            {station.images?.exterior && (
+              <div
+                className={`thumbnail ${
+                  activeImage === "exterior" ? "active" : ""
+                }`}
+                onClick={() => setActiveImage("exterior")}
+              >
+                <img src={station.images.exterior} alt="Hình ảnh bên ngoài" />
+              </div>
+            )}
+
+            {station.images?.chargers && (
+              <div
+                className={`thumbnail ${
+                  activeImage === "chargers" ? "active" : ""
+                }`}
+                onClick={() => setActiveImage("chargers")}
+              >
+                <img src={station.images.chargers} alt="Charging stations" />
+              </div>
+            )}
+
+            {station.images?.thumbnail && (
+              <div
+                className={`thumbnail ${
+                  activeImage === "thumbnail" ? "active" : ""
+                }`}
+                onClick={() => setActiveImage("thumbnail")}
+              >
+                <img src={station.images.thumbnail} alt="Overview" />
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Station Description */}
         <div className="station-description">
@@ -203,7 +261,7 @@ export default function StationDetail() {
           <h2>Xe máy điện hiện có</h2>
 
           <div className="vehicles-list">
-            {stationVehicles
+            {station.vehicles
               .filter((vehicle) => vehicle.available)
               .map((vehicle) => (
                 <div
@@ -228,7 +286,7 @@ export default function StationDetail() {
                     <div className="vehicle-meta">
                       <span className="vehicle-type">{vehicle.type}</span>
                       <span className="vehicle-price">
-                        {vehicle.price}k/ngày
+                        {formatPrice(vehicle.price)}/ngày
                       </span>
                     </div>
 
@@ -299,7 +357,7 @@ export default function StationDetail() {
                 </div>
               ))}
 
-            {stationVehicles.filter((vehicle) => vehicle.available).length ===
+            {station.vehicles.filter((vehicle) => vehicle.available).length ===
               0 && (
               <div className="no-vehicles">
                 <p>Hiện không có xe nào tại trạm này.</p>
@@ -388,7 +446,7 @@ export default function StationDetail() {
                       )}
                       onChange={handleCheckboxChange}
                     />
-                    Bảo hiểm (+15k/ngày)
+                    Bảo hiểm (+{formatPrice(15000)}/ngày)
                   </label>
 
                   <label className="checkbox-label">
@@ -400,7 +458,7 @@ export default function StationDetail() {
                       )}
                       onChange={handleCheckboxChange}
                     />
-                    Bộ sạc di động (+10k/ngày)
+                    Bộ sạc di động (+{formatPrice(10000)}/ngày)
                   </label>
 
                   <label className="checkbox-label">
@@ -410,7 +468,7 @@ export default function StationDetail() {
                       checked={bookingData.additionalServices.includes("gps")}
                       onChange={handleCheckboxChange}
                     />
-                    Hệ thống định vị GPS (+5k/ngày)
+                    Hệ thống định vị GPS (+{formatPrice(5000)}/ngày)
                   </label>
                 </div>
               </div>
@@ -419,24 +477,24 @@ export default function StationDetail() {
                 <h3>Thông tin đặt xe</h3>
                 <div className="summary-item">
                   <span>Thuê xe:</span>
-                  <span>{selectedVehicle.price}k/ngày</span>
+                  <span>{formatPrice(selectedVehicle.price)}/ngày</span>
                 </div>{" "}
                 {bookingData.additionalServices.includes("insurance") && (
                   <div className="summary-item">
                     <span>Bảo hiểm:</span>
-                    <span>15k/ngày</span>
+                    <span>{formatPrice(15000)}/ngày</span>
                   </div>
                 )}
                 {bookingData.additionalServices.includes("charger") && (
                   <div className="summary-item">
                     <span>Bộ sạc di động:</span>
-                    <span>10k/ngày</span>
+                    <span>{formatPrice(10000)}/ngày</span>
                   </div>
                 )}
                 {bookingData.additionalServices.includes("gps") && (
                   <div className="summary-item">
                     <span>Định vị GPS:</span>
-                    <span>5k/ngày</span>
+                    <span>{formatPrice(5000)}/ngày</span>
                   </div>
                 )}
                 <div className="summary-total">

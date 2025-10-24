@@ -13,7 +13,7 @@ namespace BusinessObject.Models
         [ForeignKey("EVBike")]
         public int BikeID { get; set; }
 
-        [Required(ErrorMessage = "Account ID là bắt buộc")]
+        [Required(ErrorMessage = "Renter ID là bắt buộc")]
         [Range(1, int.MaxValue, ErrorMessage = "Vui lòng chọn tài khoản hợp lệ")]
         [ForeignKey("Renter")]
         public int RenterID { get; set; }
@@ -32,7 +32,7 @@ namespace BusinessObject.Models
         public decimal InitialBattery { get; set; }
 
         [Range(0, 100, ErrorMessage = "Mức pin cuối phải từ 0 đến 100")]
-        public decimal FinalBattery { get; set; }
+        public decimal? FinalBattery { get; set; }
 
         public string? InitBikeCondition { get; set; }
 

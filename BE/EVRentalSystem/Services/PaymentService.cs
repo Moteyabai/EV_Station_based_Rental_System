@@ -1,4 +1,8 @@
-using BusinessObject.Models;
+﻿using BusinessObject.Models;
+using BusinessObject.Models.PayOS;
+using Microsoft.Extensions.Configuration;
+using Net.payOS;
+using Net.payOS.Types;
 using Repositories;
 using Services.Interfaces;
 
@@ -7,10 +11,24 @@ namespace Services
     public class PaymentService : IBaseService<Payment>
     {
         private readonly PaymentRepository _paymentRepository;
+        private readonly IConfiguration _configuration;
+        private readonly string _client;
+        private readonly string _server;
+        private readonly PayOS _payOS;
 
-        public PaymentService()
+        public PaymentService(IConfiguration configuration)
         {
             _paymentRepository = PaymentRepository.Instance;
+            _configuration = configuration;
+            PayOSSettings payOS = new PayOSSettings()
+            {
+                ClientId = _configuration.GetValue<string>("PayOS:PAYOS_CLIENT_ID"),
+                ApiKey = _configuration.GetValue<string>("PayOS:PAYOS_API_KEY"),
+                ChecksumKey = _configuration.GetValue<string>("PayOS:PAYOS_CHECKSUM_KEY")
+            };
+            _client = _configuration["Client"];
+            _server = _configuration["Server"];
+            _payOS = new PayOS(payOS.ClientId, payOS.ApiKey, payOS.ChecksumKey);
         }
 
         public async Task AddAsync(Payment entity) => await _paymentRepository.AddAsync(entity);
@@ -23,71 +41,34 @@ namespace Services
 
         public async Task UpdateAsync(Payment entity) => await _paymentRepository.UpdateAsync(entity);
 
-        // Additional business methods for Payment
-        public async Task<IEnumerable<Payment>> GetPaymentsByRenterAsync(int renterId)
+        public async Task<string> CreatePaymentLink(CreatePaymentLinkRequest body)
         {
-            var payments = await GetAllAsync();
-            return payments.Where(p => p.RenterID == renterId);
-        }
+            List<ItemData> items = new List<ItemData>();
 
-        public async Task<IEnumerable<Payment>> GetPaymentsByRentalAsync(int rentalId)
-        {
-            var payments = await GetAllAsync();
-            return payments.Where(p => p.RentalID == rentalId);
-        }
+            string canceledUrl = $"{_server}/api/Payment/cancel";
+            string successUrl = $"{_server}/api/Payment/success";
+            PaymentData paymentData = new PaymentData(
+                body.paymentID,
+                body.price,
+                body.description,
+                items,
+                canceledUrl,
+                successUrl,
+                null,
+                body.buyerName,
+                body.buyerEmail,
+                null,
+                null,
+                body.expriedAt
+            );
 
-        public async Task<IEnumerable<Payment>> GetPaymentsByMethodAsync(int paymentMethod)
-        {
-            var payments = await GetAllAsync();
-            return payments.Where(p => p.PaymentMethod == paymentMethod);
-        }
+            CreatePaymentResult createPayment = await _payOS.createPaymentLink(paymentData);
+            if (createPayment == null || string.IsNullOrEmpty(createPayment.checkoutUrl))
+            {
+                throw new Exception("Tạo link thanh toán thất bại!");
+            }
 
-        public async Task<IEnumerable<Payment>> GetPaymentsByTypeAsync(int paymentType)
-        {
-            var payments = await GetAllAsync();
-            return payments.Where(p => p.PaymentType == paymentType);
-        }
-
-        public async Task<IEnumerable<Payment>> GetPaymentsByStatusAsync(int status)
-        {
-            var payments = await GetAllAsync();
-            return payments.Where(p => p.Status == status);
-        }
-
-        public async Task<IEnumerable<Payment>> GetPendingPaymentsAsync()
-        {
-            var payments = await GetAllAsync();
-            return payments.Where(p => p.Status == 0); // 0: Pending
-        }
-
-        public async Task<IEnumerable<Payment>> GetCompletedPaymentsAsync()
-        {
-            var payments = await GetAllAsync();
-            return payments.Where(p => p.Status == 1); // 1: Completed
-        }
-
-        public async Task<IEnumerable<Payment>> GetFailedPaymentsAsync()
-        {
-            var payments = await GetAllAsync();
-            return payments.Where(p => p.Status == -1); // -1: Failed
-        }
-
-        public async Task<IEnumerable<Payment>> GetPaymentsByDateRangeAsync(DateTime startDate, DateTime endDate)
-        {
-            var payments = await GetAllAsync();
-            return payments.Where(p => p.CreatedAt >= startDate && p.CreatedAt <= endDate);
-        }
-
-        public async Task<decimal> GetTotalAmountByRenterAsync(int renterId)
-        {
-            var payments = await GetPaymentsByRenterAsync(renterId);
-            return payments.Where(p => p.Status == 1).Sum(p => p.Amount); // Only completed payments
-        }
-
-        public async Task<decimal> GetTotalAmountByDateRangeAsync(DateTime startDate, DateTime endDate)
-        {
-            var payments = await GetPaymentsByDateRangeAsync(startDate, endDate);
-            return payments.Where(p => p.Status == 1).Sum(p => p.Amount); // Only completed payments
+            return createPayment.checkoutUrl;
         }
     }
 }
