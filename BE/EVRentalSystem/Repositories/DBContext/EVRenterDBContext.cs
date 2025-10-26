@@ -34,6 +34,7 @@ namespace Repositories.DBContext
         public DbSet<StationStaff> StationStaffs { get; set; }
         public DbSet<Feedback> Feedbacks { get; set; }
         public DbSet<Payment> Payments { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
