@@ -18,11 +18,16 @@ namespace API.Controllers
         private readonly EVBikeService _evBikeService;
         private readonly Client _appWriteClient;
         private readonly IConfiguration _configuration;
+        private readonly StationStaffService _stationStaffService;
+        private readonly StationService _stationService;
 
-        public EVBikeController(EVBikeService evBikeService, IConfiguration configuration)
+        public EVBikeController(EVBikeService evBikeService, IConfiguration configuration
+            , StationService stationService, StationStaffService stationStaffService)
         {
             _evBikeService = evBikeService;
             _configuration = configuration;
+            _stationService = stationService;
+            _stationStaffService = stationStaffService;
             AppwriteSettings appW = new AppwriteSettings()
             {
                 ProjectId = configuration.GetValue<string>("Appwrite:ProjectId"),
@@ -284,6 +289,82 @@ namespace API.Controllers
 
                 await _evBikeService.UpdateAsync(existingBike);
                 res.Message = "Xe không còn hoạt động!";
+                return Ok(res);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpPut("ActivateBike/{id}")]
+        [Authorize]
+        public async Task<ActionResult> ActivateBike(int id)
+        {
+            //Check user permission
+            var permission = User.FindFirst(UserClaimTypes.RoleID).Value;
+            var res = new ResponseDTO();
+            if (permission != "3" && permission != "2")
+            {
+                res.Message = "Không có quyền truy cập!";
+                return Unauthorized(res);
+            }
+            try
+            {
+                var existingBike = await _evBikeService.GetByIdAsync(id);
+                if (existingBike == null)
+                {
+                    res.Message = "Không tìm thấy xe điện!";
+                    return NotFound(res);
+                }
+                // Update bike status to Available
+                existingBike.Status = 1; // 1: Available
+                await _evBikeService.UpdateAsync(existingBike);
+                res.Message = "Kích hoạt xe thành công!";
+                return Ok(res);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpPut("AddBikeToStation/{id}")]
+        [Authorize]
+        public async Task<ActionResult> AddBikeToStation(int bikeID, int stationID)
+        {
+            //Check user permission
+            var permission = User.FindFirst(UserClaimTypes.RoleID).Value;
+            var res = new ResponseDTO();
+            if (permission != "3" && permission != "2")
+            {
+                res.Message = "Không có quyền truy cập!";
+                return Unauthorized(res);
+            }
+            try
+            {
+                var station = await _stationService.GetByIdAsync(stationID);
+                if (station == null)
+                {
+                    res.Message = "Không tìm thấy trạm!";
+                    return NotFound(res);
+                }
+                var existingBike = await _evBikeService.GetByIdAsync(bikeID);
+                if (existingBike == null)
+                {
+                    res.Message = "Không tìm thấy xe điện!";
+                    return NotFound(res);
+                }
+
+                if (existingBike.StationID != null && existingBike.StationID == station.StationID)
+                {
+                    res.Message = "Xe đã ở trong trạm này!";
+                    return BadRequest(res);
+                }
+                // Update stationID for bike
+                existingBike.StationID = station.StationID;
+                await _evBikeService.UpdateAsync(existingBike);
+                res.Message = "Thêm xe vào trạm thành công!";
                 return Ok(res);
             }
             catch (Exception ex)

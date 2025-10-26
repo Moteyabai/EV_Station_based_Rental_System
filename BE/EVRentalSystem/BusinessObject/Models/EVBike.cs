@@ -25,6 +25,8 @@ namespace BusinessObject.Models
         [StringLength(30, ErrorMessage = "Màu sắc không được quá 30 ký tự")]
         public string Color { get; set; }
 
+        public int? StationID { get; set; }
+
         [Required(ErrorMessage = "Hình ảnh mặt trước là bắt buộc")]
         [Url(ErrorMessage = "Đường dẫn hình ảnh mặt trước không hợp lệ")]
         public string FrontImg { get; set; }
@@ -56,5 +58,6 @@ namespace BusinessObject.Models
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
         public virtual Brand Brand { get; set; }
+
     }
 }

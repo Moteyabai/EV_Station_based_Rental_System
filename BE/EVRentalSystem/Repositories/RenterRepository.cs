@@ -30,20 +30,18 @@ namespace Repositories
 
         public async Task<Renter> GetRenterByAccountIDAsync(int accID)
         {
-            var renter = new Renter();
             try
             {
-                using (var context = _context)
-                {
-                    renter = await context.Renters.Include(a => a.Account).SingleOrDefaultAsync(r => r.AccountID == accID);
-                }
+                var renter = await _context.Renters
+                    .Include(a => a.Account)
+                    .SingleOrDefaultAsync(r => r.AccountID == accID);
+                
+                return renter;
             }
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
-
-            return renter;
         }
     }
 }
