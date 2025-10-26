@@ -1,4 +1,4 @@
-using BusinessObject.Models;
+Ôªøusing BusinessObject.Models;
 using BusinessObject.Models.DTOs;
 using BusinessObject.Models.JWT;
 using Microsoft.AspNetCore.Authorization;
@@ -34,7 +34,7 @@ namespace API.Controllers
             {
                 var res = new ResponseDTO
                 {
-                    Message = "KhÙng cÛ quy?n truy c?p!"
+                    Message = "Kh√¥ng c√≥ quy?n truy c?p!"
                 };
                 return Unauthorized(res);
             }
@@ -46,7 +46,7 @@ namespace API.Controllers
                 {
                     var res = new ResponseDTO
                     {
-                        Message = "Danh s·ch thÙng b·o tr?ng"
+                        Message = "Danh s√°ch th√¥ng b√°o tr·ªëng"
                     };
                     return NotFound(res);
                 }
@@ -75,7 +75,7 @@ namespace API.Controllers
                 {
                     var res = new ResponseDTO
                     {
-                        Message = "KhÙng tÏm th?y thÙng b·o!"
+                        Message = "Kh√¥ng t√¨m th?y th√¥ng b√°o!"
                     };
                     return NotFound(res);
                 }
@@ -85,7 +85,7 @@ namespace API.Controllers
                 {
                     var res = new ResponseDTO
                     {
-                        Message = "KhÙng cÛ quy?n truy c?p!"
+                        Message = "Kh√¥ng c√≥ quy?n truy c?p!"
                     };
                     return Unauthorized(res);
                 }
@@ -114,7 +114,7 @@ namespace API.Controllers
                 {
                     var res = new ResponseDTO
                     {
-                        Message = "KhÙng tÏm th?y thÙng tin t‡i kho?n!"
+                        Message = "Kh√¥ng t√¨m th?y th√¥ng tin t√†i kho?n!"
                     };
                     return Unauthorized(res);
                 }
@@ -143,7 +143,7 @@ namespace API.Controllers
             {
                 var res = new ResponseDTO
                 {
-                    Message = "KhÙng cÛ quy?n truy c?p!"
+                    Message = "Kh√¥ng c√≥ quy?n truy c?p!"
                 };
                 return Unauthorized(res);
             }
@@ -174,7 +174,7 @@ namespace API.Controllers
                 {
                     var res = new ResponseDTO
                     {
-                        Message = "KhÙng tÏm th?y thÙng tin t‡i kho?n!"
+                        Message = "Kh√¥ng t√¨m th?y th√¥ng tin t√†i kho?n!"
                     };
                     return Unauthorized(res);
                 }
@@ -203,7 +203,7 @@ namespace API.Controllers
                 {
                     var res = new ResponseDTO
                     {
-                        Message = "KhÙng tÏm th?y thÙng tin t‡i kho?n!"
+                        Message = "Kh√¥ng t√¨m th?y th√¥ng tin t√†i kho?n!"
                     };
                     return Unauthorized(res);
                 }
@@ -230,7 +230,7 @@ namespace API.Controllers
             {
                 var res = new ResponseDTO
                 {
-                    Message = "KhÙng cÛ quy?n truy c?p!"
+                    Message = "Kh√¥ng c√≥ quy?n truy c?p!"
                 };
                 return Unauthorized(res);
             }
@@ -239,7 +239,7 @@ namespace API.Controllers
             {
                 var res = new ResponseDTO
                 {
-                    Message = "D? li?u khÙng h?p l?!"
+                    Message = "D? li?u kh√¥ng h?p l?!"
                 };
                 return BadRequest(res);
             }
@@ -252,7 +252,7 @@ namespace API.Controllers
                 {
                     var res = new ResponseDTO
                     {
-                        Message = "T‡i kho?n khÙng t?n t?i!"
+                        Message = "T√†i kho?n kh√¥ng t?n t?i!"
                     };
                     return NotFound(res);
                 }
@@ -269,7 +269,7 @@ namespace API.Controllers
 
                 var successRes = new ResponseDTO
                 {
-                    Message = "T?o thÙng b·o th‡nh cÙng!"
+                    Message = "T?o th√¥ng b√°o th√†nh c√¥ng!"
                 };
                 return Ok(successRes);
             }
@@ -292,7 +292,7 @@ namespace API.Controllers
             {
                 var res = new ResponseDTO
                 {
-                    Message = "KhÙng cÛ quy?n truy c?p!"
+                    Message = "Kh√¥ng c√≥ quy?n truy c?p!"
                 };
                 return Unauthorized(res);
             }
@@ -301,7 +301,7 @@ namespace API.Controllers
             {
                 var res = new ResponseDTO
                 {
-                    Message = "D? li?u khÙng h?p l?!"
+                    Message = "D? li?u kh√¥ng h?p l?!"
                 };
                 return BadRequest(res);
             }
@@ -312,7 +312,7 @@ namespace API.Controllers
 
                 var successRes = new ResponseDTO
                 {
-                    Message = $"?„ g?i thÙng b·o ??n {bulkDto.AccountIDs.Count} ng??i d˘ng!"
+                    Message = $"?√£ g?i th√¥ng b√°o ??n {bulkDto.AccountIDs.Count} ng??i d√πng!"
                 };
                 return Ok(successRes);
             }
@@ -335,7 +335,7 @@ namespace API.Controllers
             {
                 var res = new ResponseDTO
                 {
-                    Message = "KhÙng cÛ quy?n truy c?p!"
+                    Message = "Kh√¥ng c√≥ quy?n truy c?p!"
                 };
                 return Unauthorized(res);
             }
@@ -344,7 +344,7 @@ namespace API.Controllers
             {
                 var res = new ResponseDTO
                 {
-                    Message = "D? li?u khÙng h?p l?!"
+                    Message = "D? li?u kh√¥ng h?p l?!"
                 };
                 return BadRequest(res);
             }
@@ -356,7 +356,7 @@ namespace API.Controllers
                 {
                     var res = new ResponseDTO
                     {
-                        Message = "KhÙng tÏm th?y thÙng b·o!"
+                        Message = "Kh√¥ng t√¨m th?y th√¥ng b√°o!"
                     };
                     return NotFound(res);
                 }
@@ -371,7 +371,7 @@ namespace API.Controllers
 
                 var successRes = new ResponseDTO
                 {
-                    Message = "C?p nh?t thÙng b·o th‡nh cÙng!"
+                    Message = "C?p nh?t th√¥ng b√°o th√†nh c√¥ng!"
                 };
                 return Ok(successRes);
             }
@@ -398,7 +398,7 @@ namespace API.Controllers
                 {
                     var res = new ResponseDTO
                     {
-                        Message = "KhÙng tÏm th?y thÙng b·o!"
+                        Message = "Kh√¥ng t√¨m th?y th√¥ng b√°o!"
                     };
                     return NotFound(res);
                 }
@@ -408,7 +408,7 @@ namespace API.Controllers
                 {
                     var res = new ResponseDTO
                     {
-                        Message = "KhÙng cÛ quy?n truy c?p!"
+                        Message = "Kh√¥ng c√≥ quy?n truy c?p!"
                     };
                     return Unauthorized(res);
                 }
@@ -418,14 +418,14 @@ namespace API.Controllers
                 {
                     var res = new ResponseDTO
                     {
-                        Message = "KhÙng th? ?·nh d?u ?„ ??c!"
+                        Message = "Kh√¥ng th? ?√°nh d?u ?√£ ??c!"
                     };
                     return BadRequest(res);
                 }
 
                 var successRes = new ResponseDTO
                 {
-                    Message = "?„ ?·nh d?u thÙng b·o l‡ ?„ ??c!"
+                    Message = "?√£ ?√°nh d?u th√¥ng b√°o l√† ?√£ ??c!"
                 };
                 return Ok(successRes);
             }
@@ -450,7 +450,7 @@ namespace API.Controllers
                 {
                     var res = new ResponseDTO
                     {
-                        Message = "KhÙng tÏm th?y thÙng tin t‡i kho?n!"
+                        Message = "Kh√¥ng t√¨m th?y th√¥ng tin t√†i kho?n!"
                     };
                     return Unauthorized(res);
                 }
@@ -459,7 +459,7 @@ namespace API.Controllers
 
                 var successRes = new ResponseDTO
                 {
-                    Message = $"?„ ?·nh d?u {count} thÙng b·o l‡ ?„ ??c!"
+                    Message = $"?√£ ?√°nh d?u {count} th√¥ng b√°o l√† ?√£ ??c!"
                 };
                 return Ok(successRes);
             }
@@ -486,7 +486,7 @@ namespace API.Controllers
                 {
                     var res = new ResponseDTO
                     {
-                        Message = "KhÙng tÏm th?y thÙng b·o!"
+                        Message = "Kh√¥ng t√¨m th?y th√¥ng b√°o!"
                     };
                     return NotFound(res);
                 }
@@ -496,7 +496,7 @@ namespace API.Controllers
                 {
                     var res = new ResponseDTO
                     {
-                        Message = "KhÙng cÛ quy?n truy c?p!"
+                        Message = "Kh√¥ng c√≥ quy?n truy c?p!"
                     };
                     return Unauthorized(res);
                 }
@@ -505,7 +505,7 @@ namespace API.Controllers
 
                 var successRes = new ResponseDTO
                 {
-                    Message = "XÛa thÙng b·o th‡nh cÙng!"
+                    Message = "X√≥a th√¥ng b√°o th√†nh c√¥ng!"
                 };
                 return Ok(successRes);
             }
@@ -528,7 +528,7 @@ namespace API.Controllers
             {
                 var res = new ResponseDTO
                 {
-                    Message = "KhÙng cÛ quy?n truy c?p!"
+                    Message = "Kh√¥ng c√≥ quy?n truy c?p!"
                 };
                 return Unauthorized(res);
             }
@@ -539,7 +539,7 @@ namespace API.Controllers
 
                 var successRes = new ResponseDTO
                 {
-                    Message = $"?„ xÛa {count} thÙng b·o c? h?n {days} ng‡y!"
+                    Message = $"?√£ x√≥a {count} th√¥ng b√°o c? h?n {days} ng√†y!"
                 };
                 return Ok(successRes);
             }
@@ -562,7 +562,7 @@ namespace API.Controllers
             {
                 var res = new ResponseDTO
                 {
-                    Message = "KhÙng cÛ quy?n truy c?p!"
+                    Message = "Kh√¥ng c√≥ quy?n truy c?p!"
                 };
                 return Unauthorized(res);
             }
@@ -606,7 +606,7 @@ namespace API.Controllers
             {
                 var res = new ResponseDTO
                 {
-                    Message = "KhÙng cÛ quy?n truy c?p!"
+                    Message = "Kh√¥ng c√≥ quy?n truy c?p!"
                 };
                 return Unauthorized(res);
             }
@@ -650,11 +650,11 @@ namespace API.Controllers
     /// </summary>
     public class BulkNotificationCreateDTO
     {
-        [Required(ErrorMessage = "Danh s·ch t‡i kho?n l‡ b?t bu?c")]
+        [Required(ErrorMessage = "Danh s√°ch t√†i kho?n l√† b?t bu?c")]
         public List<int> AccountIDs { get; set; } = new();
 
-        [Required(ErrorMessage = "N?i dung thÙng b·o l‡ b?t bu?c")]
-        [StringLength(1000, ErrorMessage = "N?i dung thÙng b·o khÙng ???c qu· 1000 k˝ t?")]
+        [Required(ErrorMessage = "N?i dung th√¥ng b√°o l√† b?t bu?c")]
+        [StringLength(1000, ErrorMessage = "N?i dung th√¥ng b√°o kh√¥ng ???c qu√° 1000 k√Ω t?")]
         public string Message { get; set; } = string.Empty;
     }
 }

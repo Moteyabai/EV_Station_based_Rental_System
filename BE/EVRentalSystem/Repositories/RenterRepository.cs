@@ -35,7 +35,7 @@ namespace Repositories
                 var renter = await _context.Renters
                     .Include(a => a.Account)
                     .SingleOrDefaultAsync(r => r.AccountID == accID);
-                
+
                 return renter;
             }
             catch (Exception ex)

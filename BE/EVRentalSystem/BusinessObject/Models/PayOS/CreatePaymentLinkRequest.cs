@@ -1,6 +1,4 @@
-﻿using Net.payOS.Types;
-
-namespace BusinessObject.Models.PayOS
+﻿namespace BusinessObject.Models.PayOS
 {
     public record CreatePaymentLinkRequest(
     long paymentID,

@@ -131,13 +131,10 @@ namespace API.Controllers
                 // Create new EVBike
                 var bike = new EVBike();
                 bike.BikeName = eVBikeCreateDTO.BikeName;
-                bike.LicensePlate = eVBikeCreateDTO.LicensePlate;
                 bike.BrandID = eVBikeCreateDTO.BrandID;
-                bike.Color = eVBikeCreateDTO.Color;
                 bike.FrontImg = frontUrl;
                 bike.BackImg = backUrl;
                 bike.Description = eVBikeCreateDTO.Description;
-                bike.BatteryCapacity = eVBikeCreateDTO.BatteryCapacity;
                 bike.PricePerDay = eVBikeCreateDTO.PricePerDay;
 
                 await _evBikeService.AddAsync(bike);
@@ -243,11 +240,8 @@ namespace API.Controllers
 
                 // Update bike details
                 existingBike.BikeName = eVBike.BikeName;
-                existingBike.LicensePlate = eVBike.LicensePlate;
                 existingBike.BrandID = eVBike.BrandID;
-                existingBike.Color = eVBike.Color;
                 existingBike.Description = eVBike.Description;
-                existingBike.BatteryCapacity = eVBike.BatteryCapacity;
                 existingBike.PricePerDay = eVBike.PricePerDay;
                 existingBike.Status = eVBike.Status;
                 existingBike.FrontImg = frontUrl;
@@ -356,13 +350,6 @@ namespace API.Controllers
                     return NotFound(res);
                 }
 
-                if (existingBike.StationID != null && existingBike.StationID == station.StationID)
-                {
-                    res.Message = "Xe đã ở trong trạm này!";
-                    return BadRequest(res);
-                }
-                // Update stationID for bike
-                existingBike.StationID = station.StationID;
                 await _evBikeService.UpdateAsync(existingBike);
                 res.Message = "Thêm xe vào trạm thành công!";
                 return Ok(res);

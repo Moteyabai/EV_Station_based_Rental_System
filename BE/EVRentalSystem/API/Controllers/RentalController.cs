@@ -589,12 +589,14 @@ namespace API.Controllers
                     switch (searchDto.Status.ToLower())
                     {
                         case "active":
-                            rentals = rentals.Where(r => r.RentalDate <= currentDate && 
+                            rentals = rentals.Where(r => r.RentalDate <= currentDate &&
                                                         (!r.ReturnDate.HasValue || r.ReturnDate >= currentDate));
                             break;
+
                         case "pending":
                             rentals = rentals.Where(r => r.RentalDate > currentDate);
                             break;
+
                         case "completed":
                             rentals = rentals.Where(r => r.ReturnDate.HasValue && r.ReturnDate < currentDate);
                             break;

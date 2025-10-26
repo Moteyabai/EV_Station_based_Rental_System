@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Repositories.DBContext;
 
@@ -11,9 +12,11 @@ using Repositories.DBContext;
 namespace Repositories.Migrations
 {
     [DbContext(typeof(EVRenterDBContext))]
-    partial class EVRenterDBContextModelSnapshot : ModelSnapshot
+    [Migration("20251026080850_Fix_Rental_Station_EVBike_Add_EVBikeStocks")]
+    partial class Fix_Rental_Station_EVBike_Add_EVBikeStocks
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -157,6 +160,9 @@ namespace Repositories.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("EVBikeBikeID")
+                        .HasColumnType("int");
+
                     b.Property<string>("LicensePlate")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -173,7 +179,7 @@ namespace Repositories.Migrations
 
                     b.HasKey("StockID");
 
-                    b.HasIndex("BikeID");
+                    b.HasIndex("EVBikeBikeID");
 
                     b.HasIndex("LicensePlate")
                         .IsUnique();
@@ -581,7 +587,7 @@ namespace Repositories.Migrations
                 {
                     b.HasOne("BusinessObject.Models.EVBike", "EVBike")
                         .WithMany()
-                        .HasForeignKey("BikeID")
+                        .HasForeignKey("EVBikeBikeID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

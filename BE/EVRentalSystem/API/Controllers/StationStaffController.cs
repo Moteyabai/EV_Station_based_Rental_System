@@ -852,7 +852,7 @@ namespace API.Controllers
                 rental.FinalBattery = completeDto.FinalBattery;
                 rental.FinalBikeCondition = completeDto.FinalBikeCondition;
                 rental.ReturnDate = DateTime.Now; // Set actual return time
-                
+
                 if (completeDto.Fee.HasValue)
                 {
                     rental.Fee = completeDto.Fee;
@@ -885,7 +885,7 @@ namespace API.Controllers
         {
             // Check user permission (Staff or Admin)
             var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-            
+
             if (permission != "3" && permission != "2")
             {
                 var res = new ResponseDTO
@@ -933,7 +933,7 @@ namespace API.Controllers
         {
             // Check user permission (Staff or Admin)
             var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-            
+
             if (permission != "3" && permission != "2")
             {
                 var res = new ResponseDTO
@@ -971,7 +971,7 @@ namespace API.Controllers
         {
             // Check user permission (Staff or Admin)
             var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-            
+
             if (permission != "3" && permission != "2")
             {
                 var res = new ResponseDTO
@@ -1000,6 +1000,6 @@ namespace API.Controllers
             }
         }
 
-        #endregion
+        #endregion Rental Status Management
     }
 }

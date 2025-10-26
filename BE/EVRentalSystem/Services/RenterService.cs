@@ -1,11 +1,6 @@
 ﻿using BusinessObject.Models;
 using Repositories;
 using Services.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Services
 {
@@ -27,6 +22,7 @@ namespace Services
         public async Task<Renter> GetByIdAsync(int id) => await _renterRepository.GetByIdAsync(id);
 
         public async Task UpdateAsync(Renter entity) => await _renterRepository.UpdateAsync(entity);
-        public async Task<Renter> GetRenterByAccountIDAsync(int accID) => await _renterRepository.GetRenterByAccountIDAsync(accID);    
+
+        public async Task<Renter> GetRenterByAccountIDAsync(int accID) => await _renterRepository.GetRenterByAccountIDAsync(accID);
     }
 }
