@@ -51,7 +51,5 @@ namespace BusinessObject.Models
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
         public virtual ICollection<StationStaff> StationStaffs { get; set; }
-
-        public virtual ICollection<EVBike> EVBikes { get; set; }
     }
 }

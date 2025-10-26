@@ -36,4 +36,18 @@
         PayOS = 1,
         Cash = 2
     }
+
+    public enum BikeStatus
+    {
+        Unavailable = 0,
+        Available = 1,
+        InMaintenance = 2
+    }
+
+    public enum BikeColor
+    {
+        White = 1,
+        Black = 2,
+        Red = 3,
+    }
 }

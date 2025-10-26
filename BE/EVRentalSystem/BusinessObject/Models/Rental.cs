@@ -13,6 +13,9 @@ namespace BusinessObject.Models
         [ForeignKey("EVBike")]
         public int BikeID { get; set; }
 
+        [Required(ErrorMessage = "Biển số xe là bắt buộc")]
+        public string LicensePlate { get; set; } = string.Empty;
+
         [Required(ErrorMessage = "Renter ID là bắt buộc")]
         [Range(1, int.MaxValue, ErrorMessage = "Vui lòng chọn tài khoản hợp lệ")]
         [ForeignKey("Renter")]

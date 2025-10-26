@@ -35,6 +35,7 @@ namespace Repositories.DBContext
         public DbSet<Feedback> Feedbacks { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<EVBike_Stocks> EVBike_Stocks { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -61,6 +62,11 @@ namespace Repositories.DBContext
                     new Role { RoleId = 2, RoleName = "StationStaff" },
                     new Role { RoleId = 3, RoleName = "Admin" }
                 );
+            });
+
+            modelBuilder.Entity<EVBike_Stocks>(entity =>
+            {
+                entity.HasIndex(e => e.LicensePlate).IsUnique();
             });
         }
     }

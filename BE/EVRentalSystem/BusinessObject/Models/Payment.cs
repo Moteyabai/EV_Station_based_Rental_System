@@ -38,6 +38,7 @@ namespace BusinessObject.Models
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
         public virtual Renter Renter { get; set; }
+
         [ForeignKey("RentalID")]
         public virtual Rental Rental { get; set; }
     }

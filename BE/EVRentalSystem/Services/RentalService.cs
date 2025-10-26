@@ -46,7 +46,7 @@ namespace Services
         {
             var rentals = await GetAllAsync();
             var currentDate = DateTime.Now;
-            return rentals.Where(r => r.RentalDate <= currentDate && 
+            return rentals.Where(r => r.RentalDate <= currentDate &&
                                      (!r.ReturnDate.HasValue || r.ReturnDate >= currentDate));
         }
 

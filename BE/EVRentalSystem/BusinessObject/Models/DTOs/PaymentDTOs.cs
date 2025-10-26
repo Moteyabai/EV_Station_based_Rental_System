@@ -1,5 +1,4 @@
-﻿using Net.payOS.Types;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace BusinessObject.Models.DTOs
 {
@@ -12,8 +11,10 @@ namespace BusinessObject.Models.DTOs
         [Required(ErrorMessage = "Số tiền là bắt buộc")]
         [Range(1, 999999999.99, ErrorMessage = "Số tiền phải từ 1 đến 999,999,999.99")]
         public decimal Amount { get; set; }
+
         [Required]
         public int BikeID { get; set; }
+
         [Required]
         public int StationID { get; set; }
 
@@ -24,7 +25,6 @@ namespace BusinessObject.Models.DTOs
         [Required(ErrorMessage = "Loại thanh toán là bắt buộc")]
         [Range(1, 3, ErrorMessage = "Loại thanh toán phải là 1 (Tiền cọc), 2 (Phí), hoặc 3 (Hoàn tiền)")]
         public int PaymentType { get; set; } // 1: Deposit, 2: Fee, 3: Refund
-
     }
 
     public class PaymentUpdateDTO

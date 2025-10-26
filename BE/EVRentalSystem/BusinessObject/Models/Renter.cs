@@ -7,8 +7,10 @@ namespace BusinessObject.Models
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int RenterID { get; set; }
+
         [Required]
         public int AccountID { get; set; }
+
         public int? DocumentID { get; set; }
 
         [Required]
@@ -18,6 +20,7 @@ namespace BusinessObject.Models
         public decimal TotalSpent { get; set; } = 0;
 
         public virtual Account Account { get; set; }
+
         [ForeignKey("DocumentID")]
         public virtual IDDocument IDDocument { get; set; }
     }
