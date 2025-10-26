@@ -45,8 +45,8 @@ namespace Services
         {
             List<ItemData> items = new List<ItemData>();
 
-            string canceledUrl = $"{_client}/payment-failure?orderCode={body.paymentID}&reason=cancelled";
-            string successUrl = $"{_client}/payment-success?orderCode={body.paymentID}";
+            string canceledUrl = $"{_client}/payment-callback?code=01&status=CANCELLED&cancel=true&orderCode={body.paymentID}";
+            string successUrl = $"{_client}/payment-callback?code=00&status=PAID&cancel=false&orderCode={body.paymentID}";
             PaymentData paymentData = new PaymentData(
                 body.paymentID,
                 body.price,
