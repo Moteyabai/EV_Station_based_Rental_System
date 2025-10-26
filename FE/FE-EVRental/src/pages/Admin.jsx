@@ -18,6 +18,11 @@ const Admin = () => {
   const [stationSearchTerm, setStationSearchTerm] = useState('');
   const [stationStatusFilter, setStationStatusFilter] = useState('all');
   
+  // Search and filter states for staff
+  const [staffSearchTerm, setStaffSearchTerm] = useState('');
+  const [staffStationFilter, setStaffStationFilter] = useState('all');
+  const [staffRoleFilter, setStaffRoleFilter] = useState('all');
+  
   const [newStation, setNewStation] = useState({
     name: '',
     address: '',
@@ -392,7 +397,7 @@ const Admin = () => {
         <div className="stat-card purple">
           <div className="stat-icon">💰</div>
           <div className="stat-info">
-            <h3>Doanh thu tháng</h3>
+            <h3>Doanh thu tháng {new Date().getMonth() + 1}/{new Date().getFullYear()}</h3>
             <p className="stat-number">{(stats.revenue / 1000000).toFixed(1)}M</p>
             <span className="stat-detail">VNĐ</span>
           </div>
@@ -1206,27 +1211,92 @@ const Admin = () => {
     </div>
   );
 
-  const renderStaffManagement = () => (
+  const renderStaffManagement = () => {
+    // Filter staff based on search and filters
+    const filteredStaff = staff.filter((member) => {
+      // Filter by station
+      if (staffStationFilter !== 'all' && member.stationId !== staffStationFilter) {
+        return false;
+      }
+      
+      // Filter by role
+      if (staffRoleFilter !== 'all' && member.role !== staffRoleFilter) {
+        return false;
+      }
+      
+      // Filter by search term
+      if (staffSearchTerm) {
+        const searchLower = staffSearchTerm.toLowerCase();
+        return (
+          member.name.toLowerCase().includes(searchLower) ||
+          member.station.toLowerCase().includes(searchLower) ||
+          member.role.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      return true;
+    });
+
+    // Get unique stations and roles for dropdowns
+    const uniqueStations = [...new Set(staff.map(s => ({ id: s.stationId, name: s.station })))];
+    const uniqueRoles = [...new Set(staff.map(s => s.role))];
+
+    return (
     <div className="management-content">
       <div className="section-header">
-        <h2>Quản lý nhân viên</h2>
-        <button className="btn-primary">+ Thêm nhân viên</button>
+        <h2>Quản lý nhân viên <span style={{ color: '#6b7280', fontSize: '0.9rem', fontWeight: 'normal' }}>({filteredStaff.length} nhân viên)</span></h2>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button 
+            className="btn-primary" 
+            onClick={() => {
+              console.log('Test - Current filters:', { staffSearchTerm, staffStationFilter, staffRoleFilter });
+              alert('Search: ' + staffSearchTerm);
+            }}
+            style={{ background: '#10b981' }}
+          >
+            🧪 Test Filters
+          </button>
+          <button className="btn-primary">+ Thêm nhân viên</button>
+        </div>
       </div>
 
       <div className="filters">
-        <select className="filter-select">
-          <option>Tất cả điểm</option>
-          <option>Quận 1</option>
-          <option>Quận 3</option>
-          <option>Quận 7</option>
+        <select 
+          className="filter-select"
+          value={staffStationFilter}
+          onChange={(e) => {
+            console.log('Staff station filter changed to:', e.target.value);
+            setStaffStationFilter(e.target.value);
+          }}
+        >
+          <option value="all">Tất cả điểm</option>
+          {stations.map((station) => (
+            <option key={station.id} value={station.id}>{station.name}</option>
+          ))}
         </select>
-        <select className="filter-select">
-          <option>Tất cả vai trò</option>
-          <option>Nhân viên giao xe</option>
-          <option>Kỹ thuật viên</option>
-          <option>Quản lý điểm</option>
+        <select 
+          className="filter-select"
+          value={staffRoleFilter}
+          onChange={(e) => {
+            console.log('Staff role filter changed to:', e.target.value);
+            setStaffRoleFilter(e.target.value);
+          }}
+        >
+          <option value="all">Tất cả vai trò</option>
+          {uniqueRoles.map((role, index) => (
+            <option key={index} value={role}>{role}</option>
+          ))}
         </select>
-        <input type="text" className="search-input" placeholder="Tìm kiếm nhân viên..." />
+        <input 
+          type="text" 
+          className="search-input" 
+          placeholder="Tìm kiếm nhân viên..." 
+          value={staffSearchTerm}
+          onChange={(e) => {
+            console.log('Staff search term changed to:', e.target.value);
+            setStaffSearchTerm(e.target.value);
+          }}
+        />
       </div>
 
       <div className="data-table">
@@ -1243,7 +1313,7 @@ const Admin = () => {
             </tr>
           </thead>
           <tbody>
-            {staff.map((member) => (
+            {filteredStaff.map((member) => (
               <tr key={member.id}>
                 <td>#{member.id}</td>
                 <td className="staff-name">{member.name}</td>
@@ -1270,11 +1340,25 @@ const Admin = () => {
                 </td>
               </tr>
             ))}
+            {filteredStaff.length === 0 && (
+              <tr>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+                  <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔍</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: '500' }}>
+                    Không tìm thấy nhân viên nào
+                  </div>
+                  <div style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                    Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm
+                  </div>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
     </div>
-  );
+    );
+  };
 
   const renderReports = () => (
     <div className="management-content">
