@@ -121,3 +121,77 @@ export async function cancelPayment(orderId) {
     throw error;
   }
 }
+
+/**
+ * Mark payment as successful (gọi BE API để update status)
+ * @param {number} orderID - Payment ID from PayOS callback
+ * @param {string} token - JWT authentication token
+ * @returns {Promise<Object>} Response with status (int)
+ */
+export async function markPaymentSuccess(orderID, token) {
+  try {
+    console.log('✅ Calling BE success API - orderID:', orderID);
+    
+    const response = await fetch(`${API_BASE_URL}/api/Payment/success?orderID=${orderID}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    console.log('BE Success API Response Status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('BE Success API Error:', errorText);
+      throw new Error('Không thể xác nhận thanh toán thành công');
+    }
+
+    const result = await response.json();
+    console.log('✅ BE Success Response:', result);
+    
+    // BE trả về { message: "...", status: 1 }
+    return result;
+  } catch (error) {
+    console.error('Mark Payment Success Error:', error);
+    throw error;
+  }
+}
+
+/**
+ * Mark payment as failed (gọi BE API để update status)
+ * @param {number} orderID - Payment ID from PayOS callback
+ * @param {string} token - JWT authentication token
+ * @returns {Promise<Object>} Response with status (int)
+ */
+export async function markPaymentFailed(orderID, token) {
+  try {
+    console.log('❌ Calling BE failed API - orderID:', orderID);
+    
+    const response = await fetch(`${API_BASE_URL}/api/Payment/failed?orderID=${orderID}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    console.log('BE Failed API Response Status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('BE Failed API Error:', errorText);
+      throw new Error('Không thể xác nhận thanh toán thất bại');
+    }
+
+    const result = await response.json();
+    console.log('❌ BE Failed Response:', result);
+    
+    // BE trả về { message: "...", status: -1 }
+    return result;
+  } catch (error) {
+    console.error('Mark Payment Failed Error:', error);
+    throw error;
+  }
+}

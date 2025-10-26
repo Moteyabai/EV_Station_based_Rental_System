@@ -29,6 +29,9 @@ import PickupSuccess from "./pages/PickupSuccess";
 import ReturnSuccess from "./pages/ReturnSuccess";
 import Checkout from "./pages/Checkout";
 import BookingSuccess from "./pages/BookingSuccess";
+import PaymentCallback from "./pages/PaymentCallback";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentFailure from "./pages/PaymentFailure";
 import UserProfile from "./pages/UserProfile";
 import Staff from "./pages/Staff";
 import Admin from "./pages/Admin";
@@ -125,6 +128,32 @@ function App() {
                           element={
                             <RoleBasedRoute blockedRoles={[2, 3]}>
                               <BookingSuccess />
+                            </RoleBasedRoute>
+                          }
+                        />
+                        
+                        {/* Payment Routes - PayOS callback và result pages */}
+                        <Route
+                          path="/payment-callback"
+                          element={
+                            <RoleBasedRoute blockedRoles={[2, 3]}>
+                              <PaymentCallback />
+                            </RoleBasedRoute>
+                          }
+                        />
+                        <Route
+                          path="/payment-success"
+                          element={
+                            <RoleBasedRoute blockedRoles={[2, 3]}>
+                              <PaymentSuccess />
+                            </RoleBasedRoute>
+                          }
+                        />
+                        <Route
+                          path="/payment-failure"
+                          element={
+                            <RoleBasedRoute blockedRoles={[2, 3]}>
+                              <PaymentFailure />
                             </RoleBasedRoute>
                           }
                         />
