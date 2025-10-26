@@ -17,15 +17,17 @@ namespace API.Controllers
         private readonly RentalService _rentalService;
         private readonly AccountService _accountService;
         private readonly EVBikeService _evbikeService;
+        private readonly EVBike_StocksService _evbike_StocksService;
 
         public PaymentController(PaymentService paymentService, RenterService renterService, RentalService rentalService
-            , AccountService accountService, EVBikeService evbikeService)
+            , AccountService accountService, EVBikeService evbikeService, EVBike_StocksService evbike_StocksService)
         {
             _paymentService = paymentService;
             _renterService = renterService;
             _rentalService = rentalService;
             _accountService = accountService;
             _evbikeService = evbikeService;
+            _evbike_StocksService = evbike_StocksService;
         }
 
         [HttpGet("GetAllPayments")]
@@ -129,6 +131,14 @@ namespace API.Controllers
                     res.Message = "Không tìm thấy thông tin xe!";
                     return NotFound(res);
                 }
+
+                var availableStock = await _evbike_StocksService.GetAvailableStockByBikeIDAsync(paymentDto.BikeID);
+                if (availableStock == null)
+                {
+                    res.Message = "Hiện không còn xe trống để thuê!";
+                    return BadRequest(res);
+                }
+
                 var renter = await _renterService.GetRenterByAccountIDAsync(paymentDto.AccountID);
 
                 var rental = new Rental();
@@ -139,8 +149,22 @@ namespace API.Controllers
                 rental.RentalDate = DateTime.Now;
                 rental.Deposit = paymentDto.Amount;
                 rental.Status = (int)RentalStatus.Reserved;
+                rental.LicensePlate = availableStock.LicensePlate;
 
                 await _rentalService.AddAsync(rental);
+
+                // Update bike stock status to Unavailable
+                availableStock.Status = (int)BikeStatus.Unavailable;
+                availableStock.UpdatedAt = DateTime.Now;
+
+                await _evbike_StocksService.UpdateAsync(availableStock);
+
+                // Update Bike quantity
+                bike.Quantity -= 1;
+
+                await _evbikeService.UpdateAsync(bike);
+
+
                 long orderCode = int.Parse(DateTimeOffset.Now.ToString("ffffff"));
 
                 var payment = new Payment
@@ -203,7 +227,7 @@ namespace API.Controllers
             }
             try
             {
-                var payment = await _paymentService.GetByIdAsync(orderID);
+                var payment = await _paymentService.GetPaymentByIDAsync(orderID);
                 if (payment == null)
                 {
                     var res = new ResponseDTO
@@ -215,6 +239,22 @@ namespace API.Controllers
                 payment.Status = (int)PaymentStatus.Completed;
                 payment.UpdatedAt = DateTime.Now;
                 await _paymentService.UpdateAsync(payment);
+
+                // Update bike's TimeRented
+                var bike = await _evbikeService.GetByIdAsync(payment.Rental.BikeID);
+                if (bike == null)
+                {
+                    var res = new ResponseDTO
+                    {
+                        Message = "Không tìm thấy thông tin xe!"
+                    };
+                    return NotFound(res);
+                }
+
+                bike.TimeRented += 1;
+                bike.UpdatedAt = DateTime.Now;
+
+                await _evbikeService.UpdateAsync(bike);
 
                 // Also update rental status to Reserved
                 var rental = await _rentalService.GetByIdAsync(payment.RentalID);
@@ -251,7 +291,7 @@ namespace API.Controllers
             }
             try
             {
-                var payment = await _paymentService.GetByIdAsync(orderID);
+                var payment = await _paymentService.GetPaymentByIDAsync(orderID);
                 if (payment == null)
                 {
                     var res = new ResponseDTO
@@ -263,12 +303,29 @@ namespace API.Controllers
                 payment.Status = (int)PaymentStatus.Failed;
                 payment.UpdatedAt = DateTime.Now;
                 await _paymentService.UpdateAsync(payment);
+
                 // Also update rental status to Cancelled
                 var rental = await _rentalService.GetByIdAsync(payment.RentalID);
                 if (rental != null)
                 {
                     rental.Status = (int)RentalStatus.Cancelled;
                     await _rentalService.UpdateAsync(rental);
+                }
+
+                // Return bike stock to Available
+                var bikeStock = await _evbike_StocksService.GetStockByLicensePlateAsync(rental.LicensePlate);
+                if (bikeStock != null)
+                {
+                    bikeStock.Status = (int)BikeStatus.Available;
+                    bikeStock.UpdatedAt = DateTime.Now;
+                    await _evbike_StocksService.UpdateAsync(bikeStock);
+                    // Update Bike quantity
+                    var bike = await _evbikeService.GetByIdAsync(bikeStock.BikeID);
+                    if (bike != null)
+                    {
+                        bike.Quantity += 1;
+                        await _evbikeService.UpdateAsync(bike);
+                    }
                 }
                 var failedRes = new ResponseDTO
                 {
@@ -348,59 +405,6 @@ namespace API.Controllers
             }
         }
 
-        [HttpPut("UpdatePaymentStatus")]
-        [Authorize]
-        public async Task<ActionResult> UpdatePaymentStatus([FromBody] PaymentStatusUpdateDTO statusDto)
-        {
-            // Check user permission (only staff and admin can update payment status)
-            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-            if (permission != "3" && permission != "2")
-            {
-                var res = new ResponseDTO
-                {
-                    Message = "Không có quyền truy cập!"
-                };
-                return Unauthorized(res);
-            }
-
-            if (!ModelState.IsValid)
-            {
-                var res = new ResponseDTO
-                {
-                    Message = "Dữ liệu không hợp lệ!"
-                };
-                return BadRequest(res);
-            }
-
-            try
-            {
-                var payment = await _paymentService.GetByIdAsync(statusDto.PaymentID);
-                if (payment == null)
-                {
-                    var res = new ResponseDTO
-                    {
-                        Message = "Không tìm thấy thông tin thanh toán!"
-                    };
-                    return NotFound(res);
-                }
-
-                payment.Status = statusDto.Status;
-                payment.UpdatedAt = DateTime.Now;
-
-                await _paymentService.UpdateAsync(payment);
-
-                var successRes = new ResponseDTO
-                {
-                    Message = "Cập nhật trạng thái thanh toán thành công!"
-                };
-                return Ok(successRes);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
         [HttpDelete("DeletePayment/{id}")]
         [Authorize]
         public async Task<ActionResult> DeletePayment(int id)
@@ -418,7 +422,7 @@ namespace API.Controllers
 
             try
             {
-                var payment = await _paymentService.GetByIdAsync(id);
+                var payment = await _paymentService.GetPaymentByIDAsync(id);
                 if (payment == null)
                 {
                     var res = new ResponseDTO

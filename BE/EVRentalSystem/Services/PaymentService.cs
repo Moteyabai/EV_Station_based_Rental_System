@@ -41,6 +41,8 @@ namespace Services
 
         public async Task UpdateAsync(Payment entity) => await _paymentRepository.UpdateAsync(entity);
 
+        public async Task<Payment> GetPaymentByIDAsync(long ID) => await _paymentRepository.GetPaymentByIDAsync(ID);
+
         public async Task<string> CreatePaymentLink(CreatePaymentLinkRequest body)
         {
             List<ItemData> items = new List<ItemData>();

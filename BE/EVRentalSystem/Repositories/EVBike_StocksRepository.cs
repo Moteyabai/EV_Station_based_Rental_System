@@ -1,4 +1,5 @@
 ﻿using BusinessObject.Models;
+using BusinessObject.Models.Enum;
 using Microsoft.EntityFrameworkCore;
 using Repositories.BaseRepository;
 
@@ -39,6 +40,13 @@ namespace Repositories
         {
             return await _context.EVBike_Stocks
                 .FirstOrDefaultAsync(stock => stock.LicensePlate == licensePlate);
+        }
+
+        //Get 1 stock that is available from a specific bikeID
+        public async Task<EVBike_Stocks?> GetAvailableStockByBikeIDAsync(int bikeID)
+        {
+            return await _context.EVBike_Stocks
+                .FirstOrDefaultAsync(stock => stock.BikeID == bikeID && stock.Status == (int)BikeStatus.Available);
         }
     }
 }

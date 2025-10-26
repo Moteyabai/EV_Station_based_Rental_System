@@ -1,4 +1,5 @@
 using BusinessObject.Models;
+using Microsoft.EntityFrameworkCore;
 using Repositories.BaseRepository;
 
 namespace Repositories
@@ -25,6 +26,11 @@ namespace Repositories
                     return instance;
                 }
             }
+        }
+        public async Task<Payment> GetPaymentByIDAsync(long ID)
+        {
+            return await _context.Payments
+                .FirstOrDefaultAsync(payment => payment.PaymentID == ID);
         }
     }
 }
