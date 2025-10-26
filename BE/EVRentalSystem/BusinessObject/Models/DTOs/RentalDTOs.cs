@@ -112,4 +112,65 @@ namespace BusinessObject.Models.DTOs
         public DateTime? EndDate { get; set; }
         public string? Status { get; set; } // "active", "pending", "completed"
     }
+
+    /// <summary>
+    /// DTO for staff to confirm rental start (Reserved -> OnGoing)
+    /// </summary>
+    public class RentalConfirmStartDTO
+    {
+        [Required(ErrorMessage = "Rental ID là b?t bu?c")]
+        public int RentalID { get; set; }
+
+        [Required(ErrorMessage = "Staff ID là b?t bu?c")]
+        [Range(1, int.MaxValue, ErrorMessage = "Vui lòng ch?n nhân viên h?p l?")]
+        public int StaffID { get; set; }
+
+        [Required(ErrorMessage = "M?c pin ban ??u là b?t bu?c")]
+        [Range(0, 100, ErrorMessage = "M?c pin ph?i t? 0 ??n 100")]
+        public decimal InitialBattery { get; set; }
+
+        [StringLength(500, ErrorMessage = "Tình tr?ng xe ban ??u không ???c quá 500 ký t?")]
+        public string? InitBikeCondition { get; set; }
+
+        [StringLength(1000, ErrorMessage = "Ghi chú không ???c quá 1000 ký t?")]
+        public string? Notes { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for staff to complete rental (OnGoing -> Completed)
+    /// </summary>
+    public class RentalCompleteDTO
+    {
+        [Required(ErrorMessage = "Rental ID là b?t bu?c")]
+        public int RentalID { get; set; }
+
+        [Required(ErrorMessage = "Staff ID là b?t bu?c")]
+        [Range(1, int.MaxValue, ErrorMessage = "Vui lòng ch?n nhân viên h?p l?")]
+        public int StaffID { get; set; }
+
+        [Required(ErrorMessage = "M?c pin cu?i là b?t bu?c")]
+        [Range(0, 100, ErrorMessage = "M?c pin cu?i ph?i t? 0 ??n 100")]
+        public decimal FinalBattery { get; set; }
+
+        [Required(ErrorMessage = "Tình tr?ng xe cu?i là b?t bu?c")]
+        [StringLength(500, ErrorMessage = "Tình tr?ng xe cu?i không ???c quá 500 ký t?")]
+        public string FinalBikeCondition { get; set; }
+
+        [Range(0, 50000000, ErrorMessage = "Phí thuê ph?i t? 0 ??n 50,000,000 VN?")]
+        public decimal? Fee { get; set; }
+
+        [StringLength(1000, ErrorMessage = "Ghi chú không ???c quá 1000 ký t?")]
+        public string? Notes { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for getting rentals assigned to a specific staff
+    /// </summary>
+    public class StaffRentalFilterDTO
+    {
+        public int? StaffID { get; set; }
+        public int? Status { get; set; } // 0: Reserved, 1: OnGoing, 2: Cancelled, 3: Completed
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+    }
 }

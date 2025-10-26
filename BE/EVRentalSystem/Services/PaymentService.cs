@@ -45,8 +45,8 @@ namespace Services
         {
             List<ItemData> items = new List<ItemData>();
 
-            string canceledUrl = $"{_server}/api/Payment/cancel";
-            string successUrl = $"{_server}/api/Payment/success";
+            string canceledUrl = $"{_client}/payment-failure?orderCode={body.paymentID}&reason=cancelled";
+            string successUrl = $"{_client}/payment-success?orderCode={body.paymentID}";
             PaymentData paymentData = new PaymentData(
                 body.paymentID,
                 body.price,
