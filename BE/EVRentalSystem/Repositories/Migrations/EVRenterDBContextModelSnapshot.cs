@@ -98,11 +98,6 @@ namespace Repositories.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("BatteryCapacity")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
                     b.Property<string>("BikeName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -110,11 +105,6 @@ namespace Repositories.Migrations
 
                     b.Property<int>("BrandID")
                         .HasColumnType("int");
-
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -128,15 +118,10 @@ namespace Repositories.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("LicensePlate")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
                     b.Property<decimal>("PricePerDay")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int?>("StationID")
+                    b.Property<int>("Quantity")
                         .HasColumnType("int");
 
                     b.Property<int>("Status")
@@ -152,9 +137,50 @@ namespace Repositories.Migrations
 
                     b.HasIndex("BrandID");
 
+                    b.ToTable("EVBikes");
+                });
+
+            modelBuilder.Entity("BusinessObject.Models.EVBike_Stocks", b =>
+                {
+                    b.Property<int>("StockID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StockID"));
+
+                    b.Property<int>("BikeID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Color")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LicensePlate")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("StationID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("StockID");
+
+                    b.HasIndex("BikeID");
+
+                    b.HasIndex("LicensePlate")
+                        .IsUnique();
+
                     b.HasIndex("StationID");
 
-                    b.ToTable("EVBikes");
+                    b.ToTable("EVBike_Stocks");
                 });
 
             modelBuilder.Entity("BusinessObject.Models.Feedback", b =>
@@ -231,6 +257,35 @@ namespace Repositories.Migrations
                     b.ToTable("IDDocuments");
                 });
 
+            modelBuilder.Entity("BusinessObject.Models.Notification", b =>
+                {
+                    b.Property<int>("NotificationID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("NotificationID"));
+
+                    b.Property<int>("AccountID")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.HasKey("NotificationID");
+
+                    b.HasIndex("AccountID");
+
+                    b.ToTable("Notifications");
+                });
+
             modelBuilder.Entity("BusinessObject.Models.Payment", b =>
                 {
                     b.Property<long>("PaymentID")
@@ -303,6 +358,10 @@ namespace Repositories.Migrations
 
                     b.Property<decimal>("InitialBattery")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("LicensePlate")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("RentalDate")
                         .HasColumnType("datetime2");
@@ -515,11 +574,26 @@ namespace Repositories.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("BusinessObject.Models.Station", null)
-                        .WithMany("EVBikes")
-                        .HasForeignKey("StationID");
-
                     b.Navigation("Brand");
+                });
+
+            modelBuilder.Entity("BusinessObject.Models.EVBike_Stocks", b =>
+                {
+                    b.HasOne("BusinessObject.Models.EVBike", "EVBike")
+                        .WithMany()
+                        .HasForeignKey("BikeID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BusinessObject.Models.Station", "Station")
+                        .WithMany()
+                        .HasForeignKey("StationID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("EVBike");
+
+                    b.Navigation("Station");
                 });
 
             modelBuilder.Entity("BusinessObject.Models.Feedback", b =>
@@ -540,6 +614,17 @@ namespace Repositories.Migrations
                         .HasForeignKey("VerifiedByStaffID");
 
                     b.Navigation("VerifiedByStaff");
+                });
+
+            modelBuilder.Entity("BusinessObject.Models.Notification", b =>
+                {
+                    b.HasOne("BusinessObject.Models.Account", "Account")
+                        .WithMany()
+                        .HasForeignKey("AccountID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Account");
                 });
 
             modelBuilder.Entity("BusinessObject.Models.Payment", b =>
@@ -645,8 +730,6 @@ namespace Repositories.Migrations
 
             modelBuilder.Entity("BusinessObject.Models.Station", b =>
                 {
-                    b.Navigation("EVBikes");
-
                     b.Navigation("StationStaffs");
                 });
 #pragma warning restore 612, 618

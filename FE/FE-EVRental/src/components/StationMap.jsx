@@ -9,7 +9,7 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import { Link } from "react-router-dom";
-import "../styles/StationMap.css";
+import "../styles/Stations.css";
 
 // Fix icon issues with Leaflet
 delete L.Icon.Default.prototype._getIconUrl;

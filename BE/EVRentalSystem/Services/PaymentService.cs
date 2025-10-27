@@ -41,12 +41,14 @@ namespace Services
 
         public async Task UpdateAsync(Payment entity) => await _paymentRepository.UpdateAsync(entity);
 
+        public async Task<Payment> GetPaymentByIDAsync(long ID) => await _paymentRepository.GetPaymentByIDAsync(ID);
+
         public async Task<string> CreatePaymentLink(CreatePaymentLinkRequest body)
         {
             List<ItemData> items = new List<ItemData>();
 
-            string canceledUrl = $"{_server}/api/Payment/cancel";
-            string successUrl = $"{_server}/api/Payment/success";
+            string canceledUrl = $"{_client}/payment-callback?code=01&status=CANCELLED&cancel=true&orderCode={body.paymentID}";
+            string successUrl = $"{_client}/payment-callback?code=00&status=PAID&cancel=false&orderCode={body.paymentID}";
             PaymentData paymentData = new PaymentData(
                 body.paymentID,
                 body.price,

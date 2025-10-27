@@ -7,7 +7,7 @@ import { useReviews } from "../contexts/ReviewContext";
 import { formatPrice } from "../utils/helpers";
 import ReviewDisplay from "../components/ReviewDisplay";
 import ReviewForm from "../components/ReviewForm";
-import "../styles/StationDetail.css";
+import "../styles/Stations.css";
 import "../styles/Reviews.css";
 import "../styles/ReviewStations.css";
 

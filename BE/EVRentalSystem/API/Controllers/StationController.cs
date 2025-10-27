@@ -7,7 +7,6 @@ using BusinessObject.Models.DTOs;
 using BusinessObject.Models.JWT;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Services;
 
 namespace API.Controllers
@@ -372,7 +371,6 @@ namespace API.Controllers
             }
         }
 
- 
         [HttpPut("UpdateStationCapacity")]
         [Authorize]
         public async Task<ActionResult> UpdateStationCapacity([FromBody] StationCapacityUpdateDTO capacityDto)
@@ -467,7 +465,6 @@ namespace API.Controllers
             }
         }
 
-
         [HttpGet("SearchByName/{name}")]
         public async Task<ActionResult<IEnumerable<Station>>> SearchStationsByName(string name)
         {
@@ -496,7 +493,6 @@ namespace API.Controllers
             }
         }
 
-
         [HttpGet("GetByCapacityRange")]
         public async Task<ActionResult<IEnumerable<Station>>> GetStationsByCapacityRange([FromQuery] int minCapacity, [FromQuery] int maxCapacity)
         {
@@ -519,7 +515,6 @@ namespace API.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-
 
         [HttpGet("GetInactiveStations")]
         [Authorize]
@@ -546,7 +541,6 @@ namespace API.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-
 
         [HttpPost("SearchStations")]
         public async Task<ActionResult<IEnumerable<Station>>> SearchStations([FromBody] StationSearchDTO searchDto)
@@ -604,7 +598,6 @@ namespace API.Controllers
             }
         }
 
-
         [HttpGet("GetStationStatistics")]
         [Authorize]
         public async Task<ActionResult<StationStatisticsDTO>> GetStationStatistics()
@@ -654,7 +647,6 @@ namespace API.Controllers
             }
         }
 
- 
         [HttpGet("GetTotalCapacity")]
         public async Task<ActionResult<int>> GetTotalCapacity()
         {
@@ -668,7 +660,6 @@ namespace API.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-
 
         [HttpGet("GetStationsWithAvailableBikes")]
         public async Task<ActionResult<IEnumerable<Station>>> GetStationsWithAvailableBikes()

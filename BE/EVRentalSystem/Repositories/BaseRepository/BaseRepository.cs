@@ -28,10 +28,10 @@ namespace Repositories.BaseRepository
         {
             try
             {
-            await _dbSet.AddAsync(entity);
-            await _context.SaveChangesAsync();
-
-            }catch (Exception ex)
+                await _dbSet.AddAsync(entity);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
