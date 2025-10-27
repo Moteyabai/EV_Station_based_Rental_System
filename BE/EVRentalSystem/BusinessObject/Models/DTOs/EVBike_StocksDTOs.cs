@@ -25,6 +25,7 @@ namespace BusinessObject.Models.DTOs
         public int? Color { get; set; }
         public int? StationID { get; set; }
         public string? LicensePlate { get; set; }
+        public int? BatteryCapacity { get; set; }
         public int? Status { get; set; }
     }
 }
