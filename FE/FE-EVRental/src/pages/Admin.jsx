@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import * as adminService from '../services/adminService';
 import '../styles/Admin.css';
 
 const Admin = () => {
@@ -13,6 +14,11 @@ const Admin = () => {
   const [showStationVehiclesModal, setShowStationVehiclesModal] = useState(false);
   const [showStationStaffModal, setShowStationStaffModal] = useState(false);
   const [selectedStation, setSelectedStation] = useState(null);
+  
+  // Vehicle management modals
+  const [showAddVehicleModal, setShowAddVehicleModal] = useState(false);
+  const [showEditVehicleModal, setShowEditVehicleModal] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
   
   // Search and filter states for stations
   const [stationSearchTerm, setStationSearchTerm] = useState('');
@@ -28,6 +34,18 @@ const Admin = () => {
     address: '',
     totalVehicles: 0,
     chargingStations: 0
+  });
+
+  const [newVehicle, setNewVehicle] = useState({
+    name: '',
+    brandId: '',
+    modelYear: new Date().getFullYear(),
+    color: '',
+    licensePlate: '',
+    batteryCapacity: 0,
+    maxSpeed: 0,
+    stationId: '',
+    status: 'available'
   });
 
   // Check role access for Admin
@@ -84,6 +102,10 @@ const Admin = () => {
       window.removeEventListener('popstate', handlePopState);
     };
   }, [user]);
+  
+  // Loading and error states
+  const [stationsLoading, setStationsLoading] = useState(false);
+  const [stationsError, setStationsError] = useState(null);
   
   const [stats, setStats] = useState({
     totalVehicles: 125,
@@ -177,6 +199,39 @@ const Admin = () => {
     ]
   });
 
+  // Fetch stations from API
+  useEffect(() => {
+    fetchStations();
+  }, []);
+
+  const fetchStations = async () => {
+    setStationsLoading(true);
+    setStationsError(null);
+    
+    try {
+      const data = await adminService.getAllStations();
+      console.log('Stations loaded from API:', data);
+      
+      // Transform API data to match component structure
+      const transformedStations = data.map(station => ({
+        id: station.stationID,
+        name: station.name,
+        address: station.address,
+        availableVehicles: station.bikeCapacity || 0, // This should come from bike count API
+        totalVehicles: station.bikeCapacity || 0,
+        chargingStations: 0, // Not in API, keep as 0 or add to API
+        status: station.isActive ? 'active' : 'maintenance'
+      }));
+      
+      setStations(transformedStations);
+    } catch (error) {
+      console.error('Error loading stations:', error);
+      setStationsError('Không thể tải danh sách trạm. Vui lòng thử lại.');
+    } finally {
+      setStationsLoading(false);
+    }
+  };
+
   // Logout function
   const handleLogout = () => {
     logout();
@@ -206,7 +261,7 @@ const Admin = () => {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json',    
         },
       });
 
@@ -352,6 +407,67 @@ const Admin = () => {
       setStations(stations.filter(s => s.id !== stationId));
       alert('✅ Đã xóa trạm!');
     }
+  };
+
+  // Vehicle handlers
+  const handleAddVehicle = () => {
+    setNewVehicle({
+      name: '',
+      brandId: '',
+      modelYear: new Date().getFullYear(),
+      color: '',
+      licensePlate: '',
+      batteryCapacity: 0,
+      maxSpeed: 0,
+      stationId: '',
+      status: 'available'
+    });
+    setShowAddVehicleModal(true);
+  };
+
+  const handleEditVehicle = (vehicle) => {
+    setSelectedVehicle(vehicle);
+    setNewVehicle(vehicle);
+    setShowEditVehicleModal(true);
+  };
+
+  const handleDeleteVehicle = (vehicleId) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa xe này?')) {
+      setVehicles(vehicles.filter(v => v.id !== vehicleId));
+      alert('✅ Đã xóa xe!');
+    }
+  };
+
+  const handleSaveVehicle = () => {
+    if (!newVehicle.name || !newVehicle.licensePlate || !newVehicle.stationId) {
+      alert('⚠️ Vui lòng điền đầy đủ thông tin bắt buộc!');
+      return;
+    }
+
+    if (selectedVehicle) {
+      // Update existing vehicle
+      setVehicles(vehicles.map(v => 
+        v.id === selectedVehicle.id ? { ...newVehicle, id: v.id } : v
+      ));
+      alert('✅ Đã cập nhật xe!');
+      setShowEditVehicleModal(false);
+    } else {
+      // Add new vehicle
+      const newId = vehicles.length > 0 ? Math.max(...vehicles.map(v => v.id)) + 1 : 1;
+      setVehicles([...vehicles, { ...newVehicle, id: newId }]);
+      alert('✅ Đã thêm xe mới!');
+      setShowAddVehicleModal(false);
+    }
+    
+    setSelectedVehicle(null);
+  };
+
+  const handleVehicleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewVehicle(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleInputChange = (e) => {
@@ -598,6 +714,17 @@ const Admin = () => {
                         title="Quản lý nhân viên"
                       >
                         👥
+                      </button>
+                      <button 
+                        className="btn-table-action btn-manage" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          console.log('Quản lý xe button clicked for station:', station);
+                          handleViewStationVehicles(station);
+                        }}
+                        title="Quản lý xe"
+                      >
+                        🚗
                       </button>
                     </div>
                   </td>
@@ -846,7 +973,7 @@ const Admin = () => {
       {/* Station Vehicles Management Modal */}
       {showStationVehiclesModal && selectedStation && (
         <div className="modal-overlay" onClick={() => setShowStationVehiclesModal(false)}>
-          <div className="modal-content station-vehicles-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content station-vehicles-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '1000px' }}>
             <div className="modal-header">
               <h2>🏍️ Quản lý xe tại {selectedStation.name}</h2>
               <button className="btn-close" onClick={() => setShowStationVehiclesModal(false)}>✕</button>
@@ -859,38 +986,107 @@ const Admin = () => {
                     <span className="summary-icon">🏍️</span>
                     <div>
                       <p className="summary-label">Tổng số xe</p>
-                      <p className="summary-number">{selectedStation.totalVehicles}</p>
+                      <p className="summary-number">{vehicles.filter(v => v.stationId === selectedStation.id).length}</p>
                     </div>
                   </div>
                   <div className="summary-item">
                     <span className="summary-icon">✅</span>
                     <div>
                       <p className="summary-label">Khả dụng</p>
-                      <p className="summary-number">{selectedStation.availableVehicles}</p>
+                      <p className="summary-number">{vehicles.filter(v => v.stationId === selectedStation.id && v.status === 'available').length}</p>
                     </div>
                   </div>
                   <div className="summary-item">
                     <span className="summary-icon">🚴</span>
                     <div>
                       <p className="summary-label">Đang thuê</p>
-                      <p className="summary-number">{selectedStation.totalVehicles - selectedStation.availableVehicles}</p>
+                      <p className="summary-number">{vehicles.filter(v => v.stationId === selectedStation.id && v.status === 'rented').length}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="vehicles-actions">
-                  <p className="info-text">
-                    💡 Vui lòng chuyển sang tab "Quản lý xe điện" để thêm/sửa/xóa xe cho trạm này.
-                  </p>
+                <div className="vehicles-actions" style={{ marginTop: '1.5rem' }}>
                   <button 
-                    className="btn-primary btn-full-width" 
+                    className="btn-primary" 
                     onClick={() => {
-                      setShowStationVehiclesModal(false);
-                      setActiveTab('vehicles');
+                      setNewVehicle({
+                        name: '',
+                        brandId: '',
+                        modelYear: new Date().getFullYear(),
+                        color: '',
+                        licensePlate: '',
+                        batteryCapacity: 0,
+                        maxSpeed: 0,
+                        stationId: selectedStation.id,
+                        status: 'available'
+                      });
+                      setShowAddVehicleModal(true);
                     }}
                   >
-                    🏍️ Đi đến Quản lý xe điện
+                    ➕ Thêm xe mới
                   </button>
+                </div>
+
+                {/* Vehicles Table */}
+                <div className="data-table" style={{ marginTop: '1.5rem', maxHeight: '400px', overflow: 'auto' }}>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Tên xe</th>
+                        <th>Biển số</th>
+                        <th>Màu sắc</th>
+                        <th>Pin (Ah)</th>
+                        <th>Tốc độ (km/h)</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {vehicles.filter(v => v.stationId === selectedStation.id).map(vehicle => (
+                        <tr key={vehicle.id}>
+                          <td>{vehicle.name}</td>
+                          <td><strong>{vehicle.licensePlate}</strong></td>
+                          <td>{vehicle.color}</td>
+                          <td>{vehicle.batteryCapacity} Ah</td>
+                          <td>{vehicle.maxSpeed} km/h</td>
+                          <td>
+                            <span className={`status-badge ${vehicle.status}`}>
+                              {vehicle.status === 'available' ? '✅ Khả dụng' : 
+                               vehicle.status === 'rented' ? '🚴 Đang thuê' : 
+                               vehicle.status === 'maintenance' ? '🔧 Bảo trì' : '❌ Hỏng'}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="table-actions">
+                              <button 
+                                className="btn-table-action btn-edit" 
+                                onClick={() => handleEditVehicle(vehicle)}
+                                title="Sửa"
+                              >
+                                ✏️
+                              </button>
+                              <button 
+                                className="btn-table-action btn-delete" 
+                                onClick={() => handleDeleteVehicle(vehicle.id)}
+                                title="Xóa"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                      {vehicles.filter(v => v.stationId === selectedStation.id).length === 0 && (
+                        <tr>
+                          <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+                            <div style={{ fontSize: '2rem' }}>🏍️</div>
+                            <p>Chưa có xe nào tại trạm này</p>
+                            <p style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>Nhấn "Thêm xe mới" để bắt đầu</p>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
@@ -1036,6 +1232,308 @@ const Admin = () => {
           </div>
         </div>
       )}
+
+      {/* Add Vehicle Modal */}
+      {showAddVehicleModal && (
+        <div className="modal-overlay" onClick={() => setShowAddVehicleModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>➕ Thêm xe mới</h2>
+              <button className="btn-close" onClick={() => setShowAddVehicleModal(false)}>✕</button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="form-group">
+                <label>Tên xe *</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={newVehicle.name}
+                  onChange={handleVehicleInputChange}
+                  placeholder="VD: Honda Vision 2024"
+                  required
+                />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Hãng xe *</label>
+                  <select
+                    name="brandId"
+                    value={newVehicle.brandId}
+                    onChange={handleVehicleInputChange}
+                    required
+                  >
+                    <option value="">-- Chọn hãng --</option>
+                    <option value="1">Honda</option>
+                    <option value="2">Yamaha</option>
+                    <option value="3">Vinfast</option>
+                    <option value="4">Pega</option>
+                    <option value="5">Yadea</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Năm sản xuất</label>
+                  <input
+                    type="number"
+                    name="modelYear"
+                    value={newVehicle.modelYear}
+                    onChange={handleVehicleInputChange}
+                    min="2000"
+                    max={new Date().getFullYear() + 1}
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Màu sắc</label>
+                  <input
+                    type="text"
+                    name="color"
+                    value={newVehicle.color}
+                    onChange={handleVehicleInputChange}
+                    placeholder="VD: Đỏ, Xanh, Trắng"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Biển số xe *</label>
+                  <input
+                    type="text"
+                    name="licensePlate"
+                    value={newVehicle.licensePlate}
+                    onChange={handleVehicleInputChange}
+                    placeholder="VD: 29A-12345"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Dung lượng pin (Ah)</label>
+                  <input
+                    type="number"
+                    name="batteryCapacity"
+                    value={newVehicle.batteryCapacity}
+                    onChange={handleVehicleInputChange}
+                    min="0"
+                    step="0.1"
+                    placeholder="VD: 12.5"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Tốc độ tối đa (km/h)</label>
+                  <input
+                    type="number"
+                    name="maxSpeed"
+                    value={newVehicle.maxSpeed}
+                    onChange={handleVehicleInputChange}
+                    min="0"
+                    placeholder="VD: 45"
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Trạm *</label>
+                  <select
+                    name="stationId"
+                    value={newVehicle.stationId}
+                    onChange={handleVehicleInputChange}
+                    required
+                  >
+                    <option value="">-- Chọn trạm --</option>
+                    {stations.map(station => (
+                      <option key={station.id} value={station.id}>
+                        {station.name} - {station.address}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Trạng thái</label>
+                  <select
+                    name="status"
+                    value={newVehicle.status}
+                    onChange={handleVehicleInputChange}
+                  >
+                    <option value="available">✅ Khả dụng</option>
+                    <option value="rented">🚴 Đang thuê</option>
+                    <option value="maintenance">🔧 Bảo trì</option>
+                    <option value="broken">❌ Hỏng</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={() => setShowAddVehicleModal(false)}>
+                Hủy
+              </button>
+              <button className="btn-primary" onClick={handleSaveVehicle}>
+                ➕ Thêm xe
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Vehicle Modal */}
+      {showEditVehicleModal && selectedVehicle && (
+        <div className="modal-overlay" onClick={() => setShowEditVehicleModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>✏️ Chỉnh sửa thông tin xe</h2>
+              <button className="btn-close" onClick={() => setShowEditVehicleModal(false)}>✕</button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="form-group">
+                <label>Tên xe *</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={newVehicle.name}
+                  onChange={handleVehicleInputChange}
+                  placeholder="VD: Honda Vision 2024"
+                  required
+                />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Hãng xe *</label>
+                  <select
+                    name="brandId"
+                    value={newVehicle.brandId}
+                    onChange={handleVehicleInputChange}
+                    required
+                  >
+                    <option value="">-- Chọn hãng --</option>
+                    <option value="1">Honda</option>
+                    <option value="2">Yamaha</option>
+                    <option value="3">Vinfast</option>
+                    <option value="4">Pega</option>
+                    <option value="5">Yadea</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Năm sản xuất</label>
+                  <input
+                    type="number"
+                    name="modelYear"
+                    value={newVehicle.modelYear}
+                    onChange={handleVehicleInputChange}
+                    min="2000"
+                    max={new Date().getFullYear() + 1}
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Màu sắc</label>
+                  <input
+                    type="text"
+                    name="color"
+                    value={newVehicle.color}
+                    onChange={handleVehicleInputChange}
+                    placeholder="VD: Đỏ, Xanh, Trắng"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Biển số xe *</label>
+                  <input
+                    type="text"
+                    name="licensePlate"
+                    value={newVehicle.licensePlate}
+                    onChange={handleVehicleInputChange}
+                    placeholder="VD: 29A-12345"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Dung lượng pin (Ah)</label>
+                  <input
+                    type="number"
+                    name="batteryCapacity"
+                    value={newVehicle.batteryCapacity}
+                    onChange={handleVehicleInputChange}
+                    min="0"
+                    step="0.1"
+                    placeholder="VD: 12.5"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Tốc độ tối đa (km/h)</label>
+                  <input
+                    type="number"
+                    name="maxSpeed"
+                    value={newVehicle.maxSpeed}
+                    onChange={handleVehicleInputChange}
+                    min="0"
+                    placeholder="VD: 45"
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Trạm *</label>
+                  <select
+                    name="stationId"
+                    value={newVehicle.stationId}
+                    onChange={handleVehicleInputChange}
+                    required
+                  >
+                    <option value="">-- Chọn trạm --</option>
+                    {stations.map(station => (
+                      <option key={station.id} value={station.id}>
+                        {station.name} - {station.address}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Trạng thái</label>
+                  <select
+                    name="status"
+                    value={newVehicle.status}
+                    onChange={handleVehicleInputChange}
+                  >
+                    <option value="available">✅ Khả dụng</option>
+                    <option value="rented">🚴 Đang thuê</option>
+                    <option value="maintenance">🔧 Bảo trì</option>
+                    <option value="broken">❌ Hỏng</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={() => setShowEditVehicleModal(false)}>
+                Hủy
+              </button>
+              <button className="btn-primary" onClick={handleSaveVehicle}>
+                💾 Lưu thay đổi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
   };
@@ -1115,8 +1613,9 @@ const Admin = () => {
                   <th>Họ tên</th>
                   <th>Email</th>
                   <th>Điện thoại</th>
+                  <th>Lịch sử thuê</th>
+                  <th>Mức độ rủi ro</th>
                   <th>Ngày tạo</th>
-                  <th>Cập nhật lần cuối</th>
                   <th>Trạng thái</th>
                   <th>Hành động</th>
                 </tr>
@@ -1124,7 +1623,7 @@ const Admin = () => {
               <tbody>
                 {filteredCustomers.length === 0 ? (
                   <tr>
-                    <td colSpan="9" className="empty-state">
+                    <td colSpan="10" className="empty-state">
                       {searchTerm || statusFilter !== 'all' 
                         ? '🔍 Không tìm thấy khách hàng phù hợp' 
                         : '📭 Chưa có khách hàng nào'}
@@ -1133,6 +1632,18 @@ const Admin = () => {
                 ) : (
                   filteredCustomers.map((customer) => {
                     const statusInfo = getStatusInfo(customer.status);
+                    // Calculate rental history and risk level (mock data for now)
+                    const rentalCount = Math.floor(Math.random() * 20);
+                    const violationCount = Math.floor(Math.random() * 5);
+                    const damageCount = Math.floor(Math.random() * 3);
+                    const riskLevel = violationCount + damageCount > 3 ? 'high' : 
+                                     violationCount + damageCount > 1 ? 'medium' : 'low';
+                    const riskInfo = {
+                      high: { label: 'Cao', icon: '🔴', color: '#ef4444' },
+                      medium: { label: 'Trung bình', icon: '🟡', color: '#f59e0b' },
+                      low: { label: 'Thấp', icon: '🟢', color: '#10b981' }
+                    };
+                    
                     return (
                       <tr key={customer.accountId}>
                         <td>#{customer.accountId}</td>
@@ -1162,14 +1673,38 @@ const Admin = () => {
                         </td>
                         <td className="customer-email">{customer.email}</td>
                         <td>{customer.phone || 'N/A'}</td>
+                        <td>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#3b82f6' }}>
+                              {rentalCount}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                              {violationCount > 0 && `⚠️ ${violationCount} vi phạm`}
+                              {damageCount > 0 && ` 🔧 ${damageCount} hư hỏng`}
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span 
+                            className="risk-badge"
+                            style={{ 
+                              background: riskInfo[riskLevel].color + '20',
+                              color: riskInfo[riskLevel].color,
+                              padding: '0.25rem 0.75rem',
+                              borderRadius: '12px',
+                              fontSize: '0.875rem',
+                              fontWeight: '600',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.25rem'
+                            }}
+                          >
+                            {riskInfo[riskLevel].icon} {riskInfo[riskLevel].label}
+                          </span>
+                        </td>
                         <td className="date-cell">
                           {customer.createdAt 
                             ? new Date(customer.createdAt).toLocaleDateString('vi-VN')
-                            : 'N/A'}
-                        </td>
-                        <td className="date-cell">
-                          {customer.updatedAt 
-                            ? new Date(customer.updatedAt).toLocaleDateString('vi-VN')
                             : 'N/A'}
                         </td>
                         <td>
@@ -1179,6 +1714,9 @@ const Admin = () => {
                         </td>
                         <td>
                           <div className="action-buttons">
+                            <button className="btn-action btn-view" title="Xem lịch sử thuê">
+                              📋
+                            </button>
                             <button className="btn-action btn-view" title="Xem chi tiết">
                               👁️
                             </button>
@@ -1360,6 +1898,154 @@ const Admin = () => {
     );
   };
 
+  const renderDeliveryHistory = () => {
+    // Mock delivery history data
+    const deliveryHistory = [
+      { id: 1, type: 'pickup', customer: 'Nguyễn Văn A', bike: 'VinFast Klara S', station: 'Trạm EV Công Viên Tao Đàn', staff: 'Phạm Văn D', time: '2025-10-28 08:30', status: 'completed' },
+      { id: 2, type: 'return', customer: 'Trần Thị B', bike: 'DatBike Weaver 200', station: 'Trạm EV Bờ Sông Sài Gòn', staff: 'Hoàng Thị E', time: '2025-10-28 09:15', status: 'completed' },
+      { id: 3, type: 'pickup', customer: 'Lê Văn C', bike: 'VinFast Feliz S', station: 'Trạm EV Trung Tâm Quận 1', staff: 'Võ Văn F', time: '2025-10-28 10:00', status: 'in_progress' },
+      { id: 4, type: 'return', customer: 'Phạm Thị D', bike: 'VinFast Klara S', station: 'Trạm EV Khu Công Nghệ Cao', staff: 'Trần Văn G', time: '2025-10-28 10:30', status: 'pending' },
+      { id: 5, type: 'pickup', customer: 'Hoàng Văn E', bike: 'DatBike Weaver 200', station: 'Trạm EV Sân Bay Tân Sơn Nhất', staff: 'Nguyễn Thị H', time: '2025-10-28 11:00', status: 'completed' },
+    ];
+
+    const typeInfo = {
+      pickup: { label: 'Giao xe', icon: '🚀', color: '#3b82f6' },
+      return: { label: 'Nhận xe', icon: '🏁', color: '#10b981' }
+    };
+
+    const statusInfo = {
+      completed: { label: 'Hoàn thành', icon: '✅', color: '#10b981' },
+      in_progress: { label: 'Đang thực hiện', icon: '⏳', color: '#f59e0b' },
+      pending: { label: 'Chờ xử lý', icon: '📋', color: '#6b7280' }
+    };
+
+    return (
+      <div className="management-content">
+        <div className="section-header">
+          <h2>🚚 Lịch sử giao/nhận xe</h2>
+          <div className="header-actions">
+            <button className="btn-primary">📊 Xuất báo cáo</button>
+          </div>
+        </div>
+
+        <div className="filters">
+          <select className="filter-select">
+            <option value="all">Tất cả loại</option>
+            <option value="pickup">Giao xe</option>
+            <option value="return">Nhận xe</option>
+          </select>
+          <select className="filter-select">
+            <option value="all">Tất cả trạm</option>
+            {stations.map((station) => (
+              <option key={station.id} value={station.id}>{station.name}</option>
+            ))}
+          </select>
+          <select className="filter-select">
+            <option value="all">Tất cả trạng thái</option>
+            <option value="completed">Hoàn thành</option>
+            <option value="in_progress">Đang thực hiện</option>
+            <option value="pending">Chờ xử lý</option>
+          </select>
+          <input 
+            type="date" 
+            className="filter-select" 
+            defaultValue={new Date().toISOString().split('T')[0]}
+          />
+        </div>
+
+        <div className="stats-summary">
+          <div className="summary-item">
+            <span className="summary-label">Tổng giao dịch hôm nay:</span>
+            <span className="summary-value">{deliveryHistory.length}</span>
+          </div>
+          <div className="summary-item">
+            <span className="summary-label">🚀 Giao xe:</span>
+            <span className="summary-value" style={{ color: '#3b82f6' }}>
+              {deliveryHistory.filter(d => d.type === 'pickup').length}
+            </span>
+          </div>
+          <div className="summary-item">
+            <span className="summary-label">🏁 Nhận xe:</span>
+            <span className="summary-value" style={{ color: '#10b981' }}>
+              {deliveryHistory.filter(d => d.type === 'return').length}
+            </span>
+          </div>
+        </div>
+
+        <div className="data-table">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Loại</th>
+                <th>Khách hàng</th>
+                <th>Xe</th>
+                <th>Trạm</th>
+                <th>Nhân viên</th>
+                <th>Thời gian</th>
+                <th>Trạng thái</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              {deliveryHistory.map((record) => (
+                <tr key={record.id}>
+                  <td>#{record.id}</td>
+                  <td>
+                    <span 
+                      style={{ 
+                        background: typeInfo[record.type].color + '20',
+                        color: typeInfo[record.type].color,
+                        padding: '0.25rem 0.75rem',
+                        borderRadius: '12px',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.25rem'
+                      }}
+                    >
+                      {typeInfo[record.type].icon} {typeInfo[record.type].label}
+                    </span>
+                  </td>
+                  <td>{record.customer}</td>
+                  <td>{record.bike}</td>
+                  <td>{record.station}</td>
+                  <td>{record.staff}</td>
+                  <td>{record.time}</td>
+                  <td>
+                    <span 
+                      style={{ 
+                        background: statusInfo[record.status].color + '20',
+                        color: statusInfo[record.status].color,
+                        padding: '0.25rem 0.75rem',
+                        borderRadius: '12px',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.25rem'
+                      }}
+                    >
+                      {statusInfo[record.status].icon} {statusInfo[record.status].label}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="action-buttons">
+                      <button className="btn-action btn-view" title="Xem chi tiết">
+                        👁️
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
   const renderReports = () => (
     <div className="management-content">
       <div className="section-header">
@@ -1483,6 +2169,14 @@ const Admin = () => {
           </button>
           
           <button 
+            className={`nav-item ${activeTab === 'delivery' ? 'active' : ''}`}
+            onClick={() => setActiveTab('delivery')}
+          >
+            <span className="nav-icon">🚚</span>
+            Lịch sử giao/nhận
+          </button>
+          
+          <button 
             className={`nav-item ${activeTab === 'customers' ? 'active' : ''}`}
             onClick={() => setActiveTab('customers')}
           >
@@ -1520,6 +2214,7 @@ const Admin = () => {
           <h1>
             {activeTab === 'dashboard' && 'Dashboard'}
             {activeTab === 'vehicles' && 'Quản lý Trạm Thuê Xe'}
+            {activeTab === 'delivery' && 'Lịch sử Giao/Nhận Xe'}
             {activeTab === 'customers' && 'Quản lý Khách hàng'}
             {activeTab === 'staff' && 'Quản lý Nhân viên'}
             {activeTab === 'reports' && 'Báo cáo & Phân tích'}
@@ -1533,6 +2228,7 @@ const Admin = () => {
         <div className="admin-content">
           {activeTab === 'dashboard' && renderDashboard()}
           {activeTab === 'vehicles' && renderVehicleManagement()}
+          {activeTab === 'delivery' && renderDeliveryHistory()}
           {activeTab === 'customers' && renderCustomerManagement()}
           {activeTab === 'staff' && renderStaffManagement()}
           {activeTab === 'reports' && renderReports()}
