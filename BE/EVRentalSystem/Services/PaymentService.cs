@@ -47,8 +47,19 @@ namespace Services
         {
             List<ItemData> items = new List<ItemData>();
 
-            string canceledUrl = $"{_client}/payment-callback?code=01&status=CANCELLED&cancel=true&orderCode={body.paymentID}";
-            string successUrl = $"{_client}/payment-callback?code=00&status=PAID&cancel=false&orderCode={body.paymentID}";
+            string canceledUrl = "";
+            string successUrl = "";
+
+            if (body.isFee)
+            {
+                canceledUrl = $"{_server}/api/Payment/fee-failed?orderCode={body.paymentID}";
+                successUrl = $"{_server}/api/Payment/fee-success?orderCode={body.paymentID}";
+            }
+            else
+            {
+                canceledUrl = $"{_client}/payment-callback?code=01&status=CANCELLED&cancel=true&orderCode={body.paymentID}";
+                successUrl = $"{_client}/payment-callback?code=00&status=PAID&cancel=false&orderCode={body.paymentID}";
+            }
             PaymentData paymentData = new PaymentData(
                 body.paymentID,
                 body.price,

@@ -286,7 +286,7 @@ namespace API.Controllers
             }
         }
 
-        [HttpPut("VerifyDocument/{id}")]
+        [HttpPut("VerifyDocument")]
         [Authorize]
         public async Task<IActionResult> VerifyDocument([FromBody] VerifyIDDTO verifyIDDTO)
         {
@@ -307,7 +307,6 @@ namespace API.Controllers
                     return NotFound(res);
                 }
 
-                
                 var existingDocument = await _IDDocumentService.GetByIdAsync(verifyIDDTO.DocumentID);
                 if (existingDocument == null)
                 {

@@ -51,6 +51,13 @@ namespace BusinessObject.Models.DTOs
         public int? Status { get; set; }
     }
 
+    public class PaymentFeeDTO
+    {
+        public int RentalID { get; set; }
+        public decimal Amount { get; set; }
+        public int PaymentMethod { get; set; }
+    }
+
     public class PaymentStatusUpdateDTO
     {
         [Required(ErrorMessage = "Payment ID là b?t bu?c")]

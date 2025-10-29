@@ -1,5 +1,4 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace BusinessObject.Models.DTOs
 {
@@ -8,6 +7,7 @@ namespace BusinessObject.Models.DTOs
         [Required(ErrorMessage = "Document ID is required")]
         [Range(1, int.MaxValue, ErrorMessage = "Document ID must be greater than 0")]
         public int DocumentID { get; set; }
+
         public int Status { get; set; }
 
         [StringLength(500, ErrorMessage = "Note cannot exceed 500 characters")]
