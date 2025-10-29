@@ -27,6 +27,7 @@ namespace BusinessObject.Models
         [Required(ErrorMessage = "Tốc độ tối đa là bắt buộc")]
         [Range(0, int.MaxValue, ErrorMessage = "Tốc độ tối đa không được âm")]
         public int MaxSpeed { get; set; } = 0;
+
         [Required(ErrorMessage = "Quãng đường tối đa là bắt buộc")]
         [Range(0, int.MaxValue, ErrorMessage = "Quãng đường tối đa không được âm")]
         public int MaxDistance { get; set; } = 0;

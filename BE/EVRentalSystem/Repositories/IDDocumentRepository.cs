@@ -33,12 +33,12 @@ namespace Repositories
         {
             try
             {
-                return await _context.IDDocuments.Where(x => x.Status==(int)DocumentStatus.Pending).ToListAsync();
+                return await _context.IDDocuments.Where(x => x.Status == (int)DocumentStatus.Pending).ToListAsync();
             }
             catch (Exception ex)
             {
                 throw new Exception("Error retrieving pending ID documents: " + ex.Message);
             }
-
+        }
     }
 }

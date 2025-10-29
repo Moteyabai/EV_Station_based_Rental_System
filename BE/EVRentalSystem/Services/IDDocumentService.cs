@@ -22,6 +22,7 @@ namespace Services
         public async Task<IDDocument> GetByIdAsync(int id) => await _IDDocumentRepository.GetByIdAsync(id);
 
         public async Task UpdateAsync(IDDocument entity) => await _IDDocumentRepository.UpdateAsync(entity);
+
         public async Task<IEnumerable<IDDocument>> GetPendingDocumentsAsync() => await _IDDocumentRepository.GetPendingDocumentsAsync();
     }
 }

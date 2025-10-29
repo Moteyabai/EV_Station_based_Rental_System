@@ -6,6 +6,7 @@
     int price,
     string buyerName,
     string buyerEmail,
-    int expriedAt
+    int expriedAt,
+    bool isFee
     );
 }
