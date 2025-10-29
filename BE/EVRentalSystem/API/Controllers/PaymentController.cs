@@ -364,7 +364,7 @@ namespace API.Controllers
 
         [HttpPut("fee-success")]
         [Authorize]
-        public async Task<ActionResult> StaffFeePaymentSuccess([FromQuery]int orderID)
+        public async Task<ActionResult> StaffFeePaymentSuccess([FromQuery] int orderID)
         {
             var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
             if (permission != "2" && permission != "3")
@@ -411,7 +411,7 @@ namespace API.Controllers
 
         [HttpPut("fee-failed")]
         [Authorize]
-        public async Task<ActionResult> StaffFeePaymentFailed(int orderID)
+        public async Task<ActionResult> StaffFeePaymentFailed([FromQuery] int orderID)
         {
             var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
             if (permission != "2" && permission != "3")
