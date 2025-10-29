@@ -339,9 +339,9 @@ namespace API.Controllers
             }
         }
 
-        [HttpPut("HandOverBike/{id}")]
+        [HttpPut("HandOverBike")]
         [Authorize]
-        public async Task<ActionResult> HandOverBike(int rentalId)
+        public async Task<ActionResult> HandOverBike([FromQuery] int rentalId)
         {
             // Check user permission (only staff and admin can hand over bikes)
             var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
