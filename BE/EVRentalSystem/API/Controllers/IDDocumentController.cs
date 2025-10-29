@@ -67,6 +67,34 @@ namespace API.Controllers
             }
         }
 
+        [HttpGet("IDDocumentPendingList")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<IDDocument>>> GetPendingIDDocumentList()
+        {
+            var permission = User.FindFirst(UserClaimTypes.RoleID).Value;
+            if (permission != "3" && permission != "2")
+            {
+                var res = new ResponseDTO();
+                res.Message = "Không có quyền truy cập!";
+                return Unauthorized(res);
+            }
+            try
+            {
+                var docs = await _IDDocumentService.GetPendingDocumentsAsync();
+                if (docs == null || !docs.Any())
+                {
+                    var res = new ResponseDTO();
+                    res.Message = "Danh sách trống";
+                    return NotFound(res);
+                }
+                return Ok(docs);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Internal server error: " + ex.Message);
+            }
+        }
+
         [HttpGet("GetIDDocumentById/{id}")]
         [Authorize]
         public async Task<ActionResult<IDDocument>> GetIDDocumentById(int id)
