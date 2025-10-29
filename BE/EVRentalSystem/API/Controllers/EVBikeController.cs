@@ -68,7 +68,6 @@ namespace API.Controllers
         }
 
         [HttpGet("AvailableBikes")]
-        [Authorize]
         public async Task<ActionResult<IEnumerable<EVBike>>> GetAvailableBikes()
         {
             try

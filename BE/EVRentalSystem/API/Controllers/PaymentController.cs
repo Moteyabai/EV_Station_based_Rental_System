@@ -519,54 +519,6 @@ namespace API.Controllers
             }
         }
 
-        [HttpGet("GetPaymentStatistics")]
-        [Authorize]
-        public async Task<ActionResult<PaymentStatisticsDTO>> GetPaymentStatistics()
-        {
-            // Check user permission (Staff and Admin only)
-            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-            if (permission != "3" && permission != "2")
-            {
-                var res = new ResponseDTO
-                {
-                    Message = "Không có quyền truy cập!"
-                };
-                return Unauthorized(res);
-            }
-
-            try
-            {
-                var payments = await _paymentService.GetAllAsync();
-                var paymentsList = payments.ToList();
-
-                var statistics = new PaymentStatisticsDTO
-                {
-                    TotalAmount = paymentsList.Sum(p => p.Amount),
-                    TotalCount = paymentsList.Count,
-                    CompletedCount = paymentsList.Count(p => p.Status == 1),
-                    PendingCount = paymentsList.Count(p => p.Status == 0),
-                    FailedCount = paymentsList.Count(p => p.Status == -1),
-                    CompletedAmount = paymentsList.Where(p => p.Status == 1).Sum(p => p.Amount),
-                    PendingAmount = paymentsList.Where(p => p.Status == 0).Sum(p => p.Amount),
-                    FailedAmount = paymentsList.Where(p => p.Status == -1).Sum(p => p.Amount)
-                };
-
-                // Amount by method
-                statistics.AmountByMethod = paymentsList
-                    .GroupBy(p => p.PaymentMethod)
-                    .ToDictionary(g => g.Key, g => g.Where(p => p.Status == 1).Sum(p => p.Amount));
-
-                // Amount by type
-                statistics.AmountByType = paymentsList
-                    .GroupBy(p => p.PaymentType)
-                    .ToDictionary(g => g.Key, g => g.Where(p => p.Status == 1).Sum(p => p.Amount));
-
-                return Ok(statistics);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
+       
     }
 }

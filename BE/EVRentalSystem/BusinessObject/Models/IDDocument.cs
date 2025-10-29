@@ -10,6 +10,11 @@ namespace BusinessObject.Models
 
         public int? VerifiedByStaffID { get; set; }
 
+        public string? FullName { get; set; }
+        public string? DateOfBirth { get; set; }
+        public string? IDNumber { get; set; }
+        public string? LicenseNumber { get; set; }
+
         [Required]
         public string IDCardFront { get; set; }
 
