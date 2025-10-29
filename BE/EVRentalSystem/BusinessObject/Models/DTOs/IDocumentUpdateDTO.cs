@@ -4,7 +4,7 @@ namespace BusinessObject.Models.DTOs
 {
     public class IDocumentUpdateDTO
     {
-        public int DocumentID { get; set; }
+        public int AccountID { get; set; }
         public IFormFile IDCardFront { get; set; }
         public IFormFile IDCardBack { get; set; }
         public IFormFile LicenseCardFront { get; set; }

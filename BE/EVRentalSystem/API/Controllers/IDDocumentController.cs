@@ -130,7 +130,8 @@ namespace API.Controllers
         public async Task<IActionResult> UpdateIDDocument([FromBody] IDocumentUpdateDTO updatedDocument)
         {
             var permission = User.FindFirst(UserClaimTypes.RoleID).Value;
-            if (permission != "3")
+            var accountId = int.Parse(User.FindFirst(UserClaimTypes.AccountID).Value);
+            if (permission != "3" && updatedDocument.AccountID != accountId)
             {
                 var res = new ResponseDTO();
                 res.Message = "Không có quyền truy cập!";
@@ -139,7 +140,20 @@ namespace API.Controllers
 
             try
             {
-                var existingDocument = await _IDDocumentService.GetByIdAsync(updatedDocument.DocumentID);
+                var renter = await _renterService.GetRenterByAccountIDAsync(updatedDocument.AccountID);
+                if (renter == null)
+                {
+                    var res = new ResponseDTO();
+                    res.Message = "Người thuê không tồn tại!";
+                    return NotFound(res);
+                }
+                if (renter.DocumentID == null)
+                {
+                    var res = new ResponseDTO();
+                    res.Message = "Người thuê chưa có tài liệu để cập nhật!";
+                    return NotFound(res);
+                }
+                var existingDocument = await _IDDocumentService.GetByIdAsync(renter.DocumentID.Value);
                 if (existingDocument == null)
                 {
                     var res = new ResponseDTO();
@@ -264,6 +278,8 @@ namespace API.Controllers
                     res.Message = "Nhân viên không tồn tại!";
                     return NotFound(res);
                 }
+
+                
                 var existingDocument = await _IDDocumentService.GetByIdAsync(verifyIDDTO.DocumentID);
                 if (existingDocument == null)
                 {
