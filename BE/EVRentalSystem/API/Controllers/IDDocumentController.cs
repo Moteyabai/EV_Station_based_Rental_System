@@ -18,9 +18,12 @@ namespace API.Controllers
     {
         private readonly IDDocumentService _IDDocumentService;
         private readonly Client _appWriteClient;
+        private readonly RenterService _renterService;
+        private readonly StationStaffService _stationStaffService;
         private readonly IConfiguration _configuration;
 
-        public IDDocumentController(IDDocumentService iDDocumentService, IConfiguration configuration)
+        public IDDocumentController(IDDocumentService iDDocumentService, IConfiguration configuration
+, RenterService renterService, StationStaffService stationStaffService)
         {
             _IDDocumentService = iDDocumentService;
             _configuration = configuration;
@@ -31,6 +34,8 @@ namespace API.Controllers
                 ApiKey = configuration.GetValue<string>("Appwrite:ApiKey")
             };
             _appWriteClient = new Client().SetProject(appW.ProjectId).SetEndpoint(appW.Endpoint).SetKey(appW.ApiKey);
+            _renterService = renterService;
+            _stationStaffService = stationStaffService;
         }
 
         [HttpGet("IDDocumentList")]
@@ -90,7 +95,37 @@ namespace API.Controllers
             }
         }
 
-        [HttpPut("UpdateIDDocument/{id}")]
+        [HttpGet("GetIDDocumentByAccountId/{accountId}")]
+        [Authorize]
+        public async Task<ActionResult<IDDocument>> GetIDDocumentByAccountId(int accountId)
+        {
+            try
+            {
+                var renter = await _renterService.GetRenterByAccountIDAsync(accountId);
+                if (renter == null)
+                {
+                    var res = new ResponseDTO();
+                    res.Message = "Người thuê không tồn tại!";
+                    return NotFound(res);
+                }
+
+                var IDDoc = await _IDDocumentService.GetByIdAsync(renter.DocumentID.Value);
+                if (IDDoc == null)
+                {
+                    var res = new ResponseDTO();
+                    res.Message = "Không tìm thấy tài liệu";
+                    return NotFound(res);
+                }
+
+                return Ok(IDDoc);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Internal server error: " + ex.Message);
+            }
+        }
+
+        [HttpPut("RenterUpdateIDDocument/{id}")]
         [Authorize]
         public async Task<IActionResult> UpdateIDDocument([FromBody] IDocumentUpdateDTO updatedDocument)
         {
@@ -200,6 +235,63 @@ namespace API.Controllers
                 var response = new ResponseDTO
                 {
                     Message = "Cập nhật giấy tờ thành công, vui lòng chờ xác nhận!"
+                };
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Internal server error: " + ex.Message);
+            }
+        }
+
+        [HttpPut("VerifyDocument/{id}")]
+        [Authorize]
+        public async Task<IActionResult> VerifyDocument([FromBody] VerifyIDDTO verifyIDDTO)
+        {
+            var permission = User.FindFirst(UserClaimTypes.RoleID).Value;
+            if (permission != "2" && permission != "3")
+            {
+                var res = new ResponseDTO();
+                res.Message = "Không có quyền truy cập!";
+                return Unauthorized(res);
+            }
+            try
+            {
+                var staff = await _stationStaffService.GetStaffByAccountID(verifyIDDTO.VerifiedByStaffID);
+                if (staff == null)
+                {
+                    var res = new ResponseDTO();
+                    res.Message = "Nhân viên không tồn tại!";
+                    return NotFound(res);
+                }
+                var existingDocument = await _IDDocumentService.GetByIdAsync(verifyIDDTO.DocumentID);
+                if (existingDocument == null)
+                {
+                    var res = new ResponseDTO();
+                    res.Message = "Không tìm thấy tài liệu";
+                    return NotFound(res);
+                }
+
+                existingDocument.UpdatedAt = DateTime.Now;
+                existingDocument.Note = verifyIDDTO.Note;
+                existingDocument.VerifiedByStaffID = staff.StaffID;
+                existingDocument.FullName = verifyIDDTO.Name;
+                existingDocument.DateOfBirth = verifyIDDTO.DateOfBirth;
+                existingDocument.IDNumber = verifyIDDTO.IDNumber;
+                existingDocument.LicenseNumber = verifyIDDTO.LicenseNumber;
+
+                if (verifyIDDTO.Status == (int)DocumentStatus.Approved)
+                {
+                    existingDocument.Status = (int)DocumentStatus.Approved;
+                }
+                else if (verifyIDDTO.Status == (int)DocumentStatus.Rejected)
+                {
+                    existingDocument.Status = (int)DocumentStatus.Rejected;
+                }
+                await _IDDocumentService.UpdateAsync(existingDocument);
+                var response = new ResponseDTO
+                {
+                    Message = verifyIDDTO.Status == (int)DocumentStatus.Approved ? "Tài liệu đã được phê duyệt." : "Tài liệu đã bị từ chối."
                 };
                 return Ok(response);
             }
