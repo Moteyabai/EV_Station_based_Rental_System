@@ -900,7 +900,8 @@
   max-width: 600px;
   width: 90%;
   max-height: 90vh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   animation: slideUp 0.3s ease;
 }
@@ -925,6 +926,7 @@
   background: linear-gradient(135deg, #66c9a9 0%, #56ab91 100%);
   color: white;
   border-radius: 16px 16px 0 0;
+  flex-shrink: 0;
 }
 
 .modal-header h2 {
@@ -954,6 +956,8 @@
 
 .modal-body {
   padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .modal-footer {
@@ -962,6 +966,7 @@
   gap: 1rem;
   padding: 1.5rem;
   border-top: 2px solid #e2e8f0;
+  flex-shrink: 0;
 }
 
 .vehicle-info-box,
@@ -1172,6 +1177,27 @@
 }
 
 .btn-confirm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-deny {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-deny:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.btn-deny:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -1429,6 +1455,39 @@
   font-size: 1.1rem;
 }
 
+.note-section {
+  background: #f8fafc;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.note-section h3 {
+  margin: 0 0 1rem 0;
+  color: #1e293b;
+  font-size: 1.1rem;
+}
+
+.note-textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  resize: vertical;
+  transition: border-color 0.3s ease;
+}
+
+.note-textarea:focus {
+  outline: none;
+  border-color: #10b981;
+}
+
+.note-textarea::placeholder {
+  color: #94a3b8;
+}
+
 .info-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -1450,6 +1509,37 @@
 .info-item span {
   color: #1e293b;
   font-weight: 600;
+}
+
+.info-item input[type="text"],
+.info-item input[type="date"] {
+  padding: 0.75rem 1rem;
+  border: 2px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #1e293b;
+  font-weight: 500;
+  background: white;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.info-item input[type="text"]:focus,
+.info-item input[type="date"]:focus {
+  outline: none;
+  border-color: #66c9a9;
+  box-shadow: 0 0 0 3px rgba(102, 201, 169, 0.1);
+  background: #f0fdf4;
+}
+
+.info-item input[type="text"]::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.info-item input[type="text"]:hover,
+.info-item input[type="date"]:hover {
+  border-color: #94a3b8;
 }
 
 /* Payment Management Styles */
@@ -1966,3 +2056,179 @@
   color: #059669;
   text-decoration: underline;
 }
+
+/* Profile View Modal */
+.profile-modal {
+  max-width: 900px;
+  max-height: 90vh;
+}
+
+.profile-info-section {
+  margin-bottom: 2rem;
+}
+
+.profile-info-section h3 {
+  color: #1e293b;
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.profile-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.profile-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.profile-info-item .label {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.profile-info-item .value {
+  font-size: 1rem;
+  color: #1e293b;
+  font-weight: 500;
+  padding: 0.5rem;
+  background: #f8fafc;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.profile-images-section {
+  margin-top: 2rem;
+}
+
+.profile-images-section h3 {
+  color: #1e293b;
+  font-size: 1.2rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.image-group {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 2px solid #e2e8f0;
+}
+
+.image-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.image-header h4 {
+  color: #1e293b;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.image-selector {
+  padding: 0.5rem 1rem;
+  border: 2px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: white;
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.image-selector:hover {
+  border-color: #66c9a9;
+  background: #f0fdf4;
+}
+
+.image-selector:focus {
+  outline: none;
+  border-color: #66c9a9;
+  box-shadow: 0 0 0 3px rgba(102, 201, 169, 0.1);
+}
+
+.input-field-group {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.input-field-group label {
+  color: #475569;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.document-input {
+  padding: 0.75rem 1rem;
+  border: 2px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #1e293b;
+  font-weight: 500;
+  background: white;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.document-input:focus {
+  outline: none;
+  border-color: #66c9a9;
+  box-shadow: 0 0 0 3px rgba(102, 201, 169, 0.1);
+  background: #f0fdf4;
+}
+
+.document-input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.document-input:hover {
+  border-color: #94a3b8;
+}
+
+.image-container {
+  width: 100%;
+  min-height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: white;
+  border-radius: 8px;
+  border: 2px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.document-image {
+  max-width: 100%;
+  max-height: 500px;
+  object-fit: contain;
+  display: block;
+}
+
+.no-image {
+  color: #94a3b8;
+  font-size: 1rem;
+  text-align: center;
+  padding: 3rem;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 3rem;
+  color: #64748b;
+  font-size: 1.1rem;
+}
+

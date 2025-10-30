@@ -69,7 +69,7 @@ namespace API.Controllers
 
         [HttpGet("IDDocumentPendingList")]
         [Authorize]
-        public async Task<ActionResult<IEnumerable<IDDocument>>> GetPendingIDDocumentList()
+        public async Task<ActionResult<IEnumerable<IDDocumentDisplayDTO>>> GetPendingIDDocumentList()
         {
             var permission = User.FindFirst(UserClaimTypes.RoleID).Value;
             if (permission != "3" && permission != "2")
@@ -87,7 +87,32 @@ namespace API.Controllers
                     res.Message = "Danh sách trống";
                     return NotFound(res);
                 }
-                return Ok(docs);
+
+                var displayDocs = new List<IDDocumentDisplayDTO>();
+                foreach (var doc in docs)
+                {
+                    var renter = await _renterService.GetRenterByDocumentID(doc.DocumentID);
+                    if (renter != null)
+                    {
+                        displayDocs.Add(new IDDocumentDisplayDTO
+                        {
+                            DocumentID = doc.DocumentID,
+                            UserName = renter.Account.FullName,
+                            FullName = doc.FullName,
+                            PhoneNumber = renter.Account.Phone,
+                            DateOfBirth = doc.DateOfBirth,
+                            Status = doc.Status,
+                            Email = renter.Account.Email,
+                            IDNumber = doc.IDNumber,
+                            IDCardFront = doc.IDCardFront,
+                            IDCardBack = doc.IDCardBack,
+                            LicenseNumber = doc.LicenseNumber,
+                            LicenseCardFront = doc.LicenseCardFront,
+                            LicenseCardBack = doc.LicenseCardBack
+                        });
+                    }
+                }
+                return Ok(displayDocs);
             }
             catch (Exception ex)
             {

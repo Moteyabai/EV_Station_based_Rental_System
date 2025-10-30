@@ -43,5 +43,19 @@ namespace Repositories
                 throw new Exception(ex.Message);
             }
         }
+
+        public async Task<Renter> GetRenterByDocumentID(int documentID) { 
+          try
+            {
+                var renter = await _context.Renters
+                    .Include(a => a.Account)
+                    .SingleOrDefaultAsync(r => r.DocumentID == documentID);
+                return renter;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
     }
 }
