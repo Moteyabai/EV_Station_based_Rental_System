@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import stations from "../data/stations";
+import { fetchStationById } from "../api/stations";
 import { useAuth } from "../contexts/AuthContext";
 import { useCart } from "../contexts/CartContext";
 import { useReviews } from "../contexts/ReviewContext";
@@ -13,7 +13,9 @@ import "../styles/ReviewStations.css";
 
 export default function StationDetail() {
   const { id } = useParams();
-  const station = stations.find((s) => s.id === id);
+  const [station, setStation] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { user, verificationStatus } = useAuth();
   const { addToCart } = useCart();
   const { getStationReviews, addReview } = useReviews();
@@ -32,6 +34,60 @@ export default function StationDetail() {
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
   const [activeImage, setActiveImage] = useState("main");
   const [showReviewForm, setShowReviewForm] = useState(false);
+
+  // Fetch station data from API
+  useEffect(() => {
+    const loadStationData = async () => {
+      try {
+        setLoading(true);
+        console.log('🏪 Fetching station with ID:', id);
+        
+        const token = localStorage.getItem('ev_token');
+        const stationData = await fetchStationById(id, token);
+        
+        console.log('✅ Station data received:', stationData);
+        
+        // Map backend data to frontend format
+        const mappedStation = {
+          id: stationData.stationID || stationData.StationID,
+          name: stationData.name || stationData.Name,
+          address: stationData.address || stationData.Address,
+          description: stationData.description || stationData.Description || '',
+          openingHours: stationData.openingHours || stationData.OpeningHours || "24/7",
+          image: stationData.thumbnailImageUrl || stationData.ThumbnailImageUrl || '/images/stations/default.jpg',
+          location: {
+            lat: stationData.latitude || 10.762622,
+            lng: stationData.longitude || 106.660172
+          },
+          availableVehicles: stationData.availableBikes || 0,
+          chargingStations: 0,
+          amenities: stationData.amenities || [],
+          rating: 5,
+          reviews: 0,
+          status: stationData.status,
+          vehicles: stationData.vehicles || [], // Vehicles from BE or empty
+          images: {
+            exterior: stationData.imageUrl || stationData.thumbnailImageUrl,
+            chargers: stationData.thumbnailImageUrl,
+            thumbnail: stationData.thumbnailImageUrl
+          }
+        };
+        
+        setStation(mappedStation);
+        setError(null);
+      } catch (err) {
+        console.error('❌ Error loading station:', err);
+        setError('Không thể tải thông tin trạm.');
+        setStation(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      loadStationData();
+    }
+  }, [id]);
 
   useEffect(() => {
     // Lấy đánh giá cho trạm này
@@ -261,9 +317,15 @@ export default function StationDetail() {
           <h2>Xe máy điện hiện có</h2>
 
           <div className="vehicles-list">
-            {station.vehicles
-              .filter((vehicle) => vehicle.available)
-              .map((vehicle) => (
+            {!station.vehicles || station.vehicles.length === 0 ? (
+              <div className="no-vehicles">
+                <p>Hiện tại chưa có thông tin xe tại trạm này.</p>
+                <p>Vui lòng liên hệ trực tiếp để biết thêm chi tiết.</p>
+              </div>
+            ) : (
+              station.vehicles
+                .filter((vehicle) => vehicle.available)
+                .map((vehicle) => (
                 <div
                   key={vehicle.id}
                   className={`vehicle-card ${
@@ -355,13 +417,7 @@ export default function StationDetail() {
                     </div>
                   </div>
                 </div>
-              ))}
-
-            {station.vehicles.filter((vehicle) => vehicle.available).length ===
-              0 && (
-              <div className="no-vehicles">
-                <p>Hiện không có xe nào tại trạm này.</p>
-              </div>
+              ))
             )}
           </div>
         </div>
