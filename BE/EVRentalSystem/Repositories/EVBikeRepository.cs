@@ -1,4 +1,6 @@
 ﻿using BusinessObject.Models;
+using BusinessObject.Models.Enum;
+using Microsoft.EntityFrameworkCore;
 using Repositories.BaseRepository;
 
 namespace Repositories
@@ -24,6 +26,18 @@ namespace Repositories
                     }
                     return instance;
                 }
+            }
+        }
+
+        public async Task<IEnumerable<EVBike>> GetAvailableBikesAsync()
+        {
+            try
+            {
+                return await _context.EVBikes.Where(bike => bike.Status == (int)BikeStatus.Available).ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
             }
         }
     }

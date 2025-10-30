@@ -22,6 +22,10 @@ namespace BusinessObject.Models
         [MaxLength(20)]
         public string LicensePlate { get; set; } = null!;
 
+        [Required(ErrorMessage = "Dung lượng pin là bắt buộc")]
+        [Range(0, 100, ErrorMessage = "Dung lượng pin phải từ 0 đến 100")]
+        public int BatteryCapacity { get; set; } = 100;
+
         public int Status { get; set; } = 1; //1: Available, 0: Unavailable , 2: In Maintenance
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;

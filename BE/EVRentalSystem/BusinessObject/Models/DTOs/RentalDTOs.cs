@@ -1,61 +1,61 @@
-using System.ComponentModel.DataAnnotations;
+ï»¿using System.ComponentModel.DataAnnotations;
 
 namespace BusinessObject.Models.DTOs
 {
     public class RentalCreateDTO
     {
-        [Required(ErrorMessage = "Bike ID là b?t bu?c")]
-        [Range(1, int.MaxValue, ErrorMessage = "Vui lòng ch?n xe ?i?n h?p l?")]
+        [Required(ErrorMessage = "Bike ID lÃ  b?t bu?c")]
+        [Range(1, int.MaxValue, ErrorMessage = "Vui lÃ²ng ch?n xe ?i?n h?p l?")]
         public int BikeID { get; set; }
 
-        [Required(ErrorMessage = "Renter ID là b?t bu?c")]
-        [Range(1, int.MaxValue, ErrorMessage = "Vui lòng ch?n ng??i thuê h?p l?")]
+        [Required(ErrorMessage = "Renter ID lÃ  b?t bu?c")]
+        [Range(1, int.MaxValue, ErrorMessage = "Vui lÃ²ng ch?n ng??i thuÃª h?p l?")]
         public int RenterID { get; set; }
 
-        [Required(ErrorMessage = "Station ID là b?t bu?c")]
-        [Range(1, int.MaxValue, ErrorMessage = "Vui lòng ch?n tr?m h?p l?")]
+        [Required(ErrorMessage = "Station ID lÃ  b?t bu?c")]
+        [Range(1, int.MaxValue, ErrorMessage = "Vui lÃ²ng ch?n tr?m h?p l?")]
         public int StationID { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessage = "Vui lòng ch?n nhân viên h?p l?")]
+        [Range(1, int.MaxValue, ErrorMessage = "Vui lÃ²ng ch?n nhÃ¢n viÃªn h?p l?")]
         public int? AssignedStaff { get; set; }
 
-        [Required(ErrorMessage = "M?c pin ban ??u là b?t bu?c")]
+        [Required(ErrorMessage = "M?c pin ban ??u lÃ  b?t bu?c")]
         [Range(0, 100, ErrorMessage = "M?c pin ph?i t? 0 ??n 100")]
         public decimal InitialBattery { get; set; }
 
-        [StringLength(500, ErrorMessage = "Tình tr?ng xe ban ??u không ???c quá 500 kı t?")]
+        [StringLength(500, ErrorMessage = "TÃ¬nh tr?ng xe ban ??u khÃ´ng ???c quÃ¡ 500 kÃ½ t?")]
         public string? InitBikeCondition { get; set; }
 
-        [Required(ErrorMessage = "Ngày thuê là b?t bu?c")]
+        [Required(ErrorMessage = "NgÃ y thuÃª lÃ  b?t bu?c")]
         public DateTime RentalDate { get; set; }
 
         public DateTime? ReservedDate { get; set; }
 
         public DateTime? ReturnDate { get; set; }
 
-        [Required(ErrorMessage = "Ti?n ??t c?c là b?t bu?c")]
+        [Required(ErrorMessage = "Ti?n ??t c?c lÃ  b?t bu?c")]
         [Range(0, 50000000, ErrorMessage = "Ti?n ??t c?c ph?i t? 0 ??n 50,000,000 VN?")]
         public decimal Deposit { get; set; }
 
-        [Range(0, 50000000, ErrorMessage = "Phí thuê ph?i t? 0 ??n 50,000,000 VN?")]
+        [Range(0, 50000000, ErrorMessage = "PhÃ­ thuÃª ph?i t? 0 ??n 50,000,000 VN?")]
         public decimal? Fee { get; set; }
     }
 
     public class RentalUpdateDTO
     {
-        [Required(ErrorMessage = "Rental ID là b?t bu?c")]
+        [Required(ErrorMessage = "Rental ID lÃ  b?t bu?c")]
         public int RentalID { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessage = "Vui lòng ch?n xe ?i?n h?p l?")]
+        [Range(1, int.MaxValue, ErrorMessage = "Vui lÃ²ng ch?n xe ?i?n h?p l?")]
         public int? BikeID { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessage = "Vui lòng ch?n ng??i thuê h?p l?")]
+        [Range(1, int.MaxValue, ErrorMessage = "Vui lÃ²ng ch?n ng??i thuÃª h?p l?")]
         public int? RenterID { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessage = "Vui lòng ch?n tr?m h?p l?")]
+        [Range(1, int.MaxValue, ErrorMessage = "Vui lÃ²ng ch?n tr?m h?p l?")]
         public int? StationID { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessage = "Vui lòng ch?n nhân viên h?p l?")]
+        [Range(1, int.MaxValue, ErrorMessage = "Vui lÃ²ng ch?n nhÃ¢n viÃªn h?p l?")]
         public int? AssignedStaff { get; set; }
 
         [Range(0, 100, ErrorMessage = "M?c pin ban ??u ph?i t? 0 ??n 100")]
@@ -64,10 +64,10 @@ namespace BusinessObject.Models.DTOs
         [Range(0, 100, ErrorMessage = "M?c pin cu?i ph?i t? 0 ??n 100")]
         public decimal? FinalBattery { get; set; }
 
-        [StringLength(500, ErrorMessage = "Tình tr?ng xe ban ??u không ???c quá 500 kı t?")]
+        [StringLength(500, ErrorMessage = "TÃ¬nh tr?ng xe ban ??u khÃ´ng ???c quÃ¡ 500 kÃ½ t?")]
         public string? InitBikeCondition { get; set; }
 
-        [StringLength(500, ErrorMessage = "Tình tr?ng xe cu?i không ???c quá 500 kı t?")]
+        [StringLength(500, ErrorMessage = "TÃ¬nh tr?ng xe cu?i khÃ´ng ???c quÃ¡ 500 kÃ½ t?")]
         public string? FinalBikeCondition { get; set; }
 
         public DateTime? RentalDate { get; set; }
@@ -79,27 +79,29 @@ namespace BusinessObject.Models.DTOs
         [Range(0, 50000000, ErrorMessage = "Ti?n ??t c?c ph?i t? 0 ??n 50,000,000 VN?")]
         public decimal? Deposit { get; set; }
 
-        [Range(0, 50000000, ErrorMessage = "Phí thuê ph?i t? 0 ??n 50,000,000 VN?")]
+        [Range(0, 50000000, ErrorMessage = "PhÃ­ thuÃª ph?i t? 0 ??n 50,000,000 VN?")]
         public decimal? Fee { get; set; }
     }
 
     public class RentalReturnDTO
     {
-        [Required(ErrorMessage = "Rental ID là b?t bu?c")]
+        [Required(ErrorMessage = "Rental ID lÃ  báº¯t buá»™c")]
         public int RentalID { get; set; }
 
-        [Required(ErrorMessage = "M?c pin cu?i là b?t bu?c")]
-        [Range(0, 100, ErrorMessage = "M?c pin cu?i ph?i t? 0 ??n 100")]
-        public decimal FinalBattery { get; set; }
+        [Required(ErrorMessage = "Má»©c pin cuá»‘i lÃ  báº¯t buá»™c")]
+        [Range(0, 100, ErrorMessage = "Má»©c pin cuá»‘i pháº£i tá»« 0 Ä‘áº¿n 100")]
+        public int FinalBattery { get; set; }
 
-        [Required(ErrorMessage = "Tình tr?ng xe cu?i là b?t bu?c")]
-        [StringLength(500, ErrorMessage = "Tình tr?ng xe cu?i không ???c quá 500 kı t?")]
+        [Required(ErrorMessage = "TÃ¬nh tráº¡ng xe lÃ  báº¯t buá»™c")]
+        [StringLength(500, ErrorMessage = "TÃ¬nh tráº¡ng xe khÃ´ng Ä‘Æ°á»£c quÃ¡ 500 kÃ½ tá»±!")]
         public string FinalBikeCondition { get; set; }
 
-        [Required(ErrorMessage = "Ngày tr? xe là b?t bu?c")]
+        public string Note { get; set; }
+
+        [Required(ErrorMessage = "NgÃ y tráº£ xe lÃ  báº¯t buá»™c")]
         public DateTime ReturnDate { get; set; }
 
-        [Range(0, 50000000, ErrorMessage = "Phí thuê ph?i t? 0 ??n 50,000,000 VN?")]
+        [Range(0, 50000000, ErrorMessage = "PhÃ­ thuÃª pháº£i tá»« 0 Ä‘áº¿n 50,000,000 VN")]
         public decimal? Fee { get; set; }
     }
 
@@ -118,21 +120,21 @@ namespace BusinessObject.Models.DTOs
     /// </summary>
     public class RentalConfirmStartDTO
     {
-        [Required(ErrorMessage = "Rental ID là b?t bu?c")]
+        [Required(ErrorMessage = "Rental ID lÃ  báº¯t buá»™c")]
         public int RentalID { get; set; }
 
-        [Required(ErrorMessage = "Staff ID là b?t bu?c")]
-        [Range(1, int.MaxValue, ErrorMessage = "Vui lòng ch?n nhân viên h?p l?")]
+        [Required(ErrorMessage = "Staff ID lÃ  báº¯t buá»™c")]
+        [Range(1, int.MaxValue, ErrorMessage = "Vui lÃ²ng chá»n nhÃ¢n viÃªn há»£p lá»‡")]
         public int StaffID { get; set; }
 
-        [Required(ErrorMessage = "M?c pin ban ??u là b?t bu?c")]
+        [Required(ErrorMessage = "M?c pin ban ??u lÃ  b?t bu?c")]
         [Range(0, 100, ErrorMessage = "M?c pin ph?i t? 0 ??n 100")]
         public decimal InitialBattery { get; set; }
 
-        [StringLength(500, ErrorMessage = "Tình tr?ng xe ban ??u không ???c quá 500 kı t?")]
+        [StringLength(500, ErrorMessage = "TÃ¬nh tr?ng xe ban ??u khÃ´ng ???c quÃ¡ 500 kÃ½ t?")]
         public string? InitBikeCondition { get; set; }
 
-        [StringLength(1000, ErrorMessage = "Ghi chú không ???c quá 1000 kı t?")]
+        [StringLength(1000, ErrorMessage = "Ghi chÃº khÃ´ng ???c quÃ¡ 1000 kÃ½ t?")]
         public string? Notes { get; set; }
     }
 
@@ -141,25 +143,25 @@ namespace BusinessObject.Models.DTOs
     /// </summary>
     public class RentalCompleteDTO
     {
-        [Required(ErrorMessage = "Rental ID là b?t bu?c")]
+        [Required(ErrorMessage = "Rental ID lÃ  b?t bu?c")]
         public int RentalID { get; set; }
 
-        [Required(ErrorMessage = "Staff ID là b?t bu?c")]
-        [Range(1, int.MaxValue, ErrorMessage = "Vui lòng ch?n nhân viên h?p l?")]
+        [Required(ErrorMessage = "Staff ID lÃ  b?t bu?c")]
+        [Range(1, int.MaxValue, ErrorMessage = "Vui lÃ²ng ch?n nhÃ¢n viÃªn h?p l?")]
         public int StaffID { get; set; }
 
-        [Required(ErrorMessage = "M?c pin cu?i là b?t bu?c")]
+        [Required(ErrorMessage = "M?c pin cu?i lÃ  b?t bu?c")]
         [Range(0, 100, ErrorMessage = "M?c pin cu?i ph?i t? 0 ??n 100")]
         public decimal FinalBattery { get; set; }
 
-        [Required(ErrorMessage = "Tình tr?ng xe cu?i là b?t bu?c")]
-        [StringLength(500, ErrorMessage = "Tình tr?ng xe cu?i không ???c quá 500 kı t?")]
+        [Required(ErrorMessage = "TÃ¬nh tr?ng xe cu?i lÃ  b?t bu?c")]
+        [StringLength(500, ErrorMessage = "TÃ¬nh tr?ng xe cu?i khÃ´ng ???c quÃ¡ 500 kÃ½ t?")]
         public string FinalBikeCondition { get; set; }
 
-        [Range(0, 50000000, ErrorMessage = "Phí thuê ph?i t? 0 ??n 50,000,000 VN?")]
+        [Range(0, 50000000, ErrorMessage = "PhÃ­ thuÃª ph?i t? 0 ??n 50,000,000 VN?")]
         public decimal? Fee { get; set; }
 
-        [StringLength(1000, ErrorMessage = "Ghi chú không ???c quá 1000 kı t?")]
+        [StringLength(1000, ErrorMessage = "Ghi chÃº khÃ´ng ???c quÃ¡ 1000 kÃ½ t?")]
         public string? Notes { get; set; }
     }
 

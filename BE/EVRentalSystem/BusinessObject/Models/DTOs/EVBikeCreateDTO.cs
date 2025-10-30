@@ -19,6 +19,14 @@ namespace BusinessObject.Models.DTOs
         [Required(ErrorMessage = "Hình ảnh mặt sau là bắt buộc")]
         public IFormFile BackImg { get; set; }
 
+        [Required(ErrorMessage = "Tốc độ tối đa là bắt buộc")]
+        [Range(0, int.MaxValue, ErrorMessage = "Tốc độ tối đa không được âm")]
+        public int MaxSpeed { get; set; }
+
+        [Required(ErrorMessage = "Quãng đường tối đa là bắt buộc")]
+        [Range(0, int.MaxValue, ErrorMessage = "Quãng đường tối đa không được âm")]
+        public int MaxDistance { get; set; }
+
         [Required(ErrorMessage = "Mô tả là bắt buộc")]
         [StringLength(500, ErrorMessage = "Mô tả không được quá 500 ký tự")]
         public string Description { get; set; }

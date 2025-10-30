@@ -5,6 +5,7 @@ using AutoMapper;
 using BusinessObject.Models;
 using BusinessObject.Models.Appwrite;
 using BusinessObject.Models.DTOs;
+using BusinessObject.Models.Enum;
 using BusinessObject.Models.JWT;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -429,6 +430,36 @@ namespace API.Controllers
                 existingAcc.Status = 3; //Set status to suspended
                 await _accountService.DeleteAsync(id);
                 res.Message = "Tài khoản đạ bị khóa!";
+                return Ok(res);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Internal server error: " + ex.Message);
+            }
+        }
+
+        [HttpPut("ActivateAccount/{id}")]
+        [Authorize]
+        public async Task<ActionResult> ActivateAccount(int id)
+        {
+            try
+            {
+                var res = new ResponseDTO();
+                var permission = User.FindFirst(UserClaimTypes.RoleID).Value;
+                if (permission != "3")
+                {
+                    res.Message = "Không có quyền truy cập!";
+                    return Unauthorized(res);
+                }
+                var existingAcc = await _accountService.GetByIdAsync(id);
+                if (existingAcc == null)
+                {
+                    res.Message = "Tài khoản không tồn tại!";
+                    return NotFound(res);
+                }
+                existingAcc.Status = (int)AccountStatus.Active; //Set status to active
+                await _accountService.UpdateAsync(existingAcc);
+                res.Message = "Kích hoạt tài khoản thành công!";
                 return Ok(res);
             }
             catch (Exception ex)

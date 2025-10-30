@@ -22,5 +22,7 @@ namespace Services
         public async Task<StationStaff> GetByIdAsync(int id) => await _stationStaffRepository.GetByIdAsync(id);
 
         public async Task UpdateAsync(StationStaff entity) => await _stationStaffRepository.UpdateAsync(entity);
+
+        public async Task<StationStaff> GetStaffByAccountID(int accountID) => await _stationStaffRepository.GetStaffByAccountID(accountID);
     }
 }

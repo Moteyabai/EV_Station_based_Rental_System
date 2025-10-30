@@ -1,5 +1,6 @@
 ﻿using BusinessObject.Models;
 using BusinessObject.Models.DTOs;
+using BusinessObject.Models.Enum;
 using BusinessObject.Models.JWT;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,10 +13,14 @@ namespace API.Controllers
     public class RentalController : ControllerBase
     {
         private readonly RentalService _rentalService;
+        private readonly StationStaffService _stationStaffService;
+        private readonly RenterService _renterService;
 
-        public RentalController(RentalService rentalService)
+        public RentalController(RentalService rentalService, StationStaffService stationStaffService, RenterService renterService)
         {
             _rentalService = rentalService;
+            _stationStaffService = stationStaffService;
+            _renterService = renterService;
         }
 
         /// <summary>
@@ -274,23 +279,32 @@ namespace API.Controllers
 
             try
             {
+                var res = new ResponseDTO();
                 var rental = await _rentalService.GetByIdAsync(returnDto.RentalID);
                 if (rental == null)
                 {
-                    var res = new ResponseDTO
-                    {
-                        Message = "Không tìm thấy thông tin thuê xe!"
-                    };
+                    res.Message = "Không tìm thấy thông tin thuê xe!";
+                    return NotFound(res);
+                }
+
+                var renter = await _renterService.GetByIdAsync(rental.RenterID);
+                if (renter == null)
+                {
+                    res.Message = "Không tìm thấy thông tin người thuê!";
+                    return NotFound(res);
+                }
+
+                var staff = await _stationStaffService.GetByIdAsync(rental.AssignedStaff.Value);
+                if (staff == null)
+                {
+                    res.Message = "Không tìm thấy thông tin nhân viên!";
                     return NotFound(res);
                 }
 
                 // Check if rental is already completed
                 if (rental.ReturnDate.HasValue && rental.ReturnDate <= DateTime.Now)
                 {
-                    var res = new ResponseDTO
-                    {
-                        Message = "Đơn xe này đã hoàn thành!"
-                    };
+                    res.Message = "Đơn thuê xe đã được hoàn thành trước đó!";
                     return BadRequest(res);
                 }
 
@@ -298,16 +312,78 @@ namespace API.Controllers
                 rental.FinalBattery = returnDto.FinalBattery;
                 rental.FinalBikeCondition = returnDto.FinalBikeCondition;
                 rental.ReturnDate = returnDto.ReturnDate;
+                rental.Note = returnDto.Note;
+                rental.Status = (int)RentalStatus.Completed;
                 if (returnDto.Fee.HasValue)
                     rental.Fee = returnDto.Fee;
 
                 await _rentalService.UpdateAsync(rental);
 
-                var successRes = new ResponseDTO
+                //Update staff return count
+                staff.ReceiveTimes += 1;
+
+                await _stationStaffService.UpdateAsync(staff);
+
+                //Update renter's total rentals & total spent
+                renter.TotalRental += 1;
+                renter.TotalSpent += rental.Deposit + (rental.Fee.HasValue ? rental.Fee.Value : 0);
+                await _renterService.UpdateAsync(renter);
+
+                res.Message = "Trả xe thành công!";
+
+                return Ok(res);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpPut("HandOverBike")]
+        [Authorize]
+        public async Task<ActionResult> HandOverBike([FromQuery] int rentalId)
+        {
+            // Check user permission (only staff and admin can hand over bikes)
+            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
+            var accID = int.Parse(User.FindFirst(UserClaimTypes.AccountID).Value);
+            if (permission != "3" && permission != "2")
+            {
+                var res = new ResponseDTO
                 {
-                    Message = "Trả xe thành công!"
+                    Message = "Không có quyền truy cập!"
                 };
-                return Ok(successRes);
+                return Unauthorized(res);
+            }
+            try
+            {
+                var res = new ResponseDTO();
+                var rental = await _rentalService.GetByIdAsync(rentalId);
+                if (rental == null)
+                {
+                    res.Message = "Không tìm thấy thông tin thuê xe!";
+                    return NotFound(res);
+                }
+
+                var staff = await _stationStaffService.GetStaffByAccountID(accID);
+                if (staff == null)
+                {
+                    res.Message = "Không tìm thấy thông tin nhân viên!";
+                    return NotFound(res);
+                }
+                // Update handover status
+                rental.AssignedStaff = staff.StaffID;
+                rental.Status = (int)RentalStatus.OnGoing;
+
+                await _rentalService.UpdateAsync(rental);
+
+                //Update staff handover count
+                staff.HandoverTimes += 1;
+
+                await _stationStaffService.UpdateAsync(staff);
+
+                res.Message = "Bàn giao xe thành công!";
+
+                return Ok(res);
             }
             catch (Exception ex)
             {

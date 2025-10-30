@@ -67,6 +67,26 @@ namespace API.Controllers
             }
         }
 
+        [HttpGet("AvailableBikes")]
+        public async Task<ActionResult<IEnumerable<EVBike>>> GetAvailableBikes()
+        {
+            try
+            {
+                var bikes = await _evBikeService.GetAvailableBikesAsync();
+                if (bikes == null || !bikes.Any())
+                {
+                    var res = new ResponseDTO();
+                    res.Message = "Danh sách trống";
+                    return NotFound(res);
+                }
+                return Ok(bikes);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
         [HttpPost("AddBike")]
         [Authorize]
         public async Task<ActionResult> AddBike([FromForm] EVBikeCreateDTO eVBikeCreateDTO)
@@ -136,6 +156,8 @@ namespace API.Controllers
                 bike.BackImg = backUrl;
                 bike.Description = eVBikeCreateDTO.Description;
                 bike.PricePerDay = eVBikeCreateDTO.PricePerDay;
+                bike.MaxSpeed = eVBikeCreateDTO.MaxSpeed;
+                bike.MaxDistance = eVBikeCreateDTO.MaxDistance;
 
                 await _evBikeService.AddAsync(bike);
 

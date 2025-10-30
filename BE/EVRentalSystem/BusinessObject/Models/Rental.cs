@@ -26,6 +26,8 @@ namespace BusinessObject.Models
         [ForeignKey("Station")]
         public int StationID { get; set; }
 
+        public string? Note { get; set; }
+
         [Range(1, int.MaxValue, ErrorMessage = "Vui lòng chọn nhân viên hợp lệ")]
         [ForeignKey("Staff")]
         public int? AssignedStaff { get; set; }

@@ -37,6 +37,13 @@
         Cash = 2
     }
 
+    public enum PaymentType
+    {
+        Deposit = 1,
+        Fee = 2,
+        Refund = 3
+    }
+
     public enum BikeStatus
     {
         Unavailable = 0,

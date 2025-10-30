@@ -20,19 +20,11 @@ namespace BusinessObject.Models.DTOs
         [Range(1, int.MaxValue, ErrorMessage = "Vui lòng chọn thương hiệu")]
         public int BrandID { get; set; }
 
-        [Required(ErrorMessage = "Màu sắc là bắt buộc")]
-        [StringLength(30, ErrorMessage = "Màu sắc không được quá 30 ký tự")]
-        public string Color { get; set; }
-
         [Required(ErrorMessage = "Hình ảnh mặt trước là bắt buộc")]
         public IFormFile FrontImg { get; set; }
 
         [Required(ErrorMessage = "Hình ảnh mặt sau là bắt buộc")]
         public IFormFile BackImg { get; set; }
-
-        [Required(ErrorMessage = "Số lượng là bắt buộc")]
-        [Range(0, 1000, ErrorMessage = "Số lượng phải từ 0 đến 1000")]
-        public int Quantity { get; set; }
 
         [Required(ErrorMessage = "Số lần thuê là bắt buộc")]
         [Range(0, int.MaxValue, ErrorMessage = "Số lần thuê không được âm")]
@@ -41,10 +33,6 @@ namespace BusinessObject.Models.DTOs
         [Required(ErrorMessage = "Mô tả là bắt buộc")]
         [StringLength(500, ErrorMessage = "Mô tả không được quá 500 ký tự")]
         public string Description { get; set; }
-
-        [Required(ErrorMessage = "Dung lượng pin là bắt buộc")]
-        [StringLength(50, ErrorMessage = "Dung lượng pin không được quá 50 ký tự")]
-        public string BatteryCapacity { get; set; }
 
         [Required(ErrorMessage = "Giá thuê theo ngày là bắt buộc")]
         [Range(0.01, 10000000, ErrorMessage = "Giá thuê phải từ 0.01 đến 10,000,000 VNĐ")]
