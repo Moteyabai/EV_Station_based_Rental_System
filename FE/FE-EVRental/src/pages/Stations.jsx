@@ -23,8 +23,12 @@ export default function Stations() {
     let isMounted = true;
     async function loadStations() {
       try {
+        setLoading(true);
+        setError(null); // Reset error state
+        console.log('🚀 Calling fetchActiveStations API... (Reload safe)');
         const apiStations = await fetchActiveStations();
         if (!isMounted) return;
+        console.log('✅ Stations data received:', apiStations);
         // Map backend fields to frontend expected shape minimally
         const mapped = apiStations.map((s) => ({
           id: s.stationID || s.StationID || s.id,
@@ -42,13 +46,19 @@ export default function Stations() {
         }));
         setStations(mapped);
       } catch (e) {
-        console.error("Error loading stations:", e);
-        setError("Không tải được dữ liệu trạm. Vui lòng thử lại sau.");
-        setStations([]);
+        console.error("❌ Error loading stations:", e);
+        if (isMounted) {
+          setError("Không tải được dữ liệu trạm. Vui lòng thử lại sau.");
+          setStations([]);
+        }
       } finally {
-        if (isMounted) setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+          console.log('✅ Stations page loaded successfully');
+        }
       }
     }
+    // Always call loadStations on mount/reload
     loadStations();
     return () => { isMounted = false; };
   }, []);
