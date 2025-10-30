@@ -35,6 +35,8 @@ namespace API.CustomServices
             services.AddScoped<StationService>();
             services.AddScoped<EVBike_StocksRepository>();
             services.AddScoped<EVBike_StocksService>();
+            services.AddScoped<BrandRepository>();
+            services.AddScoped<BrandService>();
 
             services.AddAuthentication(options =>
             {
