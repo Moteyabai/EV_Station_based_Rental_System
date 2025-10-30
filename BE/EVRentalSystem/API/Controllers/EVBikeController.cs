@@ -192,7 +192,6 @@ namespace API.Controllers
         }
 
         [HttpGet("GetBikeByID/{id}")]
-        [Authorize]
         public async Task<ActionResult<EVBike>> GetBikeByID(int id)
         {
             try

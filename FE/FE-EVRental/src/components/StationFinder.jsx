@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import stationsData from "../data/stations";
 import "../styles/Stations.css";
 
 export default function StationFinder({ stations: stationsProp }) {
@@ -14,23 +13,15 @@ export default function StationFinder({ stations: stationsProp }) {
   useEffect(() => {
     try {
       setLoading(true);
-      // Sử dụng danh sách trạm được truyền vào từ prop nếu có
+      // Sử dụng danh sách trạm được truyền vào từ prop
       if (stationsProp && Array.isArray(stationsProp)) {
         setStations(stationsProp);
         setError(null);
-        setLoading(false);
       } else {
-        // Nếu không có prop trạm, sử dụng dữ liệu cứng
-        setTimeout(() => {
-          if (stationsData && Array.isArray(stationsData)) {
-            setStations(stationsData);
-            setError(null);
-          } else {
-            setError("Dữ liệu trạm không hợp lệ");
-          }
-          setLoading(false);
-        }, 500);
+        setStations([]);
+        setError("Không có dữ liệu trạm");
       }
+      setLoading(false);
     } catch (err) {
       setError("Không thể tải dữ liệu trạm: " + err.message);
       setLoading(false);

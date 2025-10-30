@@ -1,16 +1,6 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5168';
 
 /**
- * Get all stations
- * @returns {Promise<Array>} List of all stations
- */
-export async function fetchAllStations() {
-  const res = await fetch(`${API_BASE_URL}/api/Station/GetAllStations`);
-  if (!res.ok) throw new Error('Failed to fetch stations');
-  return res.json();
-}
-
-/**
  * Get active stations only
  * @returns {Promise<Array>} List of active stations
  */

@@ -2,19 +2,21 @@ import React from "react";
 import { Link } from "react-router-dom";
 import "../styles/Home.css";
 import "../styles/media.css";
-import stations from "../data/stations";
-import vehicles from "../data/vehicles";
+import { fetchActiveStations } from "../api/stations";
+import { getAvailableBikes } from "../api/bikes";
 
-// Using placeholder images and direct links to product images
-const bikeImg1 = vehicles[0].image; // VinFast Klara S
-const bikeImg2 = vehicles[1].image; // DatBike Weaver 200
-const bikeImg3 = vehicles[2].image; // VinFast Feliz S
+// Default placeholder images
+const defaultBikeImg = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60";
 const stationImg =
   "https://images.unsplash.com/photo-1599593752325-ffa41031056e?auto=format&fit=crop&w=1200&q=80";
 
 export default function Home() {
   const [currentBgIndex, setCurrentBgIndex] = React.useState(0);
   const [currentStationIndex, setCurrentStationIndex] = React.useState(0);
+  const [stations, setStations] = React.useState([]);
+  const [vehicles, setVehicles] = React.useState([]);
+  const [loadingStations, setLoadingStations] = React.useState(true);
+  const [loadingVehicles, setLoadingVehicles] = React.useState(true);
   
   // Background images array with cache busting
   const backgroundImages = [
@@ -22,6 +24,62 @@ export default function Home() {
     `/images/background/background-2.jpg?v=${Date.now()}`,
     `/images/background/background-3.jpg?v=${Date.now()}`,
   ];
+
+  // Load stations from API
+  React.useEffect(() => {
+    let isMounted = true;
+    async function loadStations() {
+      try {
+        const apiStations = await fetchActiveStations();
+        if (!isMounted) return;
+        const mapped = apiStations.map((s) => ({
+          id: s.stationID || s.StationID || s.id,
+          name: s.name || s.Name,
+          address: s.address || s.Address,
+          description: s.description || s.Description,
+          image: s.thumbnailImageUrl || s.ThumbnailImageUrl || stationImg,
+          availableVehicles: s.availableBikes || 0,
+        }));
+        setStations(mapped);
+      } catch (error) {
+        console.error("Error loading stations:", error);
+        setStations([]);
+      } finally {
+        if (isMounted) setLoadingStations(false);
+      }
+    }
+    loadStations();
+    return () => { isMounted = false; };
+  }, []);
+
+  // Load vehicles from API
+  React.useEffect(() => {
+    let isMounted = true;
+    async function loadVehicles() {
+      try {
+        const token = localStorage.getItem('ev_token');
+        const bikesData = await getAvailableBikes(token);
+        if (!isMounted) return;
+        
+        const mapped = bikesData.map((bike) => ({
+          id: bike.bikeID || bike.BikeID,
+          name: bike.bikeName || bike.model || bike.Model || 'Xe điện',
+          brand: bike.brandName || bike.BrandName || 'Unknown',
+          image: bike.thumbnailImageUrl || bike.ThumbnailImageUrl || bike.frontImg || defaultBikeImg,
+          price: bike.pricePerDay || bike.PricePerDay || 0,
+          priceUnit: '/ngày',
+        }));
+        setVehicles(mapped);
+      } catch (error) {
+        console.error("Error loading vehicles:", error);
+        setVehicles([]);
+      } finally {
+        if (isMounted) setLoadingVehicles(false);
+      }
+    }
+    loadVehicles();
+    return () => { isMounted = false; };
+  }, []);
 
   // Background slideshow effect
   React.useEffect(() => {
