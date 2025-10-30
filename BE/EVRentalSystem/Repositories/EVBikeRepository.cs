@@ -33,7 +33,7 @@ namespace Repositories
         {
             try
             {
-                return await _context.EVBikes.Where(bike => bike.Status == (int)BikeStatus.Available).ToListAsync();
+                return await _context.EVBikes.Include(x=> x.Brand).Where(bike => bike.Status == (int)BikeStatus.Available).ToListAsync();
             }
             catch (Exception ex)
             {
