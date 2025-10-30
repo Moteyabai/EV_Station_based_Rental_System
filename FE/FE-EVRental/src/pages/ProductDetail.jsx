@@ -29,7 +29,9 @@ export default function ProductDetail() {
     async function loadVehicle() {
       try {
         setLoading(true);
-        // const token = localStorage.getItem('ev_token');
+        setError(null); // Reset error state
+        console.log('🚲 [DETAIL] Fetching bike with ID:', id);
+        
         const bikeData = await getBikeById(id);
         
         if (!isMounted) return;
@@ -70,12 +72,17 @@ export default function ProductDetail() {
         
         setVehicle(mappedVehicle);
         setError(null);
+        console.log('✅ [DETAIL] Vehicle loaded successfully');
       } catch (err) {
-        console.error('Error loading vehicle:', err);
-        setError('Không thể tải thông tin xe. Vui lòng thử lại sau.');
-        setVehicle(null);
+        console.error('❌ [DETAIL] Error loading vehicle:', err);
+        if (isMounted) {
+          setError('Không thể tải thông tin xe. Vui lòng thử lại sau.');
+          setVehicle(null);
+        }
       } finally {
-        if (isMounted) setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     }
     
@@ -120,19 +127,45 @@ export default function ProductDetail() {
     return (
       <div className="product-detail">
         <div className="container">
-          <p>🔄 Đang tải thông tin xe...</p>
+          <div className="loading-message">
+            <h2>🔄 Đang tải thông tin xe...</h2>
+            <p>Vui lòng đợi trong giây lát.</p>
+          </div>
         </div>
       </div>
     );
   }
 
   // Error state
-  if (error || !vehicle) {
+  if (error) {
+    return (
+      <div className="product-not-found">
+        <div className="container">
+          <h2>❌ Có lỗi xảy ra</h2>
+          <p>{error}</p>
+          <div className="error-actions">
+            <button 
+              className="btn primary" 
+              onClick={() => window.location.reload()}
+            >
+              🔄 Thử lại
+            </button>
+            <Link to="/vehicles" className="btn secondary">
+              Quay lại danh sách xe
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Not found state (only show after loading is done and no vehicle)
+  if (!vehicle) {
     return (
       <div className="product-not-found">
         <div className="container">
           <h2>Không tìm thấy xe</h2>
-          <p>{error || 'Xe bạn đang tìm không tồn tại hoặc đã bị xóa.'}</p>
+          <p>Xe bạn đang tìm không tồn tại hoặc đã bị xóa.</p>
           <Link to="/vehicles" className="btn primary">
             Quay lại danh sách xe
           </Link>

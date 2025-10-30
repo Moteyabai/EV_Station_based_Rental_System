@@ -28,9 +28,10 @@ export default function Vehicles() {
         if (!isMounted || abortController.signal.aborted) return;
         
         setLoading(true);
+        setError(null); // Reset error state
         
         const token = localStorage.getItem('ev_token');
-        console.log('🚀 Calling getAvailableBikes API...');
+        console.log('🚀 Calling getAvailableBikes API... (Reload safe)');
         const bikesData = await getAvailableBikes(token);
         
         // Check if component is still mounted and request wasn't aborted
@@ -77,14 +78,20 @@ export default function Vehicles() {
         setVehicles(mappedVehicles);
         setError(null);
       } catch (err) {
-        console.error('Error loading vehicles:', err);
-        setError('Không thể tải danh sách xe. Vui lòng thử lại sau.');
-        setVehicles([]);
+        console.error('❌ Error loading vehicles:', err);
+        if (isMounted) {
+          setError('Không thể tải danh sách xe. Vui lòng thử lại sau.');
+          setVehicles([]);
+        }
       } finally {
-        if (isMounted) setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+          console.log('✅ Vehicles page loaded successfully');
+        }
       }
     }
     
+    // Always call loadVehicles on mount/reload
     loadVehicles();
     
     // Cleanup function to abort request if component unmounts

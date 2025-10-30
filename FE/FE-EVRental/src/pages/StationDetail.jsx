@@ -40,6 +40,7 @@ export default function StationDetail() {
     const loadStationData = async () => {
       try {
         setLoading(true);
+        setError(null); // Reset error state
         console.log('🏪 Fetching station with ID:', id);
         
         const token = localStorage.getItem('ev_token');
@@ -75,6 +76,7 @@ export default function StationDetail() {
         
         setStation(mappedStation);
         setError(null);
+        console.log('✅ Station loaded successfully');
       } catch (err) {
         console.error('❌ Error loading station:', err);
         setError('Không thể tải thông tin trạm.');
@@ -114,6 +116,42 @@ export default function StationDetail() {
     }
   };
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="page-container">
+        <div className="loading-container">
+          <h2>🔄 Đang tải thông tin trạm...</h2>
+          <p>Vui lòng đợi trong giây lát.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="page-container">
+        <div className="error-container">
+          <h2>❌ Có lỗi xảy ra</h2>
+          <p>{error}</p>
+          <div className="error-actions">
+            <button 
+              className="btn primary" 
+              onClick={() => window.location.reload()}
+            >
+              🔄 Thử lại
+            </button>
+            <Link to="/stations" className="btn secondary">
+              Xem tất cả các trạm
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Not found state (only show after loading is done and no station)
   if (!station) {
     return (
       <div className="page-container">

@@ -514,22 +514,62 @@
   text-align: center;
 }
 
-/* Vehicle Gallery Content */
+/* Vehicle Gallery Content - Grid Display */
 #vehicles-showcase .image-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
   padding: 2rem 0;
+  margin-top: 1rem;
 }
 
 #vehicles-showcase .gallery-item {
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(77, 182, 172, 0.2);
   cursor: pointer;
   transition: all 0.3s ease;
+  height: 400px;
+  background: #1a1a1a;
+  display: block;
+  opacity: 1 !important; /* Force visible */
+  visibility: visible !important; /* Force visible */
+}
+
+#vehicles-showcase .gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+#vehicles-showcase .gallery-item:hover img {
+  transform: scale(1.05);
+}
+
+#vehicles-showcase .gradient-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: inherit;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.95) 0%,
+    rgba(0, 0, 0, 0.7) 50%,
+    transparent 100%
+  );
+  z-index: 2;
+  pointer-events: none;
 }
 
 #vehicles-showcase .gallery-item:hover {
-  box-shadow: 0 15px 40px rgba(77, 182, 172, 0.3);
-  border-color: rgba(77, 182, 172, 0.4);
-  transform: translateY(-8px);
+  box-shadow: 0 15px 40px rgba(77, 182, 172, 0.5);
+  border-color: rgba(77, 182, 172, 0.6);
+  transform: translateY(-8px) scale(1.02);
 }
 
 #vehicles-showcase .gallery-content {
@@ -537,14 +577,12 @@
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 1.5rem;
-  background: linear-gradient(
-    to top,
-    rgba(0, 0, 0, 0.9) 0%,
-    rgba(0, 0, 0, 0.7) 50%,
-    transparent 100%
-  );
+  padding: 2rem 1.5rem;
   z-index: 3;
+}
+
+#vehicles-showcase .gallery-item:hover .gallery-content {
+  transform: translateY(-5px);
 }
 
 #vehicles-showcase .gallery-content h3 {
@@ -560,6 +598,34 @@
   font-size: 0.95rem;
   margin: 0;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* Loading and Empty States */
+.loading-message,
+.no-vehicles-message,
+.no-stations-message {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: rgba(77, 182, 172, 0.05);
+  border-radius: 12px;
+  margin: 2rem 0;
+}
+
+.loading-message p,
+.no-vehicles-message p,
+.no-stations-message p {
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.loading-message p {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 .features-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 1rem; margin-top: 1rem }
@@ -580,6 +646,16 @@
 	.hero-text { text-align: center }
 	.hero-text h1 { font-size: 2rem; }
 	.template-hero { height: 50vh; }
+	
+	/* Gallery responsive */
+	#vehicles-showcase .image-gallery {
+		grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+		gap: 1.5rem;
+	}
+	
+	#vehicles-showcase .gallery-item {
+		height: 350px;
+	}
 }
 
 @media (max-width: 640px) {
@@ -587,6 +663,28 @@
 	.lead { font-size: 0.9rem; }
 	.template-hero { height: 45vh; }
 	.hero-ctas { flex-direction: column; align-items: center; }
+	
+	/* Gallery mobile */
+	#vehicles-showcase .image-gallery {
+		grid-template-columns: 1fr;
+		gap: 1rem;
+	}
+	
+	#vehicles-showcase .gallery-item {
+		height: 300px;
+	}
+	
+	#vehicles-showcase .gallery-content {
+		padding: 1.5rem 1rem;
+	}
+	
+	#vehicles-showcase .gallery-content h3 {
+		font-size: 1.2rem;
+	}
+	
+	#vehicles-showcase .gallery-content p {
+		font-size: 0.85rem;
+	}
 }
 
 /* Station Carousel Wrapper */
@@ -594,6 +692,8 @@
   position: relative;
   margin-top: 2rem;
   padding: 0 60px;
+  opacity: 1 !important; /* Force visible */
+  visibility: visible !important; /* Force visible */
 }
 
 .stations-carousel {
@@ -610,6 +710,8 @@
 
 .station-card {
   background: white;
+  opacity: 1 !important; /* Force visible */
+  visibility: visible !important; /* Force visible */
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
