@@ -32,6 +32,7 @@ namespace Repositories
         public async Task<List<EVBike_Stocks>> GetStocksByBikeIDAsync(int bikeID)
         {
             return await _context.EVBike_Stocks
+                .Include(s => s.Station)
                 .Where(stock => stock.BikeID == bikeID)
                 .ToListAsync();
         }

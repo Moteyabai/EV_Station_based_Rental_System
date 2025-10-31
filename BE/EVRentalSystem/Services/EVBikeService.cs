@@ -24,5 +24,7 @@ namespace Services
         public async Task UpdateAsync(EVBike entity) => await _repository.UpdateAsync(entity);
 
         public async Task<IEnumerable<EVBike>> GetAvailableBikesAsync() => await _repository.GetAvailableBikesAsync();
+
+        public async Task<IEnumerable<EVBike>> GetBikesByBrandIDAsync(int brandId) => await _repository.GetBikesByBrandIDAsync(brandId);
     }
 }

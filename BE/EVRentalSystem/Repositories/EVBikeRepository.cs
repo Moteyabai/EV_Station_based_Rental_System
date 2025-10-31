@@ -40,5 +40,24 @@ namespace Repositories
                 throw new Exception(ex.Message);
             }
         }
+
+        /// <summary>
+        /// Get all bikes by BrandID with Brand navigation property
+        /// </summary>
+        public async Task<IEnumerable<EVBike>> GetBikesByBrandIDAsync(int brandId)
+        {
+            try
+            {
+                return await _context.EVBikes
+                    .Include(x => x.Brand)
+                    .Where(bike => bike.BrandID == brandId)
+                    .OrderByDescending(bike => bike.CreatedAt)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error getting bikes by BrandID: {ex.Message}");
+            }
+        }
     }
 }

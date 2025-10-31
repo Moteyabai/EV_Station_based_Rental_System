@@ -28,4 +28,16 @@ namespace BusinessObject.Models.DTOs
         public int? BatteryCapacity { get; set; }
         public int? Status { get; set; }
     }
+
+    public class EVBike_StocksDisplayDTO
+    {
+        public int StockID { get; set; }
+        public int BikeID { get; set; }
+        public int Color { get; set; }
+        public int StationID { get; set; }
+        public string StationName { get; set; }
+        public string LicensePlate { get; set; }
+        public int BatteryCapacity { get; set; }
+        public int Status { get; set; }
+    }
 }
