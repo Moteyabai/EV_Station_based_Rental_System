@@ -16,12 +16,15 @@ namespace API.Controllers
     public class StationController : ControllerBase
     {
         private readonly StationService _stationService;
+        private readonly EVBike_StocksService _eVBike_StocksService;
         private readonly Client _appWriteClient;
         private readonly IConfiguration _configuration;
 
-        public StationController(StationService stationService, IConfiguration configuration)
+        public StationController(StationService stationService, IConfiguration configuration,
+            EVBike_StocksService eVBike_StocksService)
         {
             _stationService = stationService;
+            _eVBike_StocksService = eVBike_StocksService;
             _configuration = configuration;
             AppwriteSettings appW = new AppwriteSettings()
             {
@@ -75,6 +78,37 @@ namespace API.Controllers
                     return NotFound(res);
                 }
                 return Ok(stations);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpGet("AvailableStockInStationsByBikeID")]
+        public async Task<ActionResult<IEnumerable<Station>>> AvailableStockInStationsByBikeID(int bikeID)
+        {
+            try
+            {
+                var stocks = await _eVBike_StocksService.GetAvailbStocksAtStationByBikeIDAsync(bikeID);
+                if (stocks == null || !stocks.Any())
+                {
+                    var res = new ResponseDTO
+                    {
+                        Message = "Loại xe này không còn hàng"
+                    };
+                    return NotFound(res);
+                }
+
+                var stastions = new List<Station>();
+                foreach (var stock in stocks)
+                {
+                    if (stock.Station != null && !stastions.Any(s => s.StationID == stock.Station.StationID))
+                    {
+                        stastions.Add(stock.Station);
+                    }
+                }
+                return Ok(stastions);
             }
             catch (Exception ex)
             {
