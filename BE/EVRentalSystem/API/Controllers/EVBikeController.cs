@@ -211,6 +211,50 @@ namespace API.Controllers
             }
         }
 
+        /// <summary>
+        /// Get bikes by BrandID (Public access)
+        /// </summary>
+        [HttpGet("GetBikesByBrandID/{brandId}")]
+        public async Task<ActionResult<IEnumerable<EVBikeDisplayDTO>>> GetBikesByBrandID(int brandId)
+        {
+            try
+            {
+                var bikes = await _evBikeService.GetBikesByBrandIDAsync(brandId);
+                if (bikes == null || !bikes.Any())
+                {
+                    var res = new ResponseDTO();
+                    res.Message = "Không tìm thấy xe điện nào của thương hiệu này!";
+                    return NotFound(res);
+                }
+
+                var display = new List<EVBikeDisplayDTO>();
+                foreach (var bike in bikes)
+                {
+                    var bikeDTO = new EVBikeDisplayDTO
+                    {
+                        BikeID = bike.BikeID,
+                        BikeName = bike.BikeName,
+                        BrandID = bike.BrandID,
+                        BrandName = bike.Brand.BrandName,
+                        FrontImg = bike.FrontImg,
+                        BackImg = bike.BackImg,
+                        MaxSpeed = bike.MaxSpeed,
+                        MaxDistance = bike.MaxDistance,
+                        TimeRented = bike.TimeRented,
+                        Quantity = bike.Quantity,
+                        Description = bike.Description,
+                        PricePerDay = bike.PricePerDay
+                    };
+                    display.Add(bikeDTO);
+                }
+                return Ok(display);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
         [HttpPut("UpdateBike")]
         [Authorize]
         public async Task<ActionResult> UpdateBike([FromBody] EVBikeUpdateDTO eVBike)
