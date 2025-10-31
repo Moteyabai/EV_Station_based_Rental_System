@@ -49,7 +49,22 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
     let isMounted = true;
     async function loadStations() {
       try {
-        const apiStations = await fetchActiveStations();
+        // Use the new API endpoint with bikeID
+        const token = localStorage.getItem('token');
+        const response = await fetch(
+          `http://localhost:5168/api/Station/AvailableStockInStationsByBikeID?bikeID=${vehicle.id}`,
+          {
+            headers: {
+              'Authorization': token ? `Bearer ${token}` : '',
+            },
+          }
+        );
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch stations');
+        }
+        
+        const apiStations = await response.json();
         if (!isMounted) return;
         const mapped = apiStations.map((s) => ({
           id: s.stationID || s.StationID || s.id,
@@ -67,7 +82,7 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
     }
     loadStations();
     return () => { isMounted = false; };
-  }, []);
+  }, [vehicle.id]);
 
   // Giữ nguyên logic state như cũ để tránh lỗi
   const [formData, setFormData] = useState({
