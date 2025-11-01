@@ -63,6 +63,21 @@ export default function Checkout() {
 
   const subtotal = getTotalPrice();
   const total = subtotal;
+  
+  // Debug: Log cart items to see station data structure
+  useEffect(() => {
+    console.log('🛒 [CHECKOUT] Cart items:', cartItems);
+    cartItems.forEach((item, index) => {
+      console.log(`🛒 [CHECKOUT] Item ${index + 1}:`, {
+        vehicleName: item.vehicle?.name,
+        rentalDetails: item.rentalDetails,
+        pickupStation: item.rentalDetails?.pickupStation,
+        returnStation: item.rentalDetails?.returnStation,
+      });
+      console.log(`📍 [CHECKOUT] Pickup Station Full Object:`, item.rentalDetails?.pickupStation);
+      console.log(`📍 [CHECKOUT] Return Station Full Object:`, item.rentalDetails?.returnStation);
+    });
+  }, [cartItems]);
 
   const handlePaymentSubmit = async (e) => {
     e.preventDefault();
@@ -176,6 +191,9 @@ export default function Checkout() {
 
                 // Save booking data before redirecting
                 const itemBookingId = `${bookingId}-${itemIndex}`;
+                const pickupStation = item.rentalDetails.pickupStation;
+                const returnStation = item.rentalDetails.returnStation || pickupStation;
+                
                 const bookingData = {
                   userId: user.email,
                   userEmail: user.email,
@@ -189,8 +207,12 @@ export default function Checkout() {
                   returnDate: item.rentalDetails.returnDate,
                   pickupTime: item.rentalDetails.pickupTime || '09:00',
                   returnTime: item.rentalDetails.returnTime || '18:00',
-                  pickupStation: item.rentalDetails.pickupStation?.name || 'Chưa chọn',
-                  returnStation: item.rentalDetails.pickupStation?.name || 'Chưa chọn',
+                  pickupStation: typeof pickupStation === 'object' ? pickupStation.name : (pickupStation || 'Chưa chọn'),
+                  pickupStationId: typeof pickupStation === 'object' ? pickupStation.id : null,
+                  pickupStationAddress: typeof pickupStation === 'object' ? pickupStation.address : null,
+                  returnStation: typeof returnStation === 'object' ? returnStation.name : (returnStation || 'Chưa chọn'),
+                  returnStationId: typeof returnStation === 'object' ? returnStation.id : null,
+                  returnStationAddress: typeof returnStation === 'object' ? returnStation.address : null,
                   days: item.rentalDetails.days || 1,
                   totalPrice: item.totalPrice || 0,
                   additionalServices: item.rentalDetails.additionalServices || {},
@@ -237,6 +259,8 @@ export default function Checkout() {
         }
 
         const itemBookingId = `${bookingId}-${itemIndex}`;
+        const pickupStation = item.rentalDetails.pickupStation;
+        const returnStation = item.rentalDetails.returnStation || pickupStation;
 
         const bookingData = {
           userId: user.email,
@@ -251,8 +275,12 @@ export default function Checkout() {
           returnDate: item.rentalDetails.returnDate,
           pickupTime: item.rentalDetails.pickupTime || '09:00',
           returnTime: item.rentalDetails.returnTime || '18:00',
-          pickupStation: item.rentalDetails.pickupStation?.name || 'Chưa chọn',
-          returnStation: item.rentalDetails.pickupStation?.name || 'Chưa chọn',
+          pickupStation: typeof pickupStation === 'object' ? pickupStation.name : (pickupStation || 'Chưa chọn'),
+          pickupStationId: typeof pickupStation === 'object' ? pickupStation.id : null,
+          pickupStationAddress: typeof pickupStation === 'object' ? pickupStation.address : null,
+          returnStation: typeof returnStation === 'object' ? returnStation.name : (returnStation || 'Chưa chọn'),
+          returnStationId: typeof returnStation === 'object' ? returnStation.id : null,
+          returnStationAddress: typeof returnStation === 'object' ? returnStation.address : null,
           days: item.rentalDetails.days || 1,
           totalPrice: item.totalPrice || 0,
           additionalServices: item.rentalDetails.additionalServices || {},
@@ -340,10 +368,26 @@ export default function Checkout() {
                         ⏱️ {item.rentalDetails.days} ngày thuê
                       </p>
                       <p className="pickup-location">
-                        📍 Nhận: {item.rentalDetails.pickupStation?.name}
+                        📍 Nhận xe tại: {(() => {
+                          const station = item.rentalDetails?.pickupStation;
+                          if (!station) return 'Chưa chọn điểm nhận';
+                          if (typeof station === 'object' && station.name) {
+                            return `${station.name}${station.address ? ` - ${station.address}` : ''}`;
+                          }
+                          if (typeof station === 'string') return station;
+                          return 'Chưa chọn điểm nhận';
+                        })()}
                       </p>
                       <p className="return-location">
-                        📍 Trả: {item.rentalDetails.pickupStation?.name}
+                        📍 Trả xe tại: {(() => {
+                          const station = item.rentalDetails?.returnStation || item.rentalDetails?.pickupStation;
+                          if (!station) return 'Chưa chọn điểm trả';
+                          if (typeof station === 'object' && station.name) {
+                            return `${station.name}${station.address ? ` - ${station.address}` : ''}`;
+                          }
+                          if (typeof station === 'string') return station;
+                          return 'Chưa chọn điểm trả';
+                        })()}
                       </p>
 
                       {/* Additional Services */}
