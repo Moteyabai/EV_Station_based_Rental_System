@@ -232,18 +232,34 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
 
       setFormData(updatedFormData);
 
+      // Convert station IDs to numbers for comparison
+      const pickupStationId = parseInt(updatedFormData.rentalInfo.pickupStationId);
+      const returnStationId = parseInt(updatedFormData.rentalInfo.returnStationId);
+      
+      console.log('🔍 [BOOKING] Looking for stations:', {
+        pickupStationId,
+        returnStationId,
+        allStations: stations,
+      });
+
+      const foundPickupStation = stations.find((s) => s.id === pickupStationId);
+      const foundReturnStation = stations.find((s) => s.id === returnStationId);
+      
+      console.log('✅ [BOOKING] Found stations:', {
+        foundPickupStation,
+        foundReturnStation,
+      });
+
       const rentalDetails = {
         ...updatedFormData.rentalInfo,
-        pickupStation: stations.find(
-          (s) => s.id === updatedFormData.rentalInfo.pickupStationId
-        ),
-        returnStation: stations.find(
-          (s) => s.id === updatedFormData.rentalInfo.returnStationId
-        ),
+        pickupStation: foundPickupStation,
+        returnStation: foundReturnStation,
         days: rentalDays,
         customerInfo: updatedFormData.customerInfo,
         totalPrice: totalPrice,
       };
+
+      console.log('📦 [BOOKING] Final rentalDetails:', rentalDetails);
 
       // Add to cart
       addToCart(vehicle, rentalDetails);
