@@ -1,9 +1,9 @@
-﻿import React, { useState } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "antd";
 import { StarOutlined } from "@ant-design/icons";
-import vehicles from "../data/vehicles";
 import { useCart } from "../contexts/CartContext";
+import { getBikeById, getAvailableBikes } from "../api/bikes";
 import BookingForm from "../components/BookingForm";
 import ReviewList from "../components/ReviewList";
 import ReviewForm from "../components/ReviewForm";
@@ -14,11 +14,152 @@ export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { getItemCount } = useCart();
-  const vehicle = vehicles.find((v) => v.id === id);
+  const [vehicle, setVehicle] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showBookingSuccess, setShowBookingSuccess] = useState(false);
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [availableBikesCount, setAvailableBikesCount] = useState(0);
+  const [loadingBikes, setLoadingBikes] = useState(true);
 
+  // Fetch vehicle details from API
+  useEffect(() => {
+    let isMounted = true;
+    async function loadVehicle() {
+      try {
+        setLoading(true);
+        setError(null); // Reset error state
+        console.log('🚲 [DETAIL] Fetching bike with ID:', id);
+        
+        const bikeData = await getBikeById(id);
+        
+        if (!isMounted) return;
+        
+        console.log('🚲 Bike detail from API:', bikeData);
+        
+        // Map backend data to frontend format
+        const quantity = bikeData.quantity || 0;
+        const isAvailable = quantity > 0;
+        
+        const mappedVehicle = {
+          id: bikeData.bikeID || bikeData.BikeID,
+          name: bikeData.bikeName || bikeData.model || bikeData.Model || 'Xe điện',
+          brand: bikeData.brandName || bikeData.BrandName || 'Unknown',
+          image: bikeData.thumbnailImageUrl || bikeData.ThumbnailImageUrl || bikeData.frontImg || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60',
+          backImage: bikeData.backImg || bikeData.thumbnailImageUrl,
+          price: bikeData.pricePerDay || bikeData.PricePerDay || 0,
+          priceUnit: '/ngày',
+          category: 'scooter',
+          short: `${bikeData.brandName || bikeData.BrandName || 'Xe điện'} - Số lượng có sẵn: ${quantity}`,
+          description: bikeData.description || bikeData.Description || 'Không có mô tả chi tiết.',
+          quantity: quantity,
+          available: isAvailable,
+          specs: {
+            battery: `${bikeData.batteryCapacity || bikeData.BatteryCapacity || 'N/A'}Ah`,
+            batteryCapacity: `${bikeData.batteryCapacity || bikeData.BatteryCapacity || 'N/A'}Ah`,
+            range: `${bikeData.maxDistance || 'N/A'} km`,
+            maxSpeed: `${bikeData.maxSpeed || 'N/A'} km/h`,
+            chargingTime: bikeData.chargingTime || bikeData.ChargingTime || 'N/A',
+            weight: bikeData.weight || 'N/A'
+          },
+          status: isAvailable ? 'available' : 'out-of-stock',
+          statusText: isAvailable ? 'Có sẵn' : 'Hết xe',
+          statusColor: isAvailable ? 'green' : 'red'
+        };
+        
+        console.log('✅ Mapped vehicle:', mappedVehicle);
+        
+        setVehicle(mappedVehicle);
+        setError(null);
+        console.log('✅ [DETAIL] Vehicle loaded successfully');
+      } catch (err) {
+        console.error('❌ [DETAIL] Error loading vehicle:', err);
+        if (isMounted) {
+          setError('Không thể tải thông tin xe. Vui lòng thử lại sau.');
+          setVehicle(null);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
+    
+    if (id) {
+      loadVehicle();
+    }
+    return () => { isMounted = false; };
+  }, [id]);
+
+  // Fetch available bikes count from API
+  useEffect(() => {
+    const fetchAvailableBikes = async () => {
+      try {
+        setLoadingBikes(true);
+        const token = localStorage.getItem('ev_token');
+        const allBikes = await getAvailableBikes(token);
+        
+        // Filter bikes by brand matching current vehicle
+        if (vehicle) {
+          const matchingBikes = allBikes.filter(bike => 
+            bike.brandName === vehicle.brand && bike.status === true
+          );
+          
+          setAvailableBikesCount(matchingBikes.length);
+          console.log(`Found ${matchingBikes.length} available ${vehicle.brand} bikes`);
+        }
+      } catch (error) {
+        console.error('Error fetching bikes:', error);
+        setAvailableBikesCount(0);
+      } finally {
+        setLoadingBikes(false);
+      }
+    };
+
+    if (vehicle) {
+      fetchAvailableBikes();
+    }
+  }, [vehicle]);
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="product-detail">
+        <div className="container">
+          <div className="loading-message">
+            <h2>🔄 Đang tải thông tin xe...</h2>
+            <p>Vui lòng đợi trong giây lát.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="product-not-found">
+        <div className="container">
+          <h2>❌ Có lỗi xảy ra</h2>
+          <p>{error}</p>
+          <div className="error-actions">
+            <button 
+              className="btn primary" 
+              onClick={() => window.location.reload()}
+            >
+              🔄 Thử lại
+            </button>
+            <Link to="/vehicles" className="btn secondary">
+              Quay lại danh sách xe
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Not found state (only show after loading is done and no vehicle)
   if (!vehicle) {
     return (
       <div className="product-not-found">
@@ -26,7 +167,6 @@ export default function ProductDetail() {
           <h2>Không tìm thấy xe</h2>
           <p>Xe bạn đang tìm không tồn tại hoặc đã bị xóa.</p>
           <Link to="/vehicles" className="btn primary">
-            {" "}
             Quay lại danh sách xe
           </Link>
         </div>
@@ -91,7 +231,15 @@ export default function ProductDetail() {
           {/* Info Section */}
           <div className="product-info">
             <div className="vehicle-header">
-              <div className="vehicle-badge">{vehicle.category === "scooter" ? "Xe máy điện" : vehicle.category}</div>
+              <div 
+                className="vehicle-badge"
+                style={{ 
+                  backgroundColor: vehicle.status === 'available' ? '#10b981' : '#ef4444',
+                  color: 'white'
+                }}
+              >
+                {vehicle.statusText} - {vehicle.quantity} xe
+              </div>
               <h1 className="vehicle-name">{vehicle.name}</h1>
               <p className="vehicle-category">{vehicle.short}</p>
             </div>
@@ -107,14 +255,22 @@ export default function ProductDetail() {
               <div className="status-item">
                 <span className="status-icon">●</span>
                 <span className="status-label">Trạng thái:</span>
-                <span className={`status-value ${vehicle.available ? "available" : "unavailable"}`}>
-                  {vehicle.available ? "Có sẵn" : "Không có sẵn"}
+                <span 
+                  className={`status-value ${vehicle.status}`}
+                  style={{ color: vehicle.statusColor, fontWeight: 'bold' }}
+                >
+                  {vehicle.statusText}
                 </span>
               </div>
               <div className="status-item">
                 <span className="status-icon">🏷️</span>
                 <span className="status-label">Hãng:</span>
                 <span className="status-value">{vehicle.brand}</span>
+              </div>
+              <div className="status-item">
+                <span className="status-icon">📦</span>
+                <span className="status-label">Số lượng:</span>
+                <span className="status-value">{vehicle.quantity} xe</span>
               </div>
             </div>
 

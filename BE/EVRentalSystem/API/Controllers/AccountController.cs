@@ -249,8 +249,14 @@ namespace API.Controllers
 
         [HttpPost("CreateStationStaff")]
         [Authorize]
-        public async Task<ActionResult<StationStaff>> CreateStationStaff([FromForm] AccountRegisterDTO accountRegisterDTO)
+        public async Task<ActionResult<StationStaff>> CreateStationStaff([FromForm] StaffCreateDTO accountRegisterDTO)
         {
+            if(!ModelState.IsValid)
+            {
+                var res = new ResponseDTO();
+                res.Message = "Dữ liệu không hợp lệ!";
+                return BadRequest(res);
+            }
             try
             {
                 var res = new ResponseDTO();
@@ -260,13 +266,8 @@ namespace API.Controllers
                     res.Message = "Không có quyền truy cập!";
                     return Unauthorized(res);
                 }
-                var acc = _mapper.Map<BusinessObject.Models.Account>(accountRegisterDTO);
-                if (acc == null)
-                {
-                    res.Message = "Dữ liệu đăng ký không phù hợp!";
-                    return BadRequest(res);
-                }
-                var checkEmail = await _accountService.CheckEmail(acc.Email);
+
+                var checkEmail = await _accountService.CheckEmail(accountRegisterDTO.Email);
                 if (checkEmail)
                 {
                     res.Message = "Email đã tồn tại!";
@@ -293,6 +294,11 @@ namespace API.Controllers
                 var avatarID = response.Id;
                 var avatarUrl = $"{_appWriteClient.Endpoint}/storage/buckets/{response.BucketId}/files/{avatarID}/view?project={projectID}";
                 //Hash the password before saving
+                var acc = new BusinessObject.Models.Account();
+
+                acc.FullName = accountRegisterDTO.FullName;
+                acc.Email = accountRegisterDTO.Email;
+                acc.Phone = accountRegisterDTO.Phone;
                 acc.Password = _passwordHasher.HashPassword(acc, accountRegisterDTO.Password);
                 acc.RoleID = 2; //Default role is Staff
                 acc.Avatar = avatarUrl;

@@ -27,7 +27,7 @@ import {
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../contexts/CartContext";
-import stations from "../data/stations";
+import { fetchActiveStations } from "../api/stations";
 import { calculateRentalDays, formatPrice } from "../utils/helpers";
 
 const { Title, Text } = Typography;
@@ -41,18 +41,48 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [totalPrice, setTotalPrice] = useState(0);
   const [rentalDays, setRentalDays] = useState(0);
+  const [stations, setStations] = useState([]);
+  const [loadingStations, setLoadingStations] = useState(true);
 
-  // Debug: log stations data
-  console.log("Stations data:", stations);
-  console.log("Number of stations:", stations?.length);
-
-  // Test if stations exist
+  // Load stations from API
   useEffect(() => {
-    console.log("Stations loaded:", stations);
-    if (stations && stations.length > 0) {
-      console.log("First station:", stations[0]);
+    let isMounted = true;
+    async function loadStations() {
+      try {
+        // Use the new API endpoint with bikeID
+        const token = localStorage.getItem('token');
+        const response = await fetch(
+          `http://localhost:5168/api/Station/AvailableStockInStationsByBikeID?bikeID=${vehicle.id}`,
+          {
+            headers: {
+              'Authorization': token ? `Bearer ${token}` : '',
+            },
+          }
+        );
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch stations');
+        }
+        
+        const apiStations = await response.json();
+        if (!isMounted) return;
+        const mapped = apiStations.map((s) => ({
+          id: s.stationID || s.StationID || s.id,
+          name: s.name || s.Name,
+          address: s.address || s.Address,
+        }));
+        setStations(mapped);
+      } catch (error) {
+        console.error("Error loading stations:", error);
+        message.error("Không thể tải danh sách trạm");
+        setStations([]);
+      } finally {
+        if (isMounted) setLoadingStations(false);
+      }
     }
-  }, []);
+    loadStations();
+    return () => { isMounted = false; };
+  }, [vehicle.id]);
 
   // Giữ nguyên logic state như cũ để tránh lỗi
   const [formData, setFormData] = useState({
@@ -202,18 +232,34 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
 
       setFormData(updatedFormData);
 
+      // Convert station IDs to numbers for comparison
+      const pickupStationId = parseInt(updatedFormData.rentalInfo.pickupStationId);
+      const returnStationId = parseInt(updatedFormData.rentalInfo.returnStationId);
+      
+      console.log('🔍 [BOOKING] Looking for stations:', {
+        pickupStationId,
+        returnStationId,
+        allStations: stations,
+      });
+
+      const foundPickupStation = stations.find((s) => s.id === pickupStationId);
+      const foundReturnStation = stations.find((s) => s.id === returnStationId);
+      
+      console.log('✅ [BOOKING] Found stations:', {
+        foundPickupStation,
+        foundReturnStation,
+      });
+
       const rentalDetails = {
         ...updatedFormData.rentalInfo,
-        pickupStation: stations.find(
-          (s) => s.id === updatedFormData.rentalInfo.pickupStationId
-        ),
-        returnStation: stations.find(
-          (s) => s.id === updatedFormData.rentalInfo.returnStationId
-        ),
+        pickupStation: foundPickupStation,
+        returnStation: foundReturnStation,
         days: rentalDays,
         customerInfo: updatedFormData.customerInfo,
         totalPrice: totalPrice,
       };
+
+      console.log('📦 [BOOKING] Final rentalDetails:', rentalDetails);
 
       // Add to cart
       addToCart(vehicle, rentalDetails);

@@ -2,19 +2,21 @@ import React from "react";
 import { Link } from "react-router-dom";
 import "../styles/Home.css";
 import "../styles/media.css";
-import stations from "../data/stations";
-import vehicles from "../data/vehicles";
+import { fetchActiveStations } from "../api/stations";
+import { getAvailableBikes } from "../api/bikes";
 
-// Using placeholder images and direct links to product images
-const bikeImg1 = vehicles[0].image; // VinFast Klara S
-const bikeImg2 = vehicles[1].image; // DatBike Weaver 200
-const bikeImg3 = vehicles[2].image; // VinFast Feliz S
+// Default placeholder images
+const defaultBikeImg = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60";
 const stationImg =
   "https://images.unsplash.com/photo-1599593752325-ffa41031056e?auto=format&fit=crop&w=1200&q=80";
 
 export default function Home() {
   const [currentBgIndex, setCurrentBgIndex] = React.useState(0);
   const [currentStationIndex, setCurrentStationIndex] = React.useState(0);
+  const [stations, setStations] = React.useState([]);
+  const [vehicles, setVehicles] = React.useState([]);
+  const [loadingStations, setLoadingStations] = React.useState(true);
+  const [loadingVehicles, setLoadingVehicles] = React.useState(true);
   
   // Background images array with cache busting
   const backgroundImages = [
@@ -22,6 +24,81 @@ export default function Home() {
     `/images/background/background-2.jpg?v=${Date.now()}`,
     `/images/background/background-3.jpg?v=${Date.now()}`,
   ];
+
+  // Load stations from API
+  React.useEffect(() => {
+    let isMounted = true;
+    async function loadStations() {
+      try {
+        setLoadingStations(true);
+        console.log('🚀 [HOME] Calling fetchActiveStations API... (Reload safe)');
+        const apiStations = await fetchActiveStations();
+        if (!isMounted) return;
+        console.log('✅ [HOME] Stations data received:', apiStations);
+        const mapped = apiStations.map((s) => ({
+          id: s.stationID || s.StationID || s.id,
+          name: s.name || s.Name,
+          address: s.address || s.Address,
+          description: s.description || s.Description,
+          image: s.thumbnailImageUrl || s.ThumbnailImageUrl || stationImg,
+          availableVehicles: s.availableBikes || 0,
+        }));
+        setStations(mapped);
+      } catch (error) {
+        console.error("❌ [HOME] Error loading stations:", error);
+        if (isMounted) setStations([]);
+      } finally {
+        if (isMounted) {
+          setLoadingStations(false);
+          console.log('✅ [HOME] Stations loaded successfully');
+        }
+      }
+    }
+    // Always call loadStations on mount/reload
+    loadStations();
+    return () => { isMounted = false; };
+  }, []);
+
+  // Load vehicles from API
+  React.useEffect(() => {
+    let isMounted = true;
+    async function loadVehicles() {
+      try {
+        setLoadingVehicles(true);
+        const token = localStorage.getItem('ev_token');
+        console.log('🚀 [HOME] Calling getAvailableBikes API... (Reload safe)');
+        const bikesData = await getAvailableBikes(token);
+        if (!isMounted) return;
+        console.log('✅ [HOME] Bikes data received:', bikesData);
+        
+        const mapped = bikesData.map((bike) => {
+          const quantity = bike.quantity || 0;
+          return {
+            id: bike.bikeID || bike.BikeID,
+            name: bike.bikeName || bike.model || bike.Model || 'Xe điện',
+            brand: bike.brandName || bike.BrandName || 'Unknown',
+            image: bike.thumbnailImageUrl || bike.ThumbnailImageUrl || bike.frontImg || defaultBikeImg,
+            price: bike.pricePerDay || bike.PricePerDay || 0,
+            priceUnit: '/ngày',
+            short: `${bike.brandName || bike.BrandName || 'Xe điện'} - ${quantity} xe có sẵn`,
+            quantity: quantity,
+          };
+        });
+        setVehicles(mapped);
+      } catch (error) {
+        console.error("❌ [HOME] Error loading vehicles:", error);
+        if (isMounted) setVehicles([]);
+      } finally {
+        if (isMounted) {
+          setLoadingVehicles(false);
+          console.log('✅ [HOME] Vehicles loaded successfully');
+        }
+      }
+    }
+    // Always call loadVehicles on mount/reload
+    loadVehicles();
+    return () => { isMounted = false; };
+  }, []);
 
   // Background slideshow effect
   React.useEffect(() => {
@@ -82,6 +159,13 @@ export default function Home() {
 
   // Featured vehicles (first 3)
   const featuredVehicles = vehicles.slice(0, 3);
+  
+  // Debug logs
+  console.log('🔍 [HOME RENDER] stations:', stations.length, stations);
+  console.log('🔍 [HOME RENDER] vehicles:', vehicles.length, vehicles);
+  console.log('🔍 [HOME RENDER] featuredVehicles:', featuredVehicles.length, featuredVehicles);
+  console.log('🔍 [HOME RENDER] loadingVehicles:', loadingVehicles);
+  console.log('🔍 [HOME RENDER] loadingStations:', loadingStations);
 
   return (
     <div className="template-root">
@@ -131,23 +215,43 @@ export default function Home() {
           <p className="section-sub scroll-reveal fade-up">
             Trải nghiệm tương lai của giao thông đô thị.
           </p>
-          <div className="image-gallery">
-            {featuredVehicles.map((vehicle, index) => (
-              <Link
-                to={`/vehicles/${vehicle.id}`}
-                key={vehicle.id}
-                className="gallery-item scroll-reveal fade-up"
-                style={{ textDecoration: 'none', color: 'inherit' }}
-              >
-                <img src={vehicle.image} alt={vehicle.name} loading="lazy" />
-                <div className="gradient-overlay"></div>
-                <div className="gallery-content">
-                  <h3>{vehicle.name}</h3>
-                  <p>{vehicle.short}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
+          
+          {loadingVehicles ? (
+            <div className="loading-message">
+              <p>🔄 Đang tải xe máy điện...</p>
+            </div>
+          ) : featuredVehicles.length === 0 ? (
+            <div className="no-vehicles-message">
+              <p>Hiện chưa có xe máy điện nào.</p>
+            </div>
+          ) : (
+            <div className="image-gallery">
+              {featuredVehicles.map((vehicle, index) => (
+                <Link
+                  to={`/vehicles/${vehicle.id}`}
+                  key={vehicle.id}
+                  className="gallery-item"
+                  style={{ textDecoration: 'none', color: 'inherit' }}
+                >
+                  <img 
+                    src={vehicle.image} 
+                    alt={vehicle.name} 
+                    loading="lazy"
+                    onError={(e) => {
+                      console.log('❌ Image failed to load:', vehicle.image);
+                      e.target.src = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60';
+                    }}
+                  />
+                  <div className="gradient-overlay"></div>
+                  <div className="gallery-content">
+                    <h3>{vehicle.name}</h3>
+                    <p>{vehicle.short}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+          
           <div className="text-center mt-4">
             <Link to="/vehicles" className="btn primary">
               Xem tất cả xe máy điện
@@ -223,66 +327,79 @@ export default function Home() {
             Tìm điểm thuê xe máy điện phù hợp với lịch trình của bạn.
           </p>
 
-          <div className="stations-carousel-wrapper scroll-reveal fade-up">
-            {/* Previous Button */}
-            <button
-              className="carousel-btn carousel-btn-prev"
-              onClick={handlePrevStation}
-              aria-label="Trạm trước"
-            >
-              <span>&#8249;</span>
-            </button>
-
-            {/* Stations Carousel */}
-            <div className="stations-carousel">
-              <div
-                className="stations-carousel-track"
-                style={{
-                  transform: `translateX(-${currentStationIndex * (100 / stationsPerView)}%)`,
-                }}
-              >
-                {stations.map((station) => (
-                  <div key={station.id} className="station-card">
-                    <img
-                      src={station.image}
-                      alt={station.name}
-                      className="station-img"
-                    />
-                    <div className="station-content">
-                      <h3>{station.name}</h3>
-                      <p className="station-address">{station.address}</p>
-                      <div className="station-meta">
-                        <span className="station-hours">
-                          {station.openingHours}
-                        </span>
-                        <span className="station-available">
-                          {station.availableVehicles} xe có sẵn
-                        </span>
-                      </div>
-                      <Link
-                        to={`/stations/${station.id}`}
-                        className="btn primary sm"
-                      >
-                        Xem chi tiết
-                      </Link>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          {loadingStations ? (
+            <div className="loading-message">
+              <p>🔄 Đang tải điểm thuê...</p>
             </div>
+          ) : stations.length === 0 ? (
+            <div className="no-stations-message">
+              <p>Hiện chưa có điểm thuê nào.</p>
+            </div>
+          ) : (
+            <div className="stations-carousel-wrapper">
+              {/* Previous Button */}
+              <button
+                className="carousel-btn carousel-btn-prev"
+                onClick={handlePrevStation}
+                aria-label="Trạm trước"
+              >
+                <span>&#8249;</span>
+              </button>
 
-            {/* Next Button */}
-            <button
-              className="carousel-btn carousel-btn-next"
-              onClick={handleNextStation}
-              aria-label="Trạm tiếp theo"
-            >
-              <span>&#8250;</span>
-            </button>
-          </div>
+              {/* Stations Carousel */}
+              <div className="stations-carousel">
+                <div
+                  className="stations-carousel-track"
+                  style={{
+                    transform: `translateX(-${currentStationIndex * (100 / stationsPerView)}%)`,
+                  }}
+                >
+                  {stations.map((station) => (
+                    <div key={station.id} className="station-card">
+                      <img
+                        src={station.image}
+                        alt={station.name}
+                        className="station-img"
+                        onError={(e) => {
+                          e.target.src = 'https://images.unsplash.com/photo-1599593752325-ffa41031056e?auto=format&fit=crop&w=1200&q=80';
+                        }}
+                      />
+                      <div className="station-content">
+                        <h3>{station.name}</h3>
+                        <p className="station-address">{station.address}</p>
+                        <div className="station-meta">
+                          <span className="station-hours">
+                            {station.openingHours}
+                          </span>
+                          <span className="station-available">
+                            {station.availableVehicles} xe có sẵn
+                          </span>
+                        </div>
+                        <Link
+                          to={`/stations/${station.id}`}
+                          className="btn primary sm"
+                        >
+                          Xem chi tiết
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Next Button */}
+              <button
+                className="carousel-btn carousel-btn-next"
+                onClick={handleNextStation}
+                aria-label="Trạm tiếp theo"
+              >
+                <span>&#8250;</span>
+              </button>
+            </div>
+          )}
 
           {/* Carousel Indicators */}
-          {maxIndex > 0 && (
+          {!loadingStations && maxIndex > 0 && (
             <div className="carousel-indicators">
               {Array.from({ length: maxIndex + 1 }).map((_, index) => (
                 <button

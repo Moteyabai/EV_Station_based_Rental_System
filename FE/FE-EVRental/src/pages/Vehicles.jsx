@@ -1,11 +1,15 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import vehicles from "../data/vehicles";
+import { getAvailableBikes } from "../api/bikes";
 import "../styles/Vehicles.css";
 import { useCart } from "../contexts/CartContext";
 import BookingForm from "../components/BookingForm";
 
 export default function Vehicles() {
+  const [vehicles, setVehicles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [filterType, setFilterType] = useState("all");
   const [sortOption, setSortOption] = useState("price-asc");
   const [searchTerm, setSearchTerm] = useState("");
   const [brandFilter, setBrandFilter] = useState("all");
@@ -14,11 +18,95 @@ export default function Vehicles() {
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
 
+  // Load vehicles from API
+  useEffect(() => {
+    const abortController = new AbortController();
+    let isMounted = true;
+    
+    async function loadVehicles() {
+      try {
+        if (!isMounted || abortController.signal.aborted) return;
+        
+        setLoading(true);
+        setError(null); // Reset error state
+        
+        const token = localStorage.getItem('ev_token');
+        console.log('🚀 Calling getAvailableBikes API... (Reload safe)');
+        const bikesData = await getAvailableBikes(token);
+        
+        // Check if component is still mounted and request wasn't aborted
+        if (!isMounted || abortController.signal.aborted) {
+          console.log('⚠️ Component unmounted or request aborted');
+          return;
+        }
+        
+        console.log('🚲 Raw bikes data from API:', bikesData);
+        console.log('🔍 First bike sample:', bikesData[0]);
+        
+        // Map backend data to frontend format
+        const mappedVehicles = bikesData.map((bike) => {
+          console.log('🔧 Mapping bike:', bike.bikeID, bike);
+          const quantity = bike.quantity || 0;
+          const isAvailable = quantity > 0;
+          
+          return {
+            id: bike.bikeID || bike.BikeID,
+            name: bike.bikeName || bike.model || bike.Model || 'Xe điện',
+            brand: bike.brandName || 'Unknown',
+            image: bike.thumbnailImageUrl || bike.ThumbnailImageUrl || bike.frontImg || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60',
+            price: bike.pricePerDay || bike.PricePerDay || 0,
+            priceUnit: '/ngày',
+            category: 'scooter',
+            short: `${bike.brandName || bike.BrandName || 'Xe điện'} - Số lượng: ${quantity||'0'}`,
+            description: bike.description || bike.Description || '',
+            quantity: quantity,
+            specs: {
+              range: `${bike.maxDistance || 'N/A'} km`,
+              maxSpeed: `${bike.maxSpeed || 'N/A'} km/h`,
+              batteryCapacity: `${bike.batteryCapacity || bike.BatteryCapacity || 'N/A'}Ah`,
+              chargingTime: bike.chargingTime || bike.ChargingTime || 'N/A'
+            },
+            status: isAvailable ? 'available' : 'out-of-stock',
+            statusText: isAvailable ? 'Có sẵn' : 'Hết xe',
+            statusColor: isAvailable ? 'green' : 'red'
+          };
+        });
+        
+        console.log('✅ Mapped vehicles:', mappedVehicles);
+        console.log('📊 Total vehicles:', mappedVehicles.length);
+        
+        setVehicles(mappedVehicles);
+        setError(null);
+      } catch (err) {
+        console.error('❌ Error loading vehicles:', err);
+        if (isMounted) {
+          setError('Không thể tải danh sách xe. Vui lòng thử lại sau.');
+          setVehicles([]);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+          console.log('✅ Vehicles page loaded successfully');
+        }
+      }
+    }
+    
+    // Always call loadVehicles on mount/reload
+    loadVehicles();
+    
+    // Cleanup function to abort request if component unmounts
+    return () => { 
+      console.log('🧹 Cleanup: Aborting API request');
+      isMounted = false;
+      abortController.abort();
+    };
+  }, []); // Empty dependency array - only run once on mount
+
   // Get unique brands
   const brands = useMemo(() => {
     const uniqueBrands = [...new Set(vehicles.map((vehicle) => vehicle.brand))];
     return ["all", ...uniqueBrands];
-  }, []);
+  }, [vehicles]);
 
   // Filter and sort vehicles
   const filteredVehicles = useMemo(() => {
@@ -35,6 +123,11 @@ export default function Vehicles() {
       );
     }
 
+    // Apply type filter
+    if (filterType !== "all") {
+      filtered = filtered.filter((vehicle) => vehicle.category === filterType);
+    }
+
     // Apply brand filter
     if (brandFilter !== "all") {
       filtered = filtered.filter((vehicle) => vehicle.brand === brandFilter);
@@ -47,7 +140,52 @@ export default function Vehicles() {
       if (sortOption === "name") return a.name.localeCompare(b.name);
       return 0;
     });
-  }, [sortOption, searchTerm, brandFilter]);
+  }, [filterType, sortOption, searchTerm, brandFilter, vehicles]);
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="vehicles-page">
+        <div className="vehicles-hero">
+          <div className="vehicles-hero-content">
+            <h1>Xe máy điện có sẵn</h1>
+            <p>Đang tải danh sách xe...</p>
+          </div>
+        </div>
+        <div className="vehicles-container">
+          <div className="loading-message">
+            <p>🔄 Đang tải danh sách xe điện...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="vehicles-page">
+        <div className="vehicles-hero">
+          <div className="vehicles-hero-content">
+            <h1>Xe máy điện có sẵn</h1>
+            <p>{error}</p>
+          </div>
+        </div>
+        <div className="vehicles-container">
+          <div className="error-message">
+            <h3>❌ Có lỗi xảy ra</h3>
+            <p>{error}</p>
+            <button
+              className="btn primary"
+              onClick={() => window.location.reload()}
+            >
+              🔄 Thử lại
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="vehicles-page">
@@ -135,10 +273,14 @@ export default function Vehicles() {
                     <p className="vehicle-short">{vehicle.short}</p>
                     <div className="vehicle-meta">
                       <span className="vehicle-brand">{vehicle.brand}</span>
-                      <span className="vehicle-category">
-                        {vehicle.category === "scooter"
-                          ? "Xe máy điện"
-                          : vehicle.category}
+                      <span 
+                        className={`vehicle-status ${vehicle.status}`}
+                        style={{ 
+                          color: vehicle.statusColor,
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        {vehicle.statusText}
                       </span>
                     </div>
                     <div className="vehicle-price">
@@ -147,13 +289,13 @@ export default function Vehicles() {
                     </div>
                     <div className="vehicle-specs">
                       <div className="spec">
-                        <span className="spec-icon">⚡</span>
+                        <span className="spec-icon">🏁</span>
                         <span className="spec-value">
                           {vehicle.specs.range}
                         </span>
                       </div>
                       <div className="spec">
-                        <span className="spec-icon">🏁</span>
+                        <span className="spec-icon">⚡</span>
                         <span className="spec-value">
                           {vehicle.specs.maxSpeed}
                         </span>
@@ -168,12 +310,19 @@ export default function Vehicles() {
                       </Link>
                       <button
                         onClick={() => {
-                          setSelectedVehicle(vehicle);
-                          setShowBookingForm(true);
+                          if (vehicle.status === 'available') {
+                            setSelectedVehicle(vehicle);
+                            setShowBookingForm(true);
+                          }
                         }}
-                        className="btn rent-now"
+                        className={`btn rent-now ${vehicle.status === 'out-of-stock' ? 'disabled' : ''}`}
+                        disabled={vehicle.status === 'out-of-stock'}
+                        style={{
+                          opacity: vehicle.status === 'out-of-stock' ? 0.5 : 1,
+                          cursor: vehicle.status === 'out-of-stock' ? 'not-allowed' : 'pointer'
+                        }}
                       >
-                        Thuê ngay
+                        {vehicle.status === 'available' ? 'Thuê ngay' : 'Hết xe'}
                       </button>
                     </div>
                   </div>

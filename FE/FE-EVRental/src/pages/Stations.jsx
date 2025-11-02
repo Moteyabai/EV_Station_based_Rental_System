@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import StationFinder from "../components/StationFinder";
 import StationMap from "../components/StationMap";
-import stationsData from "../data/stations";
 import { fetchActiveStations } from "../api/stations";
 import { calculateDistance } from "../utils/helpers";
 import "../styles/Stations.css";
@@ -11,7 +10,7 @@ import { FaMapMarkerAlt, FaClock, FaMotorcycle } from "react-icons/fa";
 export default function Stations() {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState("map"); // 'map' or 'list'
-  const [stations, setStations] = useState(stationsData);
+  const [stations, setStations] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
   const [nearbyStations, setNearbyStations] = useState([]);
   const [locationPermission, setLocationPermission] = useState("pending"); // 'pending', 'granted', 'denied'
@@ -24,8 +23,12 @@ export default function Stations() {
     let isMounted = true;
     async function loadStations() {
       try {
+        setLoading(true);
+        setError(null); // Reset error state
+        console.log('🚀 Calling fetchActiveStations API... (Reload safe)');
         const apiStations = await fetchActiveStations();
         if (!isMounted) return;
+        console.log('✅ Stations data received:', apiStations);
         // Map backend fields to frontend expected shape minimally
         const mapped = apiStations.map((s) => ({
           id: s.stationID || s.StationID || s.id,
@@ -43,13 +46,19 @@ export default function Stations() {
         }));
         setStations(mapped);
       } catch (e) {
-        console.error(e);
-        setError("Không tải được dữ liệu trạm. Hiển thị dữ liệu mẫu.");
-        setStations(stationsData);
+        console.error("❌ Error loading stations:", e);
+        if (isMounted) {
+          setError("Không tải được dữ liệu trạm. Vui lòng thử lại sau.");
+          setStations([]);
+        }
       } finally {
-        if (isMounted) setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+          console.log('✅ Stations page loaded successfully');
+        }
       }
     }
+    // Always call loadStations on mount/reload
     loadStations();
     return () => { isMounted = false; };
   }, []);
@@ -69,7 +78,7 @@ export default function Stations() {
           setIsRequestingLocation(false);
 
           // Tính khoảng cách và sắp xếp trạm theo khoảng cách gần nhất
-          const stationsWithDistance = stationsData
+          const stationsWithDistance = stations
             .map((station) => {
               const distance = calculateDistance(
                 location.lat,
@@ -88,10 +97,9 @@ export default function Stations() {
           console.error("Lỗi khi lấy vị trí:", error);
           setLocationPermission("denied");
           setIsRequestingLocation(false);
-          // Mặc định là vị trí TPHCM
+          // Giữ nguyên stations từ API
           const defaultLocation = { lat: 10.762622, lng: 106.660172 };
           setUserLocation(defaultLocation);
-          setStations(stationsData);
         }
       );
     } else {
@@ -100,7 +108,6 @@ export default function Stations() {
       setIsRequestingLocation(false);
       const defaultLocation = { lat: 10.762622, lng: 106.660172 };
       setUserLocation(defaultLocation);
-      setStations(stationsData);
     }
   };
 

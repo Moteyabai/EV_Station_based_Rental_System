@@ -32,6 +32,7 @@ namespace Repositories
         public async Task<List<EVBike_Stocks>> GetStocksByBikeIDAsync(int bikeID)
         {
             return await _context.EVBike_Stocks
+                .Include(s => s.Station)
                 .Where(stock => stock.BikeID == bikeID)
                 .ToListAsync();
         }
@@ -48,5 +49,14 @@ namespace Repositories
             return await _context.EVBike_Stocks
                 .FirstOrDefaultAsync(stock => stock.BikeID == bikeID && stock.Status == (int)BikeStatus.Available);
         }
+
+        public async Task<List<EVBike_Stocks>> GetAvailbStocksAtStationByBikeIDAsync(int bikeID)
+        {
+            return await _context.EVBike_Stocks
+                .Include(s => s.Station)
+                .Where(stock => stock.BikeID == bikeID && stock.Status == (int)BikeStatus.Available)
+                .ToListAsync();
+        }
+
     }
 }

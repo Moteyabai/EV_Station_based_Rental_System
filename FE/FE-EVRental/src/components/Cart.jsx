@@ -8,6 +8,18 @@ export default function Cart() {
   const { cartItems, removeFromCart, getTotalPrice, getItemCount, clearCart } =
     useCart();
 
+  // Debug: Log cart items to see station data structure
+  React.useEffect(() => {
+    console.log('🛒 [CART] Cart items:', cartItems);
+    cartItems.forEach((item, index) => {
+      console.log(`🛒 [CART] Item ${index + 1}:`, {
+        vehicleName: item.vehicle?.name,
+        pickupStation: item.rentalDetails?.pickupStation,
+        returnStation: item.rentalDetails?.returnStation,
+      });
+    });
+  }, [cartItems]);
+
   if (cartItems.length === 0) {
     return (
       <div className="cart-container">
@@ -56,36 +68,91 @@ export default function Cart() {
               </div>
 
               <div className="cart-item-details">
-                <h4>{item.vehicle.name}</h4>
-                <p className="vehicle-type">{item.vehicle.short}</p>
+                <div className="vehicle-header">
+                  <h4>{item.vehicle.name}</h4>
+                  <p className="vehicle-type">{item.vehicle.short}</p>
+                </div>
 
                 <div className="rental-details">
-                  <div className="rental-info">
-                    <span className="label">📅 Ngày thuê:</span>
-                    <span>
-                      {formatDate(item.rentalDetails.pickupDate)} -{" "}
-                      {formatDate(item.rentalDetails.returnDate)}
-                    </span>
+                  {/* Ngày thuê */}
+                  <div className="rental-info-row">
+                    <div className="info-label">
+                      <span className="icon">📅</span>
+                      <span className="text">Ngày thuê</span>
+                    </div>
+                    <div className="info-value">
+                      <div>{formatDate(item.rentalDetails.pickupDate)}</div>
+                      <div className="separator">→</div>
+                      <div>{formatDate(item.rentalDetails.returnDate)}</div>
+                      <div className="duration-badge">
+                        {item.rentalDetails.days} ngày
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="rental-info">
-                    <span className="label">🕒 Thời gian:</span>
-                    <span>
-                      {item.rentalDetails.pickupTime} -{" "}
-                      {item.rentalDetails.returnTime}
-                    </span>
+                  {/* Thời gian */}
+                  <div className="rental-info-row">
+                    <div className="info-label">
+                      <span className="icon">🕒</span>
+                      <span className="text">Thời gian</span>
+                    </div>
+                    <div className="info-value">
+                      <div>Nhận: {item.rentalDetails.pickupTime}</div>
+                      <div className="separator">•</div>
+                      <div>Trả: {item.rentalDetails.returnTime}</div>
+                    </div>
                   </div>
 
-                  <div className="rental-info">
-                    <span className="label">📍 Điểm nhận:</span>
-                    <span>
-                      {item.rentalDetails.pickupStation?.name || "Chưa chọn"}
-                    </span>
+                  {/* Điểm nhận xe */}
+                  <div className="rental-info-row">
+                    <div className="info-label">
+                      <span className="icon">📍</span>
+                      <span className="text">Điểm nhận</span>
+                    </div>
+                    <div className="info-value">
+                      {(() => {
+                        const station = item.rentalDetails?.pickupStation;
+                        if (!station) return <span className="not-selected">Chưa chọn điểm nhận</span>;
+                        if (typeof station === 'object' && station.name) {
+                          return (
+                            <div className="station-info">
+                              <div className="station-name">{station.name}</div>
+                              {station.address && (
+                                <div className="station-address">{station.address}</div>
+                              )}
+                            </div>
+                          );
+                        }
+                        if (typeof station === 'string') return <span>{station}</span>;
+                        return <span className="not-selected">Chưa chọn điểm nhận</span>;
+                      })()}
+                    </div>
                   </div>
 
-                  <div className="rental-info duration">
-                    <span className="label">⏱️ Thời gian thuê:</span>
-                    <span>{item.rentalDetails.days} ngày</span>
+                  {/* Điểm trả xe */}
+                  <div className="rental-info-row">
+                    <div className="info-label">
+                      <span className="icon">�</span>
+                      <span className="text">Điểm trả</span>
+                    </div>
+                    <div className="info-value">
+                      {(() => {
+                        const station = item.rentalDetails?.returnStation || item.rentalDetails?.pickupStation;
+                        if (!station) return <span className="not-selected">Chưa chọn điểm trả</span>;
+                        if (typeof station === 'object' && station.name) {
+                          return (
+                            <div className="station-info">
+                              <div className="station-name">{station.name}</div>
+                              {station.address && (
+                                <div className="station-address">{station.address}</div>
+                              )}
+                            </div>
+                          );
+                        }
+                        if (typeof station === 'string') return <span>{station}</span>;
+                        return <span className="not-selected">Chưa chọn điểm trả</span>;
+                      })()}
+                    </div>
                   </div>
                 </div>
               </div>

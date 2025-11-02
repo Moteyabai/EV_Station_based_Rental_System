@@ -60,23 +60,48 @@ namespace API.Controllers
         }
 
         [HttpGet("GetStocksByBikeID/{bikeID}")]
-        public async Task<IActionResult> GetStocksByBikeID(int bikeID)
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<EVBike_StocksDisplayDTO>>> GetStocksByBikeID(int bikeID)
         {
             var res = new ResponseDTO();
+            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
+            if (permission != "2" && permission != "3")
+            {
+                res.Message = "Không có quyền truy cập!";
+                return Unauthorized(res);
+            }
             try
             {
                 var stocks = await _evBikeStocksService.GetStocksByBikeIDAsync(bikeID);
                 if (stocks == null || !stocks.Any())
                 {
-                    res.Message = $"Hiện không có xe cho BikeID: {bikeID}";
+                    res.Message = "Không tìm thấy xe nào.";
                     return NotFound(res);
                 }
-                return Ok(stocks);
+
+                var display = new List<EVBike_StocksDisplayDTO>();
+                foreach(var stock in stocks)
+                {
+                    var dis = new EVBike_StocksDisplayDTO
+                    {
+                        StockID = stock.StockID,
+                        BikeID = stock.BikeID,
+                        Color = stock.Color,
+                        StationID = stock.StationID,
+                        StationName = stock.Station.Name,
+                        BatteryCapacity = stock.BatteryCapacity,
+                        LicensePlate = stock.LicensePlate,
+                        Status = stock.Status
+                    };
+                    display.Add(dis);
+                }
+
+                return Ok(display);
             }
             catch (Exception ex)
             {
                 res.Message = $"Lỗi khi lấy dữ liệu: {ex.Message}";
-                return StatusCode(StatusCodes.Status500InternalServerError, res);
+                return Array.Empty<EVBike_StocksDisplayDTO>();
             }
         }
 
