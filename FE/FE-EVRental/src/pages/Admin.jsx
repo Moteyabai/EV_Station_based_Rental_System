@@ -800,7 +800,6 @@ const Admin = () => {
       setBrands(mappedBrands);
     } catch (error) {
       console.error("Error fetching brands:", error);
-      alert("Không thể tải danh sách hãng xe: " + error.message);
     }
   };
 

@@ -1,10 +1,40 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const orderCode = searchParams.get('orderCode') || 'N/A';
+
+  useEffect(() => {
+    const callSuccessAPI = async () => {
+      if (orderCode && orderCode !== 'N/A') {
+        try {
+          const token = localStorage.getItem('token');
+          const response = await fetch(
+            `http://localhost:5168/api/Payment/success?orderID=${orderCode}`,
+            {
+              method: 'PUT',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+
+          if (response.ok) {
+            console.log('Payment success recorded successfully');
+          } else {
+            console.error('Failed to record payment success');
+          }
+        } catch (error) {
+          console.error('Error calling payment success API:', error);
+        }
+      }
+    };
+
+    callSuccessAPI();
+  }, [orderCode]);
 
   return (
     <div style={{
