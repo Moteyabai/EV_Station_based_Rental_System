@@ -40,7 +40,7 @@ export default function Home() {
           name: s.name || s.Name,
           address: s.address || s.Address,
           description: s.description || s.Description,
-          image: s.thumbnailImageUrl || s.ThumbnailImageUrl || stationImg,
+          image: s.imageUrl || s.ThumbnailImageUrl || stationImg,
           availableVehicles: s.availableBikes || 0,
         }));
         setStations(mapped);
