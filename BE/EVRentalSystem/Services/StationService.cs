@@ -48,24 +48,12 @@ namespace Services
             return stations.Where(s => s.Address.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
         }
 
-        public async Task<IEnumerable<Station>> GetStationsByCapacityRangeAsync(int minCapacity, int maxCapacity)
-        {
-            var stations = await GetAllAsync();
-            return stations.Where(s => s.BikeCapacity >= minCapacity && s.BikeCapacity <= maxCapacity);
-        }
-
         public async Task<IEnumerable<Station>> GetStationsWithAvailableBikesAsync()
         {
             var stations = await GetAllAsync();
             // This would need to be implemented with actual bike availability logic
             // For now, return all active stations
             return stations.Where(s => s.IsActive);
-        }
-
-        public async Task<int> GetTotalBikeCapacityAsync()
-        {
-            var stations = await GetActiveStationsAsync();
-            return stations.Sum(s => s.BikeCapacity);
         }
 
         public async Task<IEnumerable<Station>> GetStationsCreatedAfterAsync(DateTime date)

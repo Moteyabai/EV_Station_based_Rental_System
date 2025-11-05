@@ -20,14 +20,16 @@ namespace API.Controllers
         private readonly IConfiguration _configuration;
         private readonly StationStaffService _stationStaffService;
         private readonly StationService _stationService;
+        private readonly EVBike_StocksService _stocks;
 
         public EVBikeController(EVBikeService evBikeService, IConfiguration configuration
-            , StationService stationService, StationStaffService stationStaffService)
+            , StationService stationService, StationStaffService stationStaffService, EVBike_StocksService stocks)
         {
             _evBikeService = evBikeService;
             _configuration = configuration;
             _stationService = stationService;
             _stationStaffService = stationStaffService;
+            _stocks = stocks;
             AppwriteSettings appW = new AppwriteSettings()
             {
                 ProjectId = configuration.GetValue<string>("Appwrite:ProjectId"),
@@ -79,9 +81,11 @@ namespace API.Controllers
                     res.Message = "Danh sách trống";
                     return NotFound(res);
                 }
+
                 var display = new List<EVBikeDisplayDTO>();
                 foreach (var bike in bikes)
                 {
+                    var quantity = await _stocks.GetStockCountByBikeIDAsync(bike.BikeID);
                     var bikeDTO = new EVBikeDisplayDTO
                     {
                         BikeID = bike.BikeID,
@@ -93,7 +97,7 @@ namespace API.Controllers
                         MaxSpeed = bike.MaxSpeed,
                         MaxDistance = bike.MaxDistance,
                         TimeRented = bike.TimeRented,
-                        Quantity = bike.Quantity,
+                        Quantity = quantity,
                         Description = bike.Description,
                         PricePerDay = bike.PricePerDay
                     };
@@ -192,7 +196,7 @@ namespace API.Controllers
         }
 
         [HttpGet("GetBikeByID/{id}")]
-        public async Task<ActionResult<EVBike>> GetBikeByID(int id)
+        public async Task<ActionResult<EVBikeDisplayDTO>> GetBikeByID(int id)
         {
             try
             {
@@ -203,7 +207,26 @@ namespace API.Controllers
                     res.Message = "Không tìm thấy xe điện!";
                     return NotFound(res);
                 }
-                return Ok(bike);
+
+                var quantity = await _stocks.GetStockCountByBikeIDAsync(bike.BikeID);
+
+                var bikeDTO = new EVBikeDisplayDTO
+                {
+                    BikeID = bike.BikeID,
+                    BikeName = bike.BikeName,
+                    BrandID = bike.BrandID,
+                    BrandName = bike.Brand.BrandName,
+                    FrontImg = bike.FrontImg,
+                    BackImg = bike.BackImg,
+                    MaxSpeed = bike.MaxSpeed,
+                    MaxDistance = bike.MaxDistance,
+                    TimeRented = bike.TimeRented,
+                    Quantity = quantity,
+                    Description = bike.Description,
+                    PricePerDay = bike.PricePerDay
+                };
+
+                return Ok(bikeDTO);
             }
             catch (Exception ex)
             {
@@ -230,6 +253,7 @@ namespace API.Controllers
                 var display = new List<EVBikeDisplayDTO>();
                 foreach (var bike in bikes)
                 {
+                    var quantity = await _stocks.GetStockCountByBikeIDAsync(bike.BikeID);
                     var bikeDTO = new EVBikeDisplayDTO
                     {
                         BikeID = bike.BikeID,
@@ -241,7 +265,7 @@ namespace API.Controllers
                         MaxSpeed = bike.MaxSpeed,
                         MaxDistance = bike.MaxDistance,
                         TimeRented = bike.TimeRented,
-                        Quantity = bike.Quantity,
+                        Quantity = quantity,
                         Description = bike.Description,
                         PricePerDay = bike.PricePerDay
                     };
