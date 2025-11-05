@@ -181,6 +181,7 @@ namespace API.Controllers
                 var avatarUrl = $"{_appWriteClient.Endpoint}/storage/buckets/{response.BucketId}/files/{avatarID}/view?project={projectID}";
                 // Create Account
                 var account = new BusinessObject.Models.Account();
+
                 account.FullName = staffDto.FullName;
                 account.Email = staffDto.Email;
                 account.Phone = staffDto.Phone;
