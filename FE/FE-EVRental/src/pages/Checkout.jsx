@@ -175,7 +175,9 @@ export default function Checkout() {
                 accountID: accountID,
                 amount: item.totalPrice || 0,
                 bikeID: realBikeID,
-                stationID: realStationID
+                stationID: realStationID,
+                startTime: item.rentalDetails.pickupDate,
+                endTime: item.rentalDetails.returnDate
               };
 
               console.log('💳 Creating payment with database IDs:', paymentData);
@@ -368,7 +370,7 @@ export default function Checkout() {
                         ⏱️ {item.rentalDetails.days} ngày thuê
                       </p>
                       <p className="pickup-location">
-                        📍 Nhận xe tại: {(() => {
+                        📍 Nhận xe/trả tại: {(() => {
                           const station = item.rentalDetails?.pickupStation;
                           if (!station) return 'Chưa chọn điểm nhận';
                           if (typeof station === 'object' && station.name) {
@@ -376,17 +378,6 @@ export default function Checkout() {
                           }
                           if (typeof station === 'string') return station;
                           return 'Chưa chọn điểm nhận';
-                        })()}
-                      </p>
-                      <p className="return-location">
-                        📍 Trả xe tại: {(() => {
-                          const station = item.rentalDetails?.returnStation || item.rentalDetails?.pickupStation;
-                          if (!station) return 'Chưa chọn điểm trả';
-                          if (typeof station === 'object' && station.name) {
-                            return `${station.name}${station.address ? ` - ${station.address}` : ''}`;
-                          }
-                          if (typeof station === 'string') return station;
-                          return 'Chưa chọn điểm trả';
                         })()}
                       </p>
 

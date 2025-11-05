@@ -107,12 +107,12 @@ export default function Cart() {
                   <div className="rental-info-row">
                     <div className="info-label">
                       <span className="icon">📍</span>
-                      <span className="text">Điểm nhận</span>
+                      <span className="text">Điểm nhận/trả</span>
                     </div>
                     <div className="info-value">
                       {(() => {
                         const station = item.rentalDetails?.pickupStation;
-                        if (!station) return <span className="not-selected">Chưa chọn điểm nhận</span>;
+                        if (!station) return <span className="not-selected">Chưa chọn điểm nhận/trả</span>;
                         if (typeof station === 'object' && station.name) {
                           return (
                             <div className="station-info">
@@ -124,33 +124,7 @@ export default function Cart() {
                           );
                         }
                         if (typeof station === 'string') return <span>{station}</span>;
-                        return <span className="not-selected">Chưa chọn điểm nhận</span>;
-                      })()}
-                    </div>
-                  </div>
-
-                  {/* Điểm trả xe */}
-                  <div className="rental-info-row">
-                    <div className="info-label">
-                      <span className="icon">�</span>
-                      <span className="text">Điểm trả</span>
-                    </div>
-                    <div className="info-value">
-                      {(() => {
-                        const station = item.rentalDetails?.returnStation || item.rentalDetails?.pickupStation;
-                        if (!station) return <span className="not-selected">Chưa chọn điểm trả</span>;
-                        if (typeof station === 'object' && station.name) {
-                          return (
-                            <div className="station-info">
-                              <div className="station-name">{station.name}</div>
-                              {station.address && (
-                                <div className="station-address">{station.address}</div>
-                              )}
-                            </div>
-                          );
-                        }
-                        if (typeof station === 'string') return <span>{station}</span>;
-                        return <span className="not-selected">Chưa chọn điểm trả</span>;
+                        return <span className="not-selected">Chưa chọn điểm nhận/trả</span>;
                       })()}
                     </div>
                   </div>

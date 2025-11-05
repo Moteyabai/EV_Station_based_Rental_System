@@ -150,6 +150,8 @@ namespace API.Controllers
                 rental.Deposit = paymentDto.Amount;
                 rental.Status = (int)RentalStatus.Reserved;
                 rental.LicensePlate = availableStock.LicensePlate;
+                rental.StartDate = paymentDto.StartTime;
+                rental.EndDate = paymentDto.EndTime;
 
                 await _rentalService.AddAsync(rental);
 
