@@ -1,9 +1,12 @@
 // Admin Service - API calls for Admin dashboard
 const API_BASE_URL = 'http://localhost:5168/api';
 
-// Get token from localStorage
+// Get token from storage (localStorage or sessionStorage), falling back to legacy key
+import { getToken } from "../utils/auth";
+
+// Get token from storage
 const getAuthToken = () => {
-  return localStorage.getItem('token');
+  return getToken();
 };
 
 // Get auth headers

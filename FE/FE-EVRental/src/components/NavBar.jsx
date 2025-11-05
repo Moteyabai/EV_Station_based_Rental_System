@@ -42,7 +42,6 @@ export default function NavBar() {
   };
 
   const handleUserMenuClick = ({ key }) => {
-    console.log("Menu clicked:", key);
     setUserMenuVisible(false); // Đóng menu sau khi click
     switch (key) {
       case "logout":
@@ -56,7 +55,7 @@ export default function NavBar() {
         navigate("/history");
         break;
       default:
-        console.log("Unknown menu key:", key);
+        break;
     }
   };
 
@@ -203,10 +202,6 @@ export default function NavBar() {
                 type="text"
                 style={{ height: "auto", padding: "4px 8px" }}
                 onClick={() => {
-                  console.log(
-                    "Button clicked, current state:",
-                    userMenuVisible
-                  );
                   setUserMenuVisible(!userMenuVisible);
                 }}
               >
