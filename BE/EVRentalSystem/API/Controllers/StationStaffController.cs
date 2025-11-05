@@ -1,8 +1,13 @@
-﻿using BusinessObject.Models;
+﻿using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+using BusinessObject.Models;
+using BusinessObject.Models.Appwrite;
 using BusinessObject.Models.DTOs;
 using BusinessObject.Models.Enum;
 using BusinessObject.Models.JWT;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Services;
 
@@ -16,17 +21,30 @@ namespace API.Controllers
         private readonly AccountService _accountService;
         private readonly StationService _stationService;
         private readonly RentalService _rentalService;
+        private readonly Client _appWriteClient;
+        private readonly IConfiguration _configuration;
+        private readonly IPasswordHasher<BusinessObject.Models.Account> _passwordHasher = new PasswordHasher<BusinessObject.Models.Account>();
 
         public StationStaffController(
             StationStaffService stationStaffService,
             AccountService accountService,
             StationService stationService,
-            RentalService rentalService)
+            RentalService rentalService,
+            IConfiguration configuration
+            )
         {
             _stationStaffService = stationStaffService;
             _accountService = accountService;
             _stationService = stationService;
             _rentalService = rentalService;
+            _configuration = configuration;
+            AppwriteSettings appW = new AppwriteSettings()
+            {
+                ProjectId = configuration.GetValue<string>("Appwrite:ProjectId"),
+                Endpoint = configuration.GetValue<string>("Appwrite:Endpoint"),
+                ApiKey = configuration.GetValue<string>("Appwrite:ApiKey")
+            };
+            _appWriteClient = new Client().SetProject(appW.ProjectId).SetEndpoint(appW.Endpoint).SetKey(appW.ApiKey);
         }
 
         /// <summary>
@@ -115,65 +133,68 @@ namespace API.Controllers
         public async Task<ActionResult> CreateStaff([FromBody] StationStaffCreateDTO staffDto)
         {
             // Check user permission (Admin only)
+            var res = new ResponseDTO();
             var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
             if (permission != "3")
             {
-                var res = new ResponseDTO
-                {
-                    Message = "Không có quyền truy cập!"
-                };
+                res.Message = "Không có quyền truy cập!";
                 return Unauthorized(res);
             }
 
             if (!ModelState.IsValid)
             {
-                var res = new ResponseDTO
-                {
-                    Message = "Dữ liệu không hợp lệ!"
-                };
+                res.Message = "Dữ liệu không hợp lệ!";
                 return BadRequest(res);
             }
 
             try
             {
-                // Check if account exists and is a staff account
-                var account = await _accountService.GetByIdAsync(staffDto.AccountID);
-                if (account == null)
+                var checkEmail = await _accountService.CheckEmail(staffDto.Email);
+                if (checkEmail)
                 {
-                    var res = new ResponseDTO
-                    {
-                        Message = "Tài khoản không tồn tại!"
-                    };
-                    return NotFound(res);
+                    res.Message = "Email đã tồn tại!";
+                    return Conflict(res);
                 }
 
-                if (account.RoleID != 2) // RoleID 2 = Staff
-                {
-                    var res = new ResponseDTO
-                    {
-                        Message = "Tài khoản không phải là nhân viên!"
-                    };
-                    return BadRequest(res);
-                }
+                var storage = new Storage(_appWriteClient);
+                var bucketID = _configuration.GetValue<string>("Appwrite:BucketId");
+                var projectID = _configuration.GetValue<string>("Appwrite:ProjectId");
 
-                // Check if station exists (if provided)
-                if (staffDto.StationID.HasValue)
-                {
-                    var station = await _stationService.GetByIdAsync(staffDto.StationID.Value);
-                    if (station == null)
-                    {
-                        var res = new ResponseDTO
-                        {
-                            Message = "Trạm không tồn tại!"
-                        };
-                        return NotFound(res);
-                    }
-                }
+                List<string> perms = new List<string>() { Permission.Write(Appwrite.Role.Any()), Permission.Read(Appwrite.Role.Any()) };
+
+                //Upload Avatar
+                var avatarUID = Guid.NewGuid().ToString();
+                var avatar = InputFile.FromStream(
+                    staffDto.AvatarPicture.OpenReadStream(),
+                    staffDto.AvatarPicture.FileName,
+                    staffDto.AvatarPicture.ContentType
+                    );
+                var response = await storage.CreateFile(
+                            bucketID,
+                            avatarUID,
+                            avatar,
+                            perms,
+                            null
+                            );
+
+                var avatarID = response.Id;
+                var avatarUrl = $"{_appWriteClient.Endpoint}/storage/buckets/{response.BucketId}/files/{avatarID}/view?project={projectID}";
+                // Create Account
+                var account = new BusinessObject.Models.Account();
+
+                account.FullName = staffDto.FullName;
+                account.Email = staffDto.Email;
+                account.Phone = staffDto.Phone;
+                account.Password = _passwordHasher.HashPassword(account, staffDto.Password);
+                account.Avatar = avatarUrl;
+                account.RoleID = 2;
+                account.Status = (int)AccountStatus.Active;
+
+                await _accountService.AddAsync(account);
 
                 var staff = new StationStaff
                 {
-                    AccountID = staffDto.AccountID,
-                    StationID = staffDto.StationID,
+                    AccountID = account.AccountId,
                     HandoverTimes = 0,
                     ReceiveTimes = 0
                 };
@@ -509,104 +530,6 @@ namespace API.Controllers
                     Message = "Đã cập nhật số lần thu hồi xe!"
                 };
                 return Ok(successRes);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Search staff with filters (Admin only)
-        /// </summary>
-        [HttpPost("SearchStaff")]
-        [Authorize]
-        public async Task<ActionResult<IEnumerable<StationStaff>>> SearchStaff([FromBody] StationStaffSearchDTO searchDto)
-        {
-            // Check user permission (Admin only)
-            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-            if (permission != "3")
-            {
-                var res = new ResponseDTO
-                {
-                    Message = "Không có quyền truy cập!"
-                };
-                return Unauthorized(res);
-            }
-
-            try
-            {
-                var staffList = await _stationStaffService.GetAllAsync();
-
-                // Apply filters
-                if (searchDto.StationID.HasValue)
-                {
-                    staffList = staffList.Where(s => s.StationID == searchDto.StationID.Value);
-                }
-
-                if (searchDto.AccountID.HasValue)
-                {
-                    staffList = staffList.Where(s => s.AccountID == searchDto.AccountID.Value);
-                }
-
-                if (searchDto.MinHandoverTimes.HasValue)
-                {
-                    staffList = staffList.Where(s => s.HandoverTimes >= searchDto.MinHandoverTimes.Value);
-                }
-
-                if (searchDto.MinReceiveTimes.HasValue)
-                {
-                    staffList = staffList.Where(s => s.ReceiveTimes >= searchDto.MinReceiveTimes.Value);
-                }
-
-                return Ok(staffList);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Get staff statistics (Admin only)
-        /// </summary>
-        [HttpGet("GetStaffStatistics")]
-        [Authorize]
-        public async Task<ActionResult<StationStaffStatisticsDTO>> GetStaffStatistics()
-        {
-            // Check user permission (Admin only)
-            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-            if (permission != "3")
-            {
-                var res = new ResponseDTO
-                {
-                    Message = "Không có quyền truy cập!"
-                };
-                return Unauthorized(res);
-            }
-
-            try
-            {
-                var staffList = (await _stationStaffService.GetAllAsync()).ToList();
-
-                var statistics = new StationStaffStatisticsDTO
-                {
-                    TotalStaff = staffList.Count,
-                    StaffWithStation = staffList.Count(s => s.StationID.HasValue),
-                    StaffWithoutStation = staffList.Count(s => !s.StationID.HasValue),
-                    TotalHandoverTimes = staffList.Sum(s => s.HandoverTimes),
-                    TotalReceiveTimes = staffList.Sum(s => s.ReceiveTimes),
-                    AverageHandoverPerStaff = staffList.Count > 0 ? staffList.Average(s => s.HandoverTimes) : 0,
-                    AverageReceivePerStaff = staffList.Count > 0 ? staffList.Average(s => s.ReceiveTimes) : 0
-                };
-
-                // Staff count by station
-                statistics.StaffCountByStation = staffList
-                    .Where(s => s.StationID.HasValue)
-                    .GroupBy(s => s.StationID.Value)
-                    .ToDictionary(g => g.Key, g => g.Count());
-
-                return Ok(statistics);
             }
             catch (Exception ex)
             {
