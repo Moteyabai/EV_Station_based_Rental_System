@@ -16,6 +16,8 @@ export async function createPayOSPayment(paymentData, token) {
       Amount: parseFloat(paymentData.amount) || 0,
       BikeID: parseInt(paymentData.bikeID) || 0,
       StationID: parseInt(paymentData.stationID) || 0,
+      StartTime: paymentData.startTime || null,
+      EndTime: paymentData.endTime || null,
       PaymentMethod: 1, // 1 = PayOS (integer)
       PaymentType: 1, // 1 = Deposit (integer)
       Status: 0 // 0 = Pending (integer)

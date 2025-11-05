@@ -175,7 +175,9 @@ export default function Checkout() {
                 accountID: accountID,
                 amount: item.totalPrice || 0,
                 bikeID: realBikeID,
-                stationID: realStationID
+                stationID: realStationID,
+                startTime: item.rentalDetails.pickupDate,
+                endTime: item.rentalDetails.returnDate
               };
 
               console.log('💳 Creating payment with database IDs:', paymentData);
