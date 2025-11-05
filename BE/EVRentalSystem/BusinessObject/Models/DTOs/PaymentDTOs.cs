@@ -17,6 +17,10 @@ namespace BusinessObject.Models.DTOs
 
         [Required]
         public int StationID { get; set; }
+        [Required]
+        public DateTime StartTime { get; set; }
+        [Required]
+        public DateTime EndTime { get; set; }
 
         [Required(ErrorMessage = "Phương thức thanh toán là bắt buộc")]
         [Range(1, 3, ErrorMessage = "Phương thức thanh toán phải là 1 (PayOS), 2 (Tiền mặt)")]
