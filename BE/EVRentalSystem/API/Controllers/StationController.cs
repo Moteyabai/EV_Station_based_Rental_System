@@ -19,13 +19,15 @@ namespace API.Controllers
         private readonly EVBike_StocksService _eVBike_StocksService;
         private readonly Client _appWriteClient;
         private readonly IConfiguration _configuration;
+        private readonly EVBike_StocksService _eVBikeStocksService;
 
         public StationController(StationService stationService, IConfiguration configuration,
-            EVBike_StocksService eVBike_StocksService)
+            EVBike_StocksService eVBike_StocksService, EVBike_StocksService eVBikeStocksService)
         {
             _stationService = stationService;
             _eVBike_StocksService = eVBike_StocksService;
             _configuration = configuration;
+            _eVBikeStocksService = eVBikeStocksService;
             AppwriteSettings appW = new AppwriteSettings()
             {
                 ProjectId = configuration.GetValue<string>("Appwrite:ProjectId"),
@@ -64,7 +66,7 @@ namespace API.Controllers
         /// Get active stations only
         /// </summary>
         [HttpGet("GetActiveStations")]
-        public async Task<ActionResult<IEnumerable<Station>>> GetActiveStations()
+        public async Task<ActionResult<IEnumerable<StationDisplayDTO>>> GetActiveStations()
         {
             try
             {
@@ -77,7 +79,29 @@ namespace API.Controllers
                     };
                     return NotFound(res);
                 }
-                return Ok(stations);
+                
+                var display = new List<StationDisplayDTO>();
+                foreach (var station in stations) { 
+                    var quantity = await _eVBikeStocksService.GetStockCountByStationIDAsync(station.StationID);
+                    var dis = new StationDisplayDTO
+                    {
+                        StationID = station.StationID,
+                        Name = station.Name,
+                        Address = station.Address,
+                        Description = station.Description,
+                        BikeCapacity = quantity,
+                        OpeningHours = station.OpeningHours,
+                        ContactNumber = station.ContactNumber,
+                        ImageUrl = station.ImageUrl,
+                        ExteriorImageUrl = station.ExteriorImageUrl,
+                        ThumbnailImageUrl = station.ThumbnailImageUrl,
+                        IsActive = station.IsActive,
+                        CreatedAt = station.CreatedAt,
+                        UpdatedAt = station.UpdatedAt
+                    };
+                    display.Add(dis);
+                }
+                return Ok(display);
             }
             catch (Exception ex)
             {
@@ -86,7 +110,7 @@ namespace API.Controllers
         }
 
         [HttpGet("AvailableStockInStationsByBikeID")]
-        public async Task<ActionResult<IEnumerable<Station>>> AvailableStockInStationsByBikeID(int bikeID)
+        public async Task<ActionResult<IEnumerable<StationDisplayDTO>>> AvailableStockInStationsByBikeID(int bikeID)
         {
             try
             {
@@ -108,7 +132,30 @@ namespace API.Controllers
                         stastions.Add(stock.Station);
                     }
                 }
-                return Ok(stastions);
+
+                var display = new List<StationDisplayDTO>();
+                foreach (var station in stastions)
+                {
+                    var quantity = await _eVBikeStocksService.GetStockCountByStationIDAsync(station.StationID);
+                    var dis = new StationDisplayDTO
+                    {
+                        StationID = station.StationID,
+                        Name = station.Name,
+                        Address = station.Address,
+                        Description = station.Description,
+                        BikeCapacity = quantity,
+                        OpeningHours = station.OpeningHours,
+                        ContactNumber = station.ContactNumber,
+                        ImageUrl = station.ImageUrl,
+                        ExteriorImageUrl = station.ExteriorImageUrl,
+                        ThumbnailImageUrl = station.ThumbnailImageUrl,
+                        IsActive = station.IsActive,
+                        CreatedAt = station.CreatedAt,
+                        UpdatedAt = station.UpdatedAt
+                    };
+                    display.Add(dis);
+                }
+                return Ok(display);
             }
             catch (Exception ex)
             {
@@ -120,7 +167,7 @@ namespace API.Controllers
         /// Get station by ID
         /// </summary>
         [HttpGet("GetStationById/{id}")]
-        public async Task<ActionResult<Station>> GetStationById(int id)
+        public async Task<ActionResult<StationDisplayDTO>> GetStationById(int id)
         {
             try
             {
@@ -134,7 +181,24 @@ namespace API.Controllers
                     return NotFound(res);
                 }
 
-                return Ok(station);
+                var display = new StationDisplayDTO
+                {
+                    StationID = station.StationID,
+                    Name = station.Name,
+                    Address = station.Address,
+                    Description = station.Description,
+                    BikeCapacity = await _eVBikeStocksService.GetStockCountByStationIDAsync(station.StationID),
+                    OpeningHours = station.OpeningHours,
+                    ContactNumber = station.ContactNumber,
+                    ImageUrl = station.ImageUrl,
+                    ExteriorImageUrl = station.ExteriorImageUrl,
+                    ThumbnailImageUrl = station.ThumbnailImageUrl,
+                    IsActive = station.IsActive,
+                    CreatedAt = station.CreatedAt,
+                    UpdatedAt = station.UpdatedAt
+                };
+
+                return Ok(display);
             }
             catch (Exception ex)
             {
@@ -244,7 +308,6 @@ namespace API.Controllers
                     Name = stationDto.Name,
                     Address = stationDto.Address,
                     Description = stationDto.Description,
-                    BikeCapacity = stationDto.BikeCapacity,
                     OpeningHours = stationDto.OpeningHours,
                     ContactNumber = stationDto.ContactNumber,
                     ImageUrl = imageUrl,
@@ -326,8 +389,6 @@ namespace API.Controllers
                     existingStation.Address = stationDto.Address;
                 if (!string.IsNullOrEmpty(stationDto.Description))
                     existingStation.Description = stationDto.Description;
-                if (stationDto.BikeCapacity.HasValue)
-                    existingStation.BikeCapacity = stationDto.BikeCapacity.Value;
                 if (!string.IsNullOrEmpty(stationDto.OpeningHours))
                     existingStation.OpeningHours = stationDto.OpeningHours;
                 if (!string.IsNullOrEmpty(stationDto.ContactNumber))
@@ -348,107 +409,6 @@ namespace API.Controllers
                 var successRes = new ResponseDTO
                 {
                     Message = "Cập nhật thông tin trạm thành công!"
-                };
-                return Ok(successRes);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        [HttpPut("UpdateStationStatus")]
-        [Authorize]
-        public async Task<ActionResult> UpdateStationStatus([FromBody] StationStatusUpdateDTO statusDto)
-        {
-            // Check user permission (only admin can update station status)
-            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-            if (permission != "3")
-            {
-                var res = new ResponseDTO
-                {
-                    Message = "Không có quyền truy cập!"
-                };
-                return Unauthorized(res);
-            }
-
-            if (!ModelState.IsValid)
-            {
-                var res = new ResponseDTO
-                {
-                    Message = "Dữ liệu không hợp lệ!"
-                };
-                return BadRequest(res);
-            }
-
-            try
-            {
-                if (statusDto.IsActive)
-                {
-                    await _stationService.ActivateStationAsync(statusDto.StationID);
-                }
-                else
-                {
-                    await _stationService.DeactivateStationAsync(statusDto.StationID);
-                }
-
-                var actionText = statusDto.IsActive ? "kích hoạt" : "vô hiệu hóa";
-                var successRes = new ResponseDTO
-                {
-                    Message = $"Đã {actionText} trạm thành công!"
-                };
-                return Ok(successRes);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        [HttpPut("UpdateStationCapacity")]
-        [Authorize]
-        public async Task<ActionResult> UpdateStationCapacity([FromBody] StationCapacityUpdateDTO capacityDto)
-        {
-            // Check user permission (only admin can update station capacity)
-            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-            if (permission != "3")
-            {
-                var res = new ResponseDTO
-                {
-                    Message = "Không có quyền truy cập!"
-                };
-                return Unauthorized(res);
-            }
-
-            if (!ModelState.IsValid)
-            {
-                var res = new ResponseDTO
-                {
-                    Message = "Dữ liệu không hợp lệ!"
-                };
-                return BadRequest(res);
-            }
-
-            try
-            {
-                var station = await _stationService.GetByIdAsync(capacityDto.StationID);
-                if (station == null)
-                {
-                    var res = new ResponseDTO
-                    {
-                        Message = "Không tìm thấy thông tin trạm!"
-                    };
-                    return NotFound(res);
-                }
-
-                station.BikeCapacity = capacityDto.BikeCapacity;
-                station.UpdatedAt = DateTime.Now;
-
-                await _stationService.UpdateAsync(station);
-
-                var successRes = new ResponseDTO
-                {
-                    Message = "Cập nhật sức chứa trạm thành công!"
                 };
                 return Ok(successRes);
             }
@@ -492,57 +452,6 @@ namespace API.Controllers
                     Message = "Xóa trạm thành công!"
                 };
                 return Ok(successRes);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        [HttpGet("SearchByName/{name}")]
-        public async Task<ActionResult<IEnumerable<Station>>> SearchStationsByName(string name)
-        {
-            try
-            {
-                var stations = await _stationService.SearchStationsByNameAsync(name);
-                return Ok(stations);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        [HttpGet("SearchByAddress/{address}")]
-        public async Task<ActionResult<IEnumerable<Station>>> SearchStationsByAddress(string address)
-        {
-            try
-            {
-                var stations = await _stationService.SearchStationsByAddressAsync(address);
-                return Ok(stations);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        [HttpGet("GetByCapacityRange")]
-        public async Task<ActionResult<IEnumerable<Station>>> GetStationsByCapacityRange([FromQuery] int minCapacity, [FromQuery] int maxCapacity)
-        {
-            try
-            {
-                if (minCapacity <= 0 || maxCapacity <= 0 || minCapacity > maxCapacity)
-                {
-                    var res = new ResponseDTO
-                    {
-                        Message = "Phạm vi sức chứa không hợp lệ!"
-                    };
-                    return BadRequest(res);
-                }
-
-                var stations = await _stationService.GetStationsByCapacityRangeAsync(minCapacity, maxCapacity);
-                return Ok(stations);
             }
             catch (Exception ex)
             {
@@ -599,16 +508,6 @@ namespace API.Controllers
                     stations = stations.Where(s => s.IsActive == searchDto.IsActive.Value);
                 }
 
-                if (searchDto.MinCapacity.HasValue)
-                {
-                    stations = stations.Where(s => s.BikeCapacity >= searchDto.MinCapacity.Value);
-                }
-
-                if (searchDto.MaxCapacity.HasValue)
-                {
-                    stations = stations.Where(s => s.BikeCapacity <= searchDto.MaxCapacity.Value);
-                }
-
                 if (searchDto.CreatedAfter.HasValue)
                 {
                     stations = stations.Where(s => s.CreatedAt >= searchDto.CreatedAfter.Value);
@@ -625,69 +524,6 @@ namespace API.Controllers
                 }
 
                 return Ok(stations);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        [HttpGet("GetStationStatistics")]
-        [Authorize]
-        public async Task<ActionResult<StationStatisticsDTO>> GetStationStatistics()
-        {
-            // Check user permission (Admin only)
-            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-            if (permission != "3")
-            {
-                var res = new ResponseDTO
-                {
-                    Message = "Không có quyền truy cập!"
-                };
-                return Unauthorized(res);
-            }
-
-            try
-            {
-                var stations = await _stationService.GetAllAsync();
-                var stationsList = stations.ToList();
-
-                var statistics = new StationStatisticsDTO
-                {
-                    TotalStations = stationsList.Count,
-                    ActiveStations = stationsList.Count(s => s.IsActive),
-                    InactiveStations = stationsList.Count(s => !s.IsActive),
-                    TotalBikeCapacity = stationsList.Sum(s => s.BikeCapacity),
-                    AverageCapacityPerStation = stationsList.Count > 0 ? (int)stationsList.Average(s => s.BikeCapacity) : 0,
-                    LatestStationCreated = stationsList.Count > 0 ? stationsList.Max(s => s.CreatedAt) : null,
-                    LatestStationUpdated = stationsList.Count > 0 ? stationsList.Max(s => s.UpdatedAt) : null
-                };
-
-                // Stations by opening hours
-                statistics.StationsByOpeningHours = stationsList
-                    .GroupBy(s => s.OpeningHours)
-                    .ToDictionary(g => g.Key, g => g.Count());
-
-                // Stations by capacity range
-                statistics.StationsByCapacityRange = stationsList
-                    .GroupBy(s => (s.BikeCapacity / 10) * 10) // Group by capacity ranges of 10
-                    .ToDictionary(g => g.Key, g => g.Count());
-
-                return Ok(statistics);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        [HttpGet("GetTotalCapacity")]
-        public async Task<ActionResult<int>> GetTotalCapacity()
-        {
-            try
-            {
-                var totalCapacity = await _stationService.GetTotalBikeCapacityAsync();
-                return Ok(new { TotalCapacity = totalCapacity });
             }
             catch (Exception ex)
             {

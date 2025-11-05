@@ -19,15 +19,6 @@ namespace BusinessObject.Models
         [StringLength(500)]
         public string Description { get; set; }
 
-        /*        [Required]
-                public decimal Latitude { get; set; }
-
-                [Required]
-                public decimal Longitude { get; set; }*/
-
-        [Required]
-        public int BikeCapacity { get; set; }
-
         [StringLength(100)]
         public string OpeningHours { get; set; } = "24/7";
 

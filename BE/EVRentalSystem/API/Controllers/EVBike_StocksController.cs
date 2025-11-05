@@ -179,7 +179,6 @@ namespace API.Controllers
                 await _evBikeStocksService.AddAsync(stockToAdd);
 
                 // Update bike quantity
-                bike.Quantity += 1;
                 await _evBikeService.UpdateAsync(bike);
 
                 res.Message = "Thêm xe thành công.";
