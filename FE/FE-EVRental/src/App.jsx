@@ -1,5 +1,10 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { CartProvider } from "./contexts/CartContext";
 import { ReviewProvider } from "./contexts/ReviewContext";
@@ -35,7 +40,6 @@ import PaymentFailure from "./pages/PaymentFailure";
 import UserProfile from "./pages/UserProfile";
 import Staff from "./pages/Staff";
 import Admin from "./pages/Admin";
-import TestDropdown from "./pages/TestDropdown";
 
 // Styles
 import "./App.css";
@@ -48,7 +52,7 @@ function App() {
           <Router>
             {/* Session Timer - hiển thị cảnh báo trước 5 phút */}
             <SessionTimer />
-            
+
             <Routes>
               {/* Admin Route - Layout riêng không có NavBar/Footer */}
               <Route
@@ -95,7 +99,7 @@ function App() {
                         <Route path="/about" element={<About />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
-                        
+
                         {/* Trang chỉ dành cho User (Customer), chặn Staff và Admin */}
                         <Route
                           path="/profile"
@@ -113,8 +117,11 @@ function App() {
                             </RoleBasedRoute>
                           }
                         />
-                        <Route path="/user-history" element={<Navigate to="/history" replace />} />
-                        
+                        <Route
+                          path="/user-history"
+                          element={<Navigate to="/history" replace />}
+                        />
+
                         <Route
                           path="/checkout"
                           element={
@@ -131,7 +138,7 @@ function App() {
                             </RoleBasedRoute>
                           }
                         />
-                        
+
                         {/* Payment Routes - PayOS callback và result pages */}
                         <Route
                           path="/payment-callback"
@@ -156,11 +163,6 @@ function App() {
                               <PaymentFailure />
                             </RoleBasedRoute>
                           }
-                        />
-                        
-                        <Route
-                          path="/test-dropdown"
-                          element={<TestDropdown />}
                         />
 
                         <Route

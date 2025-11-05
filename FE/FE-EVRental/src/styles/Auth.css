@@ -56,6 +56,12 @@
   align-items: start;
 }
 
+/* Vertical (single-column) modifier for forms that should stack fields */
+.auth-form.vertical {
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
 /* Step 2 form - 3 columns for document uploads */
 .auth-form.step-2 {
   grid-template-columns: repeat(3, 1fr);
@@ -394,6 +400,66 @@
   margin-bottom: 1rem;
   font-size: 0.9rem;
   border-left: 4px solid #e74c3c;
+}
+
+/* Show/hide password button inside auth forms */
+.auth-form .show-password-btn {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent !important;
+  border: none !important;
+  color: var(--primary-dark);
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+}
+
+.auth-form .show-password-btn:hover {
+  color: var(--primary-color);
+}
+
+.auth-form .show-password-btn svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+/* Ensure form controls in vertical auth forms have equal sizing */
+.auth-form.vertical label,
+.auth-form.vertical .form-row > * {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.auth-form.vertical input[type="email"],
+.auth-form.vertical input[type="password"],
+.auth-form.vertical input[type="text"],
+.auth-form.vertical input[type="number"],
+.auth-form.vertical select,
+.auth-form.vertical textarea {
+  width: 100%;
+  height: 48px;
+  box-sizing: border-box;
+  padding: 0.75rem;
+  border-radius: 8px;
+}
+
+/* Make primary button full width and matching height for a uniform look */
+.auth-form.vertical .btn.primary,
+.auth-form.vertical .auth-form button {
+  width: 100%;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* For the checkbox label, keep it compact but aligned */
+.auth-form.vertical label[style] {
+  display: flex;
+  align-items: center;
 }
 
 .auth-footer {

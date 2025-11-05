@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import * as adminService from "../services/adminService";
+import { getToken } from "../utils/auth";
 import "../styles/Admin.css";
 
 const Admin = () => {
@@ -134,7 +135,7 @@ const Admin = () => {
 
         // Hiển thị cảnh báo (tùy chọn)
         alert(
-          "⚠️ Bạn không thể quay lại trang trước. Vui lòng sử dụng menu điều hướng hoặc đăng xuất.",
+          "⚠️ Bạn không thể quay lại trang trước. Vui lòng sử dụng menu điều hướng hoặc đăng xuất."
         );
       }
     };
@@ -247,53 +248,10 @@ const Admin = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  const [staff, setStaff] = useState([
-    {
-      id: 1,
-      name: "Phạm Văn D",
-      stationId: "s1",
-      station: "Trạm EV Công Viên Tao Đàn",
-      role: "Nhân viên giao xe",
-      performance: 95,
-      totalDeliveries: 156,
-    },
-    {
-      id: 2,
-      name: "Hoàng Thị E",
-      stationId: "s1",
-      station: "Trạm EV Công Viên Tao Đàn",
-      role: "Nhân viên kỹ thuật",
-      performance: 88,
-      totalDeliveries: 98,
-    },
-    {
-      id: 3,
-      name: "Võ Văn F",
-      stationId: "s2",
-      station: "Trạm EV Bờ Sông Sài Gòn",
-      role: "Quản lý điểm",
-      performance: 92,
-      totalDeliveries: 142,
-    },
-    {
-      id: 4,
-      name: "Trần Văn G",
-      stationId: "s3",
-      station: "Trạm EV Trung Tâm Quận 1",
-      role: "Nhân viên giao xe",
-      performance: 87,
-      totalDeliveries: 120,
-    },
-    {
-      id: 5,
-      name: "Nguyễn Thị H",
-      stationId: "s4",
-      station: "Trạm EV Khu Công Nghệ Cao",
-      role: "Nhân viên kỹ thuật",
-      performance: 91,
-      totalDeliveries: 134,
-    },
-  ]);
+  // staff list will be loaded from API; start empty to avoid showing mock data
+  const [staff, setStaff] = useState([]);
+  const [staffLoading, setStaffLoading] = useState(false);
+  const [staffError, setStaffError] = useState(null);
 
   const [reports, setReports] = useState({
     revenueByStation: [
@@ -349,7 +307,7 @@ const Admin = () => {
     }
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
 
       if (!token) {
         alert("❌ Vui lòng đăng nhập lại");
@@ -371,7 +329,7 @@ const Admin = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(brandData),
-        },
+        }
       );
 
       if (!response.ok) {
@@ -404,7 +362,7 @@ const Admin = () => {
     }
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
 
       if (!token) {
         alert("❌ Vui lòng đăng nhập lại");
@@ -427,7 +385,7 @@ const Admin = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(brandData),
-        },
+        }
       );
 
       if (!response.ok) {
@@ -461,7 +419,7 @@ const Admin = () => {
     }
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
 
       if (!token) {
         alert("❌ Vui lòng đăng nhập lại");
@@ -476,7 +434,7 @@ const Admin = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        },
+        }
       );
 
       if (!response.ok) {
@@ -512,7 +470,7 @@ const Admin = () => {
     }
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
 
       if (!token) {
         alert("❌ Vui lòng đăng nhập lại");
@@ -590,8 +548,8 @@ const Admin = () => {
 
     setBikeTypes(
       bikeTypes.map((bt) =>
-        bt.id === selectedBikeType.id ? selectedBikeType : bt,
-      ),
+        bt.id === selectedBikeType.id ? selectedBikeType : bt
+      )
     );
 
     setShowEditBikeTypeModal(false);
@@ -610,8 +568,8 @@ const Admin = () => {
           brands.map((b) =>
             b.id === bikeType.brandId
               ? { ...b, bikeCount: Math.max(0, (b.bikeCount || 0) - 1) }
-              : b,
-          ),
+              : b
+          )
         );
       }
 
@@ -626,7 +584,7 @@ const Admin = () => {
     }
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
 
       if (!token) {
         alert("❌ Vui lòng đăng nhập lại");
@@ -651,7 +609,7 @@ const Admin = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(requestBody),
-        },
+        }
       );
 
       if (!response.ok) {
@@ -701,8 +659,8 @@ const Admin = () => {
     setCustomersError(null);
 
     try {
-      // Lấy token từ localStorage
-      const token = localStorage.getItem("token");
+      // Lấy token từ storage helper
+      const token = getToken();
 
       if (!token) {
         throw new Error("Vui lòng đăng nhập lại");
@@ -716,7 +674,7 @@ const Admin = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        },
+        }
       );
 
       if (!response.ok) {
@@ -746,6 +704,71 @@ const Admin = () => {
     }
   };
 
+  // Fetch staff from API
+  useEffect(() => {
+    if (activeTab === "staff") {
+      fetchStaff();
+    }
+  }, [activeTab]);
+
+  const fetchStaff = async () => {
+    setStaffLoading(true);
+    setStaffError(null);
+    // clear previous/mock staff while loading
+    setStaff([]);
+
+    try {
+      const token = getToken();
+      if (!token) {
+        throw new Error("Vui lòng đăng nhập lại");
+      }
+
+      const response = await fetch(
+        "http://localhost:5168/api/StationStaff/GetAllStaff",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại");
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Map API response to existing staff shape (fall back to sensible defaults)
+      const mapped = Array.isArray(data)
+        ? data.map((s) => ({
+            id: s.staffID || s.id || s.accountID || s.accountId || 0,
+            name: s.fullName || s.fullname || s.name || s.userName || "",
+            stationId: s.stationID || s.stationId || s.station || "",
+            station: s.stationName || s.station || "",
+            role: s.roleName || s.role || (s.roleID ? `Role ${s.roleID}` : ""),
+            performance: s.performance || 0,
+            totalDeliveries: s.totalDeliveries || 0,
+            phone: s.phone || s.phoneNumber || s.mobile || "",
+            email: s.email || s.userEmail || s.emailAddress || "",
+          }))
+        : [];
+
+      setStaff(mapped);
+    } catch (error) {
+      console.error("Error fetching staff:", error);
+      setStaffError(error.message || "Lỗi khi tải danh sách nhân viên");
+      // clear staff on error to avoid showing stale/mock data
+      setStaff([]);
+    } finally {
+      setStaffLoading(false);
+    }
+  };
+
   // Fetch brands from API
   useEffect(() => {
     if (activeTab === "bikeTypes") {
@@ -761,7 +784,7 @@ const Admin = () => {
 
   const fetchBrands = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
 
       if (!token) {
         throw new Error("Vui lòng đăng nhập lại");
@@ -775,7 +798,7 @@ const Admin = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        },
+        }
       );
 
       if (!response.ok) {
@@ -811,7 +834,7 @@ const Admin = () => {
     }
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
 
       if (!token) {
         throw new Error("Vui lòng đăng nhập lại");
@@ -825,7 +848,7 @@ const Admin = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        },
+        }
       );
 
       if (!response.ok) {
@@ -875,7 +898,7 @@ const Admin = () => {
     }
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
 
       if (!token) {
         throw new Error("Vui lòng đăng nhập lại");
@@ -889,7 +912,7 @@ const Admin = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        },
+        }
       );
 
       if (!response.ok) {
@@ -1036,8 +1059,8 @@ const Admin = () => {
               totalVehicles: parseInt(newStation.totalVehicles),
               chargingStations: parseInt(newStation.chargingStations),
             }
-          : s,
-      ),
+          : s
+      )
     );
 
     setShowEditStationModal(false);
@@ -1109,8 +1132,8 @@ const Admin = () => {
       // Update existing vehicle
       setVehicles(
         vehicles.map((v) =>
-          v.id === selectedVehicle.id ? { ...newVehicle, id: v.id } : v,
-        ),
+          v.id === selectedVehicle.id ? { ...newVehicle, id: v.id } : v
+        )
       );
       alert("✅ Đã cập nhật xe!");
       setShowEditVehicleModal(false);
@@ -1254,7 +1277,7 @@ const Admin = () => {
           "Station:",
           station.name,
           "Matches:",
-          matchesSearch,
+          matchesSearch
         );
         return matchesSearch;
       }
@@ -1265,17 +1288,27 @@ const Admin = () => {
       "Filter - Search term:",
       stationSearchTerm,
       "Status:",
-      stationStatusFilter,
+      stationStatusFilter
     );
     console.log(
       "Total stations:",
       stations.length,
       "Filtered:",
-      filteredStations.length,
+      filteredStations.length
     );
 
     return (
       <div className="management-content">
+        {staffLoading && (
+          <div style={{ padding: "1rem 0", color: "#6b7280" }}>
+            Đang tải danh sách nhân viên...
+          </div>
+        )}
+        {staffError && (
+          <div style={{ padding: "1rem 0", color: "#e11d48" }}>
+            {staffError}
+          </div>
+        )}
         <div className="section-header">
           <h2>
             Quản lý trạm thuê xe{" "}
@@ -1379,8 +1412,8 @@ const Admin = () => {
                                 station.availableVehicles < 5
                                   ? "#f44336"
                                   : station.availableVehicles < 10
-                                    ? "#ff9800"
-                                    : "#4caf50",
+                                  ? "#ff9800"
+                                  : "#4caf50",
                             }}
                           ></div>
                         </div>
@@ -1401,7 +1434,7 @@ const Admin = () => {
                             e.stopPropagation();
                             console.log(
                               "Chi tiết button clicked for station:",
-                              station,
+                              station
                             );
                             handleViewStationDetail(station);
                           }}
@@ -1415,7 +1448,7 @@ const Admin = () => {
                             e.stopPropagation();
                             console.log(
                               "Sửa button clicked for station:",
-                              station,
+                              station
                             );
                             handleEditStation(station);
                           }}
@@ -1429,7 +1462,7 @@ const Admin = () => {
                             e.stopPropagation();
                             console.log(
                               "Quản lý nhân viên button clicked for station:",
-                              station,
+                              station
                             );
                             handleManageStationStaff(station);
                           }}
@@ -1443,7 +1476,7 @@ const Admin = () => {
                             e.stopPropagation();
                             console.log(
                               "Quản lý xe button clicked for station:",
-                              station,
+                              station
                             );
                             handleViewStationVehicles(station);
                           }}
@@ -1685,7 +1718,7 @@ const Admin = () => {
           "showStationDetailModal:",
           showStationDetailModal,
           "selectedStation:",
-          selectedStation,
+          selectedStation
         )}
         {showStationDetailModal && selectedStation && (
           <div
@@ -1816,7 +1849,7 @@ const Admin = () => {
                         <p className="summary-number">
                           {
                             vehicles.filter(
-                              (v) => v.stationId === selectedStation.id,
+                              (v) => v.stationId === selectedStation.id
                             ).length
                           }
                         </p>
@@ -1831,7 +1864,7 @@ const Admin = () => {
                             vehicles.filter(
                               (v) =>
                                 v.stationId === selectedStation.id &&
-                                v.status === "available",
+                                v.status === "available"
                             ).length
                           }
                         </p>
@@ -1846,7 +1879,7 @@ const Admin = () => {
                             vehicles.filter(
                               (v) =>
                                 v.stationId === selectedStation.id &&
-                                v.status === "rented",
+                                v.status === "rented"
                             ).length
                           }
                         </p>
@@ -1919,10 +1952,10 @@ const Admin = () => {
                                   {vehicle.status === "available"
                                     ? "✅ Khả dụng"
                                     : vehicle.status === "rented"
-                                      ? "🚴 Đang thuê"
-                                      : vehicle.status === "maintenance"
-                                        ? "🔧 Bảo trì"
-                                        : "❌ Hỏng"}
+                                    ? "🚴 Đang thuê"
+                                    : vehicle.status === "maintenance"
+                                    ? "🔧 Bảo trì"
+                                    : "❌ Hỏng"}
                                 </span>
                               </td>
                               <td>
@@ -1948,7 +1981,7 @@ const Admin = () => {
                             </tr>
                           ))}
                         {vehicles.filter(
-                          (v) => v.stationId === selectedStation.id,
+                          (v) => v.stationId === selectedStation.id
                         ).length === 0 && (
                           <tr>
                             <td
@@ -2014,14 +2047,14 @@ const Admin = () => {
                 <div className="staff-info">
                   {(() => {
                     const stationStaff = staff.filter(
-                      (s) => s.stationId === selectedStation.id,
+                      (s) => s.stationId === selectedStation.id
                     );
                     const avgPerformance =
                       stationStaff.length > 0
                         ? (
                             stationStaff.reduce(
                               (sum, s) => sum + s.performance,
-                              0,
+                              0
                             ) / stationStaff.length
                           ).toFixed(0)
                         : 0;
@@ -2054,7 +2087,7 @@ const Admin = () => {
                               <p className="summary-number">
                                 {stationStaff.reduce(
                                   (sum, s) => sum + s.totalDeliveries,
-                                  0,
+                                  0
                                 )}
                               </p>
                             </div>
@@ -2096,8 +2129,8 @@ const Admin = () => {
                                                 member.performance > 90
                                                   ? "#4caf50"
                                                   : member.performance > 70
-                                                    ? "#ff9800"
-                                                    : "#f44336",
+                                                  ? "#ff9800"
+                                                  : "#f44336",
                                             }}
                                           >
                                             {member.performance}%
@@ -2125,13 +2158,13 @@ const Admin = () => {
                                             onClick={() => {
                                               if (
                                                 window.confirm(
-                                                  `Bạn có chắc muốn xóa nhân viên ${member.name}?`,
+                                                  `Bạn có chắc muốn xóa nhân viên ${member.name}?`
                                                 )
                                               ) {
                                                 setStaff(
                                                   staff.filter(
-                                                    (s) => s.id !== member.id,
-                                                  ),
+                                                    (s) => s.id !== member.id
+                                                  )
                                                 );
                                                 alert("✅ Đã xóa nhân viên!");
                                               }
@@ -2617,8 +2650,8 @@ const Admin = () => {
                       violationCount + damageCount > 3
                         ? "high"
                         : violationCount + damageCount > 1
-                          ? "medium"
-                          : "low";
+                        ? "medium"
+                        : "low";
                     const riskInfo = {
                       high: { label: "Cao", icon: "🔴", color: "#ef4444" },
                       medium: {
@@ -2704,7 +2737,7 @@ const Admin = () => {
                         <td className="date-cell">
                           {customer.createdAt
                             ? new Date(customer.createdAt).toLocaleDateString(
-                                "vi-VN",
+                                "vi-VN"
                               )
                             : "N/A"}
                         </td>
@@ -2907,8 +2940,8 @@ const Admin = () => {
                             member.performance > 90
                               ? "#4caf50"
                               : member.performance > 70
-                                ? "#ff9800"
-                                : "#f44336",
+                              ? "#ff9800"
+                              : "#f44336",
                         }}
                       >
                         {member.performance}%
@@ -3185,7 +3218,9 @@ const Admin = () => {
             brands.map((brand) => (
               <div
                 key={brand.id}
-                className={`brand-card ${selectedBrand?.id === brand.id ? "selected" : ""}`}
+                className={`brand-card ${
+                  selectedBrand?.id === brand.id ? "selected" : ""
+                }`}
                 onClick={() => {
                   if (selectedBrand?.id === brand.id) {
                     setSelectedBrand(null);
@@ -3280,7 +3315,9 @@ const Admin = () => {
                 filteredBikeTypes.map((bikeType) => (
                   <div
                     key={bikeType.id}
-                    className={`brand-card ${selectedBike?.id === bikeType.id ? "selected" : ""}`}
+                    className={`brand-card ${
+                      selectedBike?.id === bikeType.id ? "selected" : ""
+                    }`}
                     style={{
                       display: "flex",
                       gap: "1rem",
@@ -3433,7 +3470,7 @@ const Admin = () => {
                       {bikeInstances.filter((instance) =>
                         instance.licensePlate
                           ?.toLowerCase()
-                          .includes(bikeInstanceSearchTerm.toLowerCase()),
+                          .includes(bikeInstanceSearchTerm.toLowerCase())
                       ).length === 0 ? (
                         <tr>
                           <td
@@ -3450,7 +3487,7 @@ const Admin = () => {
                           .filter((instance) =>
                             instance.licensePlate
                               ?.toLowerCase()
-                              .includes(bikeInstanceSearchTerm.toLowerCase()),
+                              .includes(bikeInstanceSearchTerm.toLowerCase())
                           )
                           .map((instance) => (
                             <tr key={instance.bikeInstanceID || instance.id}>
@@ -3461,7 +3498,11 @@ const Admin = () => {
                               <td>{instance.stationName || "N/A"}</td>
                               <td>
                                 <span
-                                  className={`status-badge ${instance.status === 1 ? "status-active" : "status-pending"}`}
+                                  className={`status-badge ${
+                                    instance.status === 1
+                                      ? "status-active"
+                                      : "status-pending"
+                                  }`}
                                 >
                                   {instance.status === 1
                                     ? "✅ Sẵn sàng"
@@ -4120,14 +4161,16 @@ const Admin = () => {
                   fill="none"
                   stroke="#4caf50"
                   strokeWidth="10"
-                  strokeDasharray={`${(stats.vehiclesInUse / stats.totalVehicles) * 283} 283`}
+                  strokeDasharray={`${
+                    (stats.vehiclesInUse / stats.totalVehicles) * 283
+                  } 283`}
                   transform="rotate(-90 50 50)"
                 />
               </svg>
               <div className="usage-text">
                 <span className="usage-percent">
                   {((stats.vehiclesInUse / stats.totalVehicles) * 100).toFixed(
-                    0,
+                    0
                   )}
                   %
                 </span>

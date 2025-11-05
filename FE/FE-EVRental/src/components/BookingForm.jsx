@@ -25,6 +25,7 @@ import {
   PlusCircleOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
+import { getToken } from "../utils/auth";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../contexts/CartContext";
 import { fetchActiveStations } from "../api/stations";
@@ -50,20 +51,20 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
     async function loadStations() {
       try {
         // Use the new API endpoint with bikeID
-        const token = localStorage.getItem('token');
+        const token = getToken();
         const response = await fetch(
           `http://localhost:5168/api/Station/AvailableStockInStationsByBikeID?bikeID=${vehicle.id}`,
           {
             headers: {
-              'Authorization': token ? `Bearer ${token}` : '',
+              Authorization: token ? `Bearer ${token}` : "",
             },
           }
         );
-        
+
         if (!response.ok) {
-          throw new Error('Failed to fetch stations');
+          throw new Error("Failed to fetch stations");
         }
-        
+
         const apiStations = await response.json();
         if (!isMounted) return;
         const mapped = apiStations.map((s) => ({
@@ -81,7 +82,9 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
       }
     }
     loadStations();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, [vehicle.id]);
 
   // Giữ nguyên logic state như cũ để tránh lỗi
@@ -128,13 +131,13 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
 
   // Cập nhật giá khi thay đổi ngày từ form
   const handleDateChange = () => {
-    const pickupDate = form.getFieldValue('pickupDate');
-    const returnDate = form.getFieldValue('returnDate');
-    
+    const pickupDate = form.getFieldValue("pickupDate");
+    const returnDate = form.getFieldValue("returnDate");
+
     if (pickupDate && returnDate) {
       const days = calculateRentalDays(pickupDate, returnDate);
       setRentalDays(days);
-      
+
       const basePrice =
         typeof vehicle.price === "string"
           ? parseFloat(vehicle.price.replace(/[^\d]/g, ""))
@@ -233,10 +236,14 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
       setFormData(updatedFormData);
 
       // Convert station IDs to numbers for comparison
-      const pickupStationId = parseInt(updatedFormData.rentalInfo.pickupStationId);
-      const returnStationId = parseInt(updatedFormData.rentalInfo.returnStationId);
-      
-      console.log('🔍 [BOOKING] Looking for stations:', {
+      const pickupStationId = parseInt(
+        updatedFormData.rentalInfo.pickupStationId
+      );
+      const returnStationId = parseInt(
+        updatedFormData.rentalInfo.returnStationId
+      );
+
+      console.log("🔍 [BOOKING] Looking for stations:", {
         pickupStationId,
         returnStationId,
         allStations: stations,
@@ -244,8 +251,8 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
 
       const foundPickupStation = stations.find((s) => s.id === pickupStationId);
       const foundReturnStation = stations.find((s) => s.id === returnStationId);
-      
-      console.log('✅ [BOOKING] Found stations:', {
+
+      console.log("✅ [BOOKING] Found stations:", {
         foundPickupStation,
         foundReturnStation,
       });
@@ -259,7 +266,7 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
         totalPrice: totalPrice,
       };
 
-      console.log('📦 [BOOKING] Final rentalDetails:', rentalDetails);
+      console.log("📦 [BOOKING] Final rentalDetails:", rentalDetails);
 
       // Add to cart
       addToCart(vehicle, rentalDetails);
@@ -275,7 +282,7 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
 
       // Tự động chuyển đến trang giỏ hàng
       setTimeout(() => {
-        navigate('/cart');
+        navigate("/cart");
         if (onCancel) {
           onCancel(); // Đóng modal
         }
@@ -357,7 +364,10 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
                 name="pickupStationId"
                 label="Điểm nhận và trả xe"
                 rules={[
-                  { required: true, message: "Vui lòng chọn điểm nhận và trả xe!" },
+                  {
+                    required: true,
+                    message: "Vui lòng chọn điểm nhận và trả xe!",
+                  },
                 ]}
               >
                 <select

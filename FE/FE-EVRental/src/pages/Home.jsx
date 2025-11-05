@@ -6,7 +6,8 @@ import { fetchActiveStations } from "../api/stations";
 import { getAvailableBikes } from "../api/bikes";
 
 // Default placeholder images
-const defaultBikeImg = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60";
+const defaultBikeImg =
+  "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60";
 const stationImg =
   "https://images.unsplash.com/photo-1599593752325-ffa41031056e?auto=format&fit=crop&w=1200&q=80";
 
@@ -17,12 +18,13 @@ export default function Home() {
   const [vehicles, setVehicles] = React.useState([]);
   const [loadingStations, setLoadingStations] = React.useState(true);
   const [loadingVehicles, setLoadingVehicles] = React.useState(true);
-  
+
   // Background images array with cache busting
+  // Background images (keep static paths so browser can cache them)
   const backgroundImages = [
-    `/images/background/background-1.jpg?v=${Date.now()}`,
-    `/images/background/background-2.jpg?v=${Date.now()}`,
-    `/images/background/background-3.jpg?v=${Date.now()}`,
+    `/images/background/background-1.jpg`,
+    `/images/background/background-2.jpg`,
+    `/images/background/background-3.jpg`,
   ];
 
   // Load stations from API
@@ -31,10 +33,12 @@ export default function Home() {
     async function loadStations() {
       try {
         setLoadingStations(true);
-        console.log('🚀 [HOME] Calling fetchActiveStations API... (Reload safe)');
+        console.log(
+          "🚀 [HOME] Calling fetchActiveStations API... (Reload safe)"
+        );
         const apiStations = await fetchActiveStations();
         if (!isMounted) return;
-        console.log('✅ [HOME] Stations data received:', apiStations);
+        console.log("✅ [HOME] Stations data received:", apiStations);
         const mapped = apiStations.map((s) => ({
           id: s.stationID || s.StationID || s.id,
           name: s.name || s.Name,
@@ -50,13 +54,15 @@ export default function Home() {
       } finally {
         if (isMounted) {
           setLoadingStations(false);
-          console.log('✅ [HOME] Stations loaded successfully');
+          console.log("✅ [HOME] Stations loaded successfully");
         }
       }
     }
     // Always call loadStations on mount/reload
     loadStations();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Load vehicles from API
@@ -65,22 +71,28 @@ export default function Home() {
     async function loadVehicles() {
       try {
         setLoadingVehicles(true);
-        const token = localStorage.getItem('ev_token');
-        console.log('🚀 [HOME] Calling getAvailableBikes API... (Reload safe)');
+        const token = localStorage.getItem("ev_token");
+        console.log("🚀 [HOME] Calling getAvailableBikes API... (Reload safe)");
         const bikesData = await getAvailableBikes(token);
         if (!isMounted) return;
-        console.log('✅ [HOME] Bikes data received:', bikesData);
-        
+        console.log("✅ [HOME] Bikes data received:", bikesData);
+
         const mapped = bikesData.map((bike) => {
           const quantity = bike.quantity || 0;
           return {
             id: bike.bikeID || bike.BikeID,
-            name: bike.bikeName || bike.model || bike.Model || 'Xe điện',
-            brand: bike.brandName || bike.BrandName || 'Unknown',
-            image: bike.thumbnailImageUrl || bike.ThumbnailImageUrl || bike.frontImg || defaultBikeImg,
+            name: bike.bikeName || bike.model || bike.Model || "Xe điện",
+            brand: bike.brandName || bike.BrandName || "Unknown",
+            image:
+              bike.thumbnailImageUrl ||
+              bike.ThumbnailImageUrl ||
+              bike.frontImg ||
+              defaultBikeImg,
             price: bike.pricePerDay || bike.PricePerDay || 0,
-            priceUnit: '/ngày',
-            short: `${bike.brandName || bike.BrandName || 'Xe điện'} - ${quantity} xe có sẵn`,
+            priceUnit: "/ngày",
+            short: `${
+              bike.brandName || bike.BrandName || "Xe điện"
+            } - ${quantity} xe có sẵn`,
             quantity: quantity,
           };
         });
@@ -91,20 +103,22 @@ export default function Home() {
       } finally {
         if (isMounted) {
           setLoadingVehicles(false);
-          console.log('✅ [HOME] Vehicles loaded successfully');
+          console.log("✅ [HOME] Vehicles loaded successfully");
         }
       }
     }
     // Always call loadVehicles on mount/reload
     loadVehicles();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Background slideshow effect
   React.useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentBgIndex((prevIndex) => 
-        (prevIndex + 1) % backgroundImages.length
+      setCurrentBgIndex(
+        (prevIndex) => (prevIndex + 1) % backgroundImages.length
       );
     }, 5000); // Chuyển ảnh mỗi 5 giây
 
@@ -159,13 +173,17 @@ export default function Home() {
 
   // Featured vehicles (first 3)
   const featuredVehicles = vehicles.slice(0, 3);
-  
+
   // Debug logs
-  console.log('🔍 [HOME RENDER] stations:', stations.length, stations);
-  console.log('🔍 [HOME RENDER] vehicles:', vehicles.length, vehicles);
-  console.log('🔍 [HOME RENDER] featuredVehicles:', featuredVehicles.length, featuredVehicles);
-  console.log('🔍 [HOME RENDER] loadingVehicles:', loadingVehicles);
-  console.log('🔍 [HOME RENDER] loadingStations:', loadingStations);
+  console.log("🔍 [HOME RENDER] stations:", stations.length, stations);
+  console.log("🔍 [HOME RENDER] vehicles:", vehicles.length, vehicles);
+  console.log(
+    "🔍 [HOME RENDER] featuredVehicles:",
+    featuredVehicles.length,
+    featuredVehicles
+  );
+  console.log("🔍 [HOME RENDER] loadingVehicles:", loadingVehicles);
+  console.log("🔍 [HOME RENDER] loadingStations:", loadingStations);
 
   return (
     <div className="template-root">
@@ -184,7 +202,7 @@ export default function Home() {
             />
           ))}
         </div>
-        
+
         {/* Overlay */}
         <div className="hero-overlay"></div>
 
@@ -215,7 +233,7 @@ export default function Home() {
           <p className="section-sub scroll-reveal fade-up">
             Trải nghiệm tương lai của giao thông đô thị.
           </p>
-          
+
           {loadingVehicles ? (
             <div className="loading-message">
               <p>🔄 Đang tải xe máy điện...</p>
@@ -231,15 +249,16 @@ export default function Home() {
                   to={`/vehicles/${vehicle.id}`}
                   key={vehicle.id}
                   className="gallery-item"
-                  style={{ textDecoration: 'none', color: 'inherit' }}
+                  style={{ textDecoration: "none", color: "inherit" }}
                 >
-                  <img 
-                    src={vehicle.image} 
-                    alt={vehicle.name} 
+                  <img
+                    src={vehicle.image}
+                    alt={vehicle.name}
                     loading="lazy"
                     onError={(e) => {
-                      console.log('❌ Image failed to load:', vehicle.image);
-                      e.target.src = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60';
+                      console.log("❌ Image failed to load:", vehicle.image);
+                      e.target.src =
+                        "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60";
                     }}
                   />
                   <div className="gradient-overlay"></div>
@@ -251,7 +270,7 @@ export default function Home() {
               ))}
             </div>
           )}
-          
+
           <div className="text-center mt-4">
             <Link to="/vehicles" className="btn primary">
               Xem tất cả xe máy điện
@@ -351,7 +370,9 @@ export default function Home() {
                 <div
                   className="stations-carousel-track"
                   style={{
-                    transform: `translateX(-${currentStationIndex * (100 / stationsPerView)}%)`,
+                    transform: `translateX(-${
+                      currentStationIndex * (100 / stationsPerView)
+                    }%)`,
                   }}
                 >
                   {stations.map((station) => (
@@ -361,7 +382,8 @@ export default function Home() {
                         alt={station.name}
                         className="station-img"
                         onError={(e) => {
-                          e.target.src = 'https://images.unsplash.com/photo-1599593752325-ffa41031056e?auto=format&fit=crop&w=1200&q=80';
+                          e.target.src =
+                            "https://images.unsplash.com/photo-1599593752325-ffa41031056e?auto=format&fit=crop&w=1200&q=80";
                         }}
                       />
                       <div className="station-content">
@@ -404,7 +426,9 @@ export default function Home() {
               {Array.from({ length: maxIndex + 1 }).map((_, index) => (
                 <button
                   key={index}
-                  className={`indicator ${index === currentStationIndex ? "active" : ""}`}
+                  className={`indicator ${
+                    index === currentStationIndex ? "active" : ""
+                  }`}
                   onClick={() => setCurrentStationIndex(index)}
                   aria-label={`Đi tới trang ${index + 1}`}
                 />

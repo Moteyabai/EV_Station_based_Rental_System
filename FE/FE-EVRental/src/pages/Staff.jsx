@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { getToken } from "../utils/auth";
 import {
   getAllBookings,
   updateBookingStatus,
@@ -44,7 +45,7 @@ export default function Staff() {
 
         // Hiển thị cảnh báo (tùy chọn)
         alert(
-          "⚠️ Bạn không thể quay lại trang trước. Vui lòng sử dụng menu điều hướng hoặc đăng xuất.",
+          "⚠️ Bạn không thể quay lại trang trước. Vui lòng sử dụng menu điều hướng hoặc đăng xuất."
         );
       }
     };
@@ -149,7 +150,7 @@ function VehicleHandover() {
   // Fetch user phone from backend API
   const fetchUserPhone = async (userId) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
       if (!token || !userId) return null;
 
       // Nếu userId là email hoặc không phải số, skip
@@ -174,7 +175,7 @@ function VehicleHandover() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        },
+        }
       );
 
       if (!response.ok) {
@@ -191,7 +192,7 @@ function VehicleHandover() {
         "✅ Fetched user phone for accountId",
         accountId,
         ":",
-        userData.phone,
+        userData.phone
       );
       return userData.phone || userData.Phone || null;
     } catch (error) {
@@ -206,7 +207,7 @@ function VehicleHandover() {
     // CHỈ LẤY BOOKINGS ĐÃ XÁC THỰC THANH TOÁN (status !== 'pending_payment')
     const verifiedBookings = allBookings.filter(
       (booking) =>
-        booking.status !== "pending_payment" && booking.status !== "cancelled",
+        booking.status !== "pending_payment" && booking.status !== "cancelled"
     );
 
     // Transform bookings to vehicle format for display
@@ -214,7 +215,7 @@ function VehicleHandover() {
       verifiedBookings.map(async (booking) => {
         // Kiểm tra xe đã quá hạn chưa
         const returnDateTime = new Date(
-          `${booking.returnDate} ${booking.returnTime}`,
+          `${booking.returnDate} ${booking.returnTime}`
         );
         const now = new Date();
         const isOverdue = booking.status === "renting" && returnDateTime < now;
@@ -260,7 +261,7 @@ function VehicleHandover() {
             ? Math.floor((now - returnDateTime) / (1000 * 60 * 60))
             : 0,
         };
-      }),
+      })
     );
 
     setVehicles(transformedVehicles);
@@ -275,7 +276,7 @@ function VehicleHandover() {
   const bookedCount = vehicles.filter((v) => v.status === "booked").length;
   const rentingCount = vehicles.filter((v) => v.status === "renting").length;
   const completedCount = vehicles.filter(
-    (v) => v.status === "completed",
+    (v) => v.status === "completed"
   ).length;
 
   const getStatusBadge = (status) => {
@@ -327,19 +328,25 @@ function VehicleHandover() {
       {/* Filter Tabs */}
       <div className="filter-tabs">
         <button
-          className={`filter-tab ${selectedFilter === "booked" ? "active" : ""}`}
+          className={`filter-tab ${
+            selectedFilter === "booked" ? "active" : ""
+          }`}
           onClick={() => setSelectedFilter("booked")}
         >
           📅 Chuẩn bị bàn giao ({bookedCount})
         </button>
         <button
-          className={`filter-tab ${selectedFilter === "renting" ? "active" : ""}`}
+          className={`filter-tab ${
+            selectedFilter === "renting" ? "active" : ""
+          }`}
           onClick={() => setSelectedFilter("renting")}
         >
           🚗 Đang cho thuê ({rentingCount})
         </button>
         <button
-          className={`filter-tab ${selectedFilter === "completed" ? "active" : ""}`}
+          className={`filter-tab ${
+            selectedFilter === "completed" ? "active" : ""
+          }`}
           onClick={() => setSelectedFilter("completed")}
         >
           ✅ Đã thu hồi ({completedCount})
@@ -364,7 +371,9 @@ function VehicleHandover() {
         {filteredVehicles.map((vehicle) => (
           <div
             key={vehicle.id}
-            className={`handover-vehicle-card ${vehicle.isOverdue ? "overdue-warning" : ""}`}
+            className={`handover-vehicle-card ${
+              vehicle.isOverdue ? "overdue-warning" : ""
+            }`}
           >
             <div className="vehicle-header">
               <div className="vehicle-title">
@@ -566,16 +575,18 @@ function HandoverModal({ vehicle, onClose, onComplete }) {
 
     // Lấy danh sách xe cần bảo trì hiện có
     const maintenanceList = JSON.parse(
-      localStorage.getItem("ev_maintenance_vehicles") || "[]",
+      localStorage.getItem("ev_maintenance_vehicles") || "[]"
     );
     maintenanceList.push(maintenanceData);
     localStorage.setItem(
       "ev_maintenance_vehicles",
-      JSON.stringify(maintenanceList),
+      JSON.stringify(maintenanceList)
     );
 
     alert(
-      `🔧 Đã gửi xe ${vehicle.licensePlate} về mục Quản lý xe!\n\nVấn đề phát hiện:\n${issues.join("\n")}`,
+      `🔧 Đã gửi xe ${
+        vehicle.licensePlate
+      } về mục Quản lý xe!\n\nVấn đề phát hiện:\n${issues.join("\n")}`
     );
     onClose();
   };
@@ -731,7 +742,7 @@ function CustomerVerification() {
   useEffect(() => {
     const loadPendingIDDocuments = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = getToken();
         if (!token) {
           console.warn("No token found, skipping API call");
           return;
@@ -744,13 +755,13 @@ function CustomerVerification() {
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
-          },
+          }
         );
 
         if (!response.ok) {
           console.error(
             "Failed to fetch pending ID documents:",
-            response.status,
+            response.status
           );
           return;
         }
@@ -796,7 +807,7 @@ function CustomerVerification() {
     (c) =>
       c.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       c.phone.includes(searchTerm) ||
-      c.bookingId.toLowerCase().includes(searchTerm.toLowerCase()),
+      c.bookingId.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleVerify = (customer) => {
@@ -833,7 +844,9 @@ function CustomerVerification() {
                 <span className="booking-badge">📋 {customer.bookingId}</span>
               </div>
               <span
-                className={`verify-badge ${customer.status == 1 ? "verified" : "pending"}`}
+                className={`verify-badge ${
+                  customer.status == 1 ? "verified" : "pending"
+                }`}
               >
                 {customer.status == 1 ? "✅ Đã xác thực" : "⏳ Chưa xác thực"}
               </span>
@@ -891,8 +904,8 @@ function CustomerVerification() {
           onVerify={() => {
             setCustomers(
               customers.map((c) =>
-                c.id === selectedCustomer.id ? { ...c, verified: true } : c,
-              ),
+                c.id === selectedCustomer.id ? { ...c, verified: true } : c
+              )
             );
             setShowVerifyModal(false);
             setSelectedCustomer(null);
@@ -907,8 +920,8 @@ function CustomerVerification() {
             if (updatedData) {
               setCustomers(
                 customers.map((c) =>
-                  c.id === selectedCustomer.id ? { ...c, ...updatedData } : c,
-                ),
+                  c.id === selectedCustomer.id ? { ...c, ...updatedData } : c
+                )
               );
             }
             setShowProfileModal(false);
@@ -957,7 +970,7 @@ function VerificationModal({ customer, onClose, onVerify }) {
     setIsSubmitting(true);
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
       if (!token) {
         alert("❌ Không tìm thấy token xác thực!");
         setIsSubmitting(false);
@@ -990,7 +1003,7 @@ function VerificationModal({ customer, onClose, onVerify }) {
             Accept: "application/json",
           },
           body: JSON.stringify(verificationData),
-        },
+        }
       );
 
       if (!response.ok) {
@@ -1023,7 +1036,7 @@ function VerificationModal({ customer, onClose, onVerify }) {
     setIsSubmitting(true);
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
       if (!token) {
         alert("❌ Không tìm thấy token xác thực!");
         setIsSubmitting(false);
@@ -1056,7 +1069,7 @@ function VerificationModal({ customer, onClose, onVerify }) {
             Accept: "application/json",
           },
           body: JSON.stringify(verificationData),
-        },
+        }
       );
 
       if (!response.ok) {
@@ -1399,7 +1412,7 @@ function PaymentManagement() {
 
     console.log(
       "🔍 PaymentManagement: Loading bookings...",
-      allBookings.length,
+      allBookings.length
     );
 
     // Lấy tất cả bookings (bao gồm pending_payment, booked, completed)
@@ -1417,16 +1430,16 @@ function PaymentManagement() {
         booking.status === "pending_payment"
           ? "pending"
           : booking.status === "cancelled"
-            ? "cancelled"
-            : "verified",
+          ? "cancelled"
+          : "verified",
       method:
         booking.paymentMethod === "credit_card"
           ? "card"
           : booking.paymentMethod === "bank_transfer"
-            ? "transfer"
-            : booking.paymentMethod === "e_wallet"
-              ? "ewallet"
-              : "cash",
+          ? "transfer"
+          : booking.paymentMethod === "e_wallet"
+          ? "ewallet"
+          : "cash",
       date: booking.createdAt,
       pickupDate: `${booking.pickupDate} ${booking.pickupTime}`,
       returnDate: `${booking.returnDate} ${booking.returnTime}`,
@@ -1444,11 +1457,11 @@ function PaymentManagement() {
     console.log("✅ PaymentManagement: Loaded payments:", paymentData.length);
     console.log(
       "📊 Pending:",
-      paymentData.filter((p) => p.status === "pending").length,
+      paymentData.filter((p) => p.status === "pending").length
     );
     console.log(
       "📊 Verified:",
-      paymentData.filter((p) => p.status === "verified").length,
+      paymentData.filter((p) => p.status === "verified").length
     );
 
     setPayments(paymentData);
@@ -1506,7 +1519,7 @@ function PaymentManagement() {
   const handleDeletePayment = (payment) => {
     if (
       window.confirm(
-        `⚠️ Bạn có chắc muốn xóa đơn hàng #${payment.bookingId}?\nXe: ${payment.vehicleName}\nKhách hàng: ${payment.customerName}`,
+        `⚠️ Bạn có chắc muốn xóa đơn hàng #${payment.bookingId}?\nXe: ${payment.vehicleName}\nKhách hàng: ${payment.customerName}`
       )
     ) {
       try {
@@ -1519,7 +1532,7 @@ function PaymentManagement() {
         // Lưu lại
         localStorage.setItem(
           "ev_rental_bookings",
-          JSON.stringify(updatedBookings),
+          JSON.stringify(updatedBookings)
         );
 
         // Reload danh sách
@@ -1571,14 +1584,18 @@ function PaymentManagement() {
       {/* Filter Tabs */}
       <div className="filter-tabs">
         <button
-          className={`filter-tab ${paymentFilter === "pending" ? "active" : ""}`}
+          className={`filter-tab ${
+            paymentFilter === "pending" ? "active" : ""
+          }`}
           onClick={() => setPaymentFilter("pending")}
         >
           ⏳ Chưa xác nhận (
           {payments.filter((p) => p.status === "pending").length})
         </button>
         <button
-          className={`filter-tab ${paymentFilter === "verified" ? "active" : ""}`}
+          className={`filter-tab ${
+            paymentFilter === "verified" ? "active" : ""
+          }`}
           onClick={() => setPaymentFilter("verified")}
         >
           ✅ Đã xác nhận (
@@ -2006,7 +2023,9 @@ function VehicleManagement() {
                 <div className="battery-container">
                   <div className="battery-bar">
                     <div
-                      className={`battery-fill ${getBatteryClass(vehicle.battery)}`}
+                      className={`battery-fill ${getBatteryClass(
+                        vehicle.battery
+                      )}`}
                       style={{ width: `${vehicle.battery}%` }}
                     />
                   </div>
@@ -2069,8 +2088,8 @@ function VehicleManagement() {
           onUpdate={(updatedData) => {
             setVehicles(
               vehicles.map((v) =>
-                v.id === selectedVehicle.id ? { ...v, ...updatedData } : v,
-              ),
+                v.id === selectedVehicle.id ? { ...v, ...updatedData } : v
+              )
             );
             setShowUpdateModal(false);
             setSelectedVehicle(null);
@@ -2094,8 +2113,8 @@ function VehicleManagement() {
                       issues: [...v.issues, issue],
                       technicalStatus: "issue",
                     }
-                  : v,
-              ),
+                  : v
+              )
             );
             setShowReportModal(false);
             setSelectedVehicle(null);
@@ -2106,11 +2125,16 @@ function VehicleManagement() {
   );
 }
 
+// Component: Staff list fetched from API
+// StaffList removed — staff listing and CRUD belong in Admin page
+
+// (StaffList component removed — reverting API-integration UI change)
+
 // Modal cập nhật trạng thái xe
 function UpdateVehicleModal({ vehicle, onClose, onUpdate }) {
   const [battery, setBattery] = useState(vehicle.battery);
   const [technicalStatus, setTechnicalStatus] = useState(
-    vehicle.technicalStatus,
+    vehicle.technicalStatus
   );
   const [mileage, setMileage] = useState(vehicle.mileage);
   const [notes, setNotes] = useState("");

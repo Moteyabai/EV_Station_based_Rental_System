@@ -8,6 +8,7 @@ import { createPayOSPayment } from "../api/payment";
 import { getBikeById } from "../api/bikes";
 import { fetchStationById } from "../api/stations";
 import "../styles/Checkout.css";
+import { getToken } from "../utils/auth";
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ export default function Checkout() {
     if (user) {
       const userRoleId = user?.roleID || user?.RoleID;
       if (userRoleId === 2 || userRoleId === 3) {
-        console.log('Checkout: Access denied for Staff/Admin, redirecting...');
+        console.log("Checkout: Access denied for Staff/Admin, redirecting...");
         if (userRoleId === 2) {
           navigate("/staff");
         } else {
@@ -63,10 +64,10 @@ export default function Checkout() {
 
   const subtotal = getTotalPrice();
   const total = subtotal;
-  
+
   // Debug: Log cart items to see station data structure
   useEffect(() => {
-    console.log('🛒 [CHECKOUT] Cart items:', cartItems);
+    console.log("🛒 [CHECKOUT] Cart items:", cartItems);
     cartItems.forEach((item, index) => {
       console.log(`🛒 [CHECKOUT] Item ${index + 1}:`, {
         vehicleName: item.vehicle?.name,
@@ -74,8 +75,14 @@ export default function Checkout() {
         pickupStation: item.rentalDetails?.pickupStation,
         returnStation: item.rentalDetails?.returnStation,
       });
-      console.log(`📍 [CHECKOUT] Pickup Station Full Object:`, item.rentalDetails?.pickupStation);
-      console.log(`📍 [CHECKOUT] Return Station Full Object:`, item.rentalDetails?.returnStation);
+      console.log(
+        `📍 [CHECKOUT] Pickup Station Full Object:`,
+        item.rentalDetails?.pickupStation
+      );
+      console.log(
+        `📍 [CHECKOUT] Return Station Full Object:`,
+        item.rentalDetails?.returnStation
+      );
     });
   }, [cartItems]);
 
@@ -86,11 +93,11 @@ export default function Checkout() {
     try {
       // Validate data
       if (!user || !user.email) {
-        throw new Error('Thông tin người dùng không hợp lệ');
+        throw new Error("Thông tin người dùng không hợp lệ");
       }
 
       if (cartItems.length === 0) {
-        throw new Error('Giỏ hàng trống');
+        throw new Error("Giỏ hàng trống");
       }
 
       // Generate booking confirmation
@@ -100,20 +107,18 @@ export default function Checkout() {
       if (paymentMethod === "payos") {
         try {
           // Get JWT token from localStorage
-          const token = localStorage.getItem('token');
-          console.log('🔐 Token check:', token ? 'Token exists' : '❌ No token');
-          
+          const token = getToken();
           if (!token) {
-            throw new Error('Vui lòng đăng nhập để thanh toán');
+            throw new Error("Vui lòng đăng nhập để thanh toán");
           }
 
           // Get accountID from user
-          console.log('👤 User object:', user);
+          console.log("👤 User object:", user);
           const accountID = user?.accountID || user?.AccountID || user?.id;
-          console.log('📋 AccountID extracted:', accountID);
-          
+          console.log("📋 AccountID extracted:", accountID);
+
           if (!accountID) {
-            throw new Error('Không tìm thấy thông tin tài khoản');
+            throw new Error("Không tìm thấy thông tin tài khoản");
           }
 
           // Process payment for each item in cart
@@ -128,46 +133,62 @@ export default function Checkout() {
               // Get real BikeID from backend API
               let realBikeID = null;
               const mockBikeId = item.vehicle.id;
-              
+
               // Try to extract number from mock ID (e.g., "v2" -> 2)
-              const extractedId = typeof mockBikeId === 'string' 
-                ? parseInt(mockBikeId.replace(/\D/g, '')) 
-                : mockBikeId;
-              
+              const extractedId =
+                typeof mockBikeId === "string"
+                  ? parseInt(mockBikeId.replace(/\D/g, ""))
+                  : mockBikeId;
+
               if (extractedId) {
                 try {
                   const bikeData = await getBikeById(extractedId, token);
                   realBikeID = bikeData.bikeID; // Get BikeID from database
-                  console.log(`✅ Found bike in database: BikeID = ${realBikeID}`);
+                  console.log(
+                    `✅ Found bike in database: BikeID = ${realBikeID}`
+                  );
                 } catch (error) {
-                  console.warn(`⚠️ Bike with ID ${extractedId} not found in database, using extracted ID`);
+                  console.warn(
+                    `⚠️ Bike with ID ${extractedId} not found in database, using extracted ID`
+                  );
                   realBikeID = extractedId; // Fallback to extracted ID
                 }
               } else {
-                throw new Error('Cannot extract bike ID from vehicle data');
+                throw new Error("Cannot extract bike ID from vehicle data");
               }
 
               // Get real StationID from backend API
               let realStationID = null;
-              const mockStationId = item.rentalDetails.pickupStation?.id || 
-                                   item.rentalDetails.pickupStation?.stationID;
-              
+              const mockStationId =
+                item.rentalDetails.pickupStation?.id ||
+                item.rentalDetails.pickupStation?.stationID;
+
               // Try to extract number from mock ID (e.g., "s1" -> 1)
-              const extractedStationId = typeof mockStationId === 'string'
-                ? parseInt(mockStationId.replace(/\D/g, ''))
-                : mockStationId;
-              
+              const extractedStationId =
+                typeof mockStationId === "string"
+                  ? parseInt(mockStationId.replace(/\D/g, ""))
+                  : mockStationId;
+
               if (extractedStationId) {
                 try {
-                  const stationData = await fetchStationById(extractedStationId, token);
+                  const stationData = await fetchStationById(
+                    extractedStationId,
+                    token
+                  );
                   realStationID = stationData.stationID; // Get StationID from database
-                  console.log(`✅ Found station in database: StationID = ${realStationID}`);
+                  console.log(
+                    `✅ Found station in database: StationID = ${realStationID}`
+                  );
                 } catch (error) {
-                  console.warn(`⚠️ Station with ID ${extractedStationId} not found in database, using extracted ID`);
+                  console.warn(
+                    `⚠️ Station with ID ${extractedStationId} not found in database, using extracted ID`
+                  );
                   realStationID = extractedStationId; // Fallback to extracted ID
                 }
               } else {
-                throw new Error('Cannot extract station ID from rental details');
+                throw new Error(
+                  "Cannot extract station ID from rental details"
+                );
               }
 
               // Prepare payment data with REAL IDs from database
@@ -177,50 +198,76 @@ export default function Checkout() {
                 bikeID: realBikeID,
                 stationID: realStationID,
                 startTime: item.rentalDetails.pickupDate,
-                endTime: item.rentalDetails.returnDate
+                endTime: item.rentalDetails.returnDate,
               };
 
-              console.log('💳 Creating payment with database IDs:', paymentData);
-              console.log('🔗 API URL:', import.meta.env.VITE_API_BASE_URL);
+              console.log(
+                "💳 Creating payment with database IDs:",
+                paymentData
+              );
+              console.log("🔗 API URL:", import.meta.env.VITE_API_BASE_URL);
 
               // Call backend API to create payment
-              const paymentResponse = await createPayOSPayment(paymentData, token);
-              
-              console.log('✅ Payment response received:', paymentResponse);
-              
+              const paymentResponse = await createPayOSPayment(
+                paymentData,
+                token
+              );
+
+              console.log("✅ Payment response received:", paymentResponse);
+
               if (paymentResponse && paymentResponse.paymentUrl) {
                 paymentUrls.push(paymentResponse.paymentUrl);
 
                 // Save booking data before redirecting
                 const itemBookingId = `${bookingId}-${itemIndex}`;
                 const pickupStation = item.rentalDetails.pickupStation;
-                const returnStation = item.rentalDetails.returnStation || pickupStation;
-                
+                const returnStation =
+                  item.rentalDetails.returnStation || pickupStation;
+
                 const bookingData = {
                   userId: user.email,
                   userEmail: user.email,
                   userName: user.fullName || user.name || user.email,
-                  userPhone: user.phone || user.phoneNumber || 'Chưa cập nhật',
+                  userPhone: user.phone || user.phoneNumber || "Chưa cập nhật",
                   vehicleName: item.vehicle.name,
                   vehicleId: item.vehicle.id,
-                  licensePlate: item.vehicle.licensePlate || `59${String.fromCharCode(65 + Math.floor(Math.random() * 26))}-${Math.floor(10000 + Math.random() * 90000)}`,
+                  licensePlate:
+                    item.vehicle.licensePlate ||
+                    `59${String.fromCharCode(
+                      65 + Math.floor(Math.random() * 26)
+                    )}-${Math.floor(10000 + Math.random() * 90000)}`,
                   vehicleImage: item.vehicle.image,
                   pickupDate: item.rentalDetails.pickupDate,
                   returnDate: item.rentalDetails.returnDate,
-                  pickupTime: item.rentalDetails.pickupTime || '09:00',
-                  returnTime: item.rentalDetails.returnTime || '18:00',
-                  pickupStation: typeof pickupStation === 'object' ? pickupStation.name : (pickupStation || 'Chưa chọn'),
-                  pickupStationId: typeof pickupStation === 'object' ? pickupStation.id : null,
-                  pickupStationAddress: typeof pickupStation === 'object' ? pickupStation.address : null,
-                  returnStation: typeof returnStation === 'object' ? returnStation.name : (returnStation || 'Chưa chọn'),
-                  returnStationId: typeof returnStation === 'object' ? returnStation.id : null,
-                  returnStationAddress: typeof returnStation === 'object' ? returnStation.address : null,
+                  pickupTime: item.rentalDetails.pickupTime || "09:00",
+                  returnTime: item.rentalDetails.returnTime || "18:00",
+                  pickupStation:
+                    typeof pickupStation === "object"
+                      ? pickupStation.name
+                      : pickupStation || "Chưa chọn",
+                  pickupStationId:
+                    typeof pickupStation === "object" ? pickupStation.id : null,
+                  pickupStationAddress:
+                    typeof pickupStation === "object"
+                      ? pickupStation.address
+                      : null,
+                  returnStation:
+                    typeof returnStation === "object"
+                      ? returnStation.name
+                      : returnStation || "Chưa chọn",
+                  returnStationId:
+                    typeof returnStation === "object" ? returnStation.id : null,
+                  returnStationAddress:
+                    typeof returnStation === "object"
+                      ? returnStation.address
+                      : null,
                   days: item.rentalDetails.days || 1,
                   totalPrice: item.totalPrice || 0,
-                  additionalServices: item.rentalDetails.additionalServices || {},
-                  paymentMethod: 'payos',
-                  paymentStatus: 'pending',
-                  battery: '100%',
+                  additionalServices:
+                    item.rentalDetails.additionalServices || {},
+                  paymentMethod: "payos",
+                  paymentStatus: "pending",
+                  battery: "100%",
                   lastCheck: new Date().toISOString(),
                 };
 
@@ -228,11 +275,15 @@ export default function Checkout() {
                 savedBookings.push(savedBooking);
                 itemIndex++;
               } else {
-                throw new Error('Không nhận được link thanh toán từ PayOS');
+                throw new Error("Không nhận được link thanh toán từ PayOS");
               }
             } catch (itemError) {
               console.error(`Error processing item ${itemIndex}:`, itemError);
-              throw new Error(`Lỗi xử lý xe ${item.vehicle?.name || 'không xác định'}: ${itemError.message}`);
+              throw new Error(
+                `Lỗi xử lý xe ${item.vehicle?.name || "không xác định"}: ${
+                  itemError.message
+                }`
+              );
             }
           }
 
@@ -241,11 +292,14 @@ export default function Checkout() {
             window.location.href = paymentUrls[0];
             return;
           } else {
-            throw new Error('Không có link thanh toán nào được tạo');
+            throw new Error("Không có link thanh toán nào được tạo");
           }
         } catch (payosError) {
-          console.error('PayOS Error:', payosError);
-          throw new Error(payosError.message || 'Không thể kết nối với cổng thanh toán PayOS. Vui lòng thử lại sau.');
+          console.error("PayOS Error:", payosError);
+          throw new Error(
+            payosError.message ||
+              "Không thể kết nối với cổng thanh toán PayOS. Vui lòng thử lại sau."
+          );
         }
       }
 
@@ -254,7 +308,7 @@ export default function Checkout() {
 
       const savedBookings = [];
       let itemIndex = 1;
-      
+
       for (const item of cartItems) {
         if (!item.vehicle || !item.rentalDetails) {
           continue;
@@ -268,27 +322,41 @@ export default function Checkout() {
           userId: user.email,
           userEmail: user.email,
           userName: user.fullName || user.name || user.email,
-          userPhone: user.phone || user.phoneNumber || 'Chưa cập nhật',
+          userPhone: user.phone || user.phoneNumber || "Chưa cập nhật",
           vehicleName: item.vehicle.name,
           vehicleId: item.vehicle.id,
-          licensePlate: item.vehicle.licensePlate || `59${String.fromCharCode(65 + Math.floor(Math.random() * 26))}-${Math.floor(10000 + Math.random() * 90000)}`,
+          licensePlate:
+            item.vehicle.licensePlate ||
+            `59${String.fromCharCode(
+              65 + Math.floor(Math.random() * 26)
+            )}-${Math.floor(10000 + Math.random() * 90000)}`,
           vehicleImage: item.vehicle.image,
           pickupDate: item.rentalDetails.pickupDate,
           returnDate: item.rentalDetails.returnDate,
-          pickupTime: item.rentalDetails.pickupTime || '09:00',
-          returnTime: item.rentalDetails.returnTime || '18:00',
-          pickupStation: typeof pickupStation === 'object' ? pickupStation.name : (pickupStation || 'Chưa chọn'),
-          pickupStationId: typeof pickupStation === 'object' ? pickupStation.id : null,
-          pickupStationAddress: typeof pickupStation === 'object' ? pickupStation.address : null,
-          returnStation: typeof returnStation === 'object' ? returnStation.name : (returnStation || 'Chưa chọn'),
-          returnStationId: typeof returnStation === 'object' ? returnStation.id : null,
-          returnStationAddress: typeof returnStation === 'object' ? returnStation.address : null,
+          pickupTime: item.rentalDetails.pickupTime || "09:00",
+          returnTime: item.rentalDetails.returnTime || "18:00",
+          pickupStation:
+            typeof pickupStation === "object"
+              ? pickupStation.name
+              : pickupStation || "Chưa chọn",
+          pickupStationId:
+            typeof pickupStation === "object" ? pickupStation.id : null,
+          pickupStationAddress:
+            typeof pickupStation === "object" ? pickupStation.address : null,
+          returnStation:
+            typeof returnStation === "object"
+              ? returnStation.name
+              : returnStation || "Chưa chọn",
+          returnStationId:
+            typeof returnStation === "object" ? returnStation.id : null,
+          returnStationAddress:
+            typeof returnStation === "object" ? returnStation.address : null,
           days: item.rentalDetails.days || 1,
           totalPrice: item.totalPrice || 0,
           additionalServices: item.rentalDetails.additionalServices || {},
-          paymentMethod: 'cash',
-          paymentStatus: 'confirmed',
-          battery: '100%',
+          paymentMethod: "cash",
+          paymentStatus: "confirmed",
+          battery: "100%",
           lastCheck: new Date().toISOString(),
         };
 
@@ -302,22 +370,29 @@ export default function Checkout() {
       }
 
       if (savedBookings.length === 0) {
-        throw new Error('Không có booking nào được lưu thành công');
+        throw new Error("Không có booking nào được lưu thành công");
       }
 
       // Clear cart and redirect
       clearCart();
-      
+
       // Show success message based on payment method
-      if (paymentMethod === 'cash') {
-        alert('✅ Đặt xe thành công! Vui lòng thanh toán khi nhận xe tại điểm.');
+      if (paymentMethod === "cash") {
+        alert(
+          "✅ Đặt xe thành công! Vui lòng thanh toán khi nhận xe tại điểm."
+        );
       } else {
-        alert('✅ Thanh toán thành công! Đang chuyển đến trang xác nhận...');
+        alert("✅ Thanh toán thành công! Đang chuyển đến trang xác nhận...");
       }
-      
+
       navigate(`/booking-success/${bookingId}`);
     } catch (error) {
-      alert(`❌ Lỗi: ${error.message || 'Có lỗi xảy ra trong quá trình thanh toán. Vui lòng thử lại!'}`);
+      alert(
+        `❌ Lỗi: ${
+          error.message ||
+          "Có lỗi xảy ra trong quá trình thanh toán. Vui lòng thử lại!"
+        }`
+      );
     } finally {
       setIsProcessing(false);
     }
@@ -370,14 +445,17 @@ export default function Checkout() {
                         ⏱️ {item.rentalDetails.days} ngày thuê
                       </p>
                       <p className="pickup-location">
-                        📍 Nhận xe/trả tại: {(() => {
+                        📍 Nhận xe/trả tại:{" "}
+                        {(() => {
                           const station = item.rentalDetails?.pickupStation;
-                          if (!station) return 'Chưa chọn điểm nhận';
-                          if (typeof station === 'object' && station.name) {
-                            return `${station.name}${station.address ? ` - ${station.address}` : ''}`;
+                          if (!station) return "Chưa chọn điểm nhận";
+                          if (typeof station === "object" && station.name) {
+                            return `${station.name}${
+                              station.address ? ` - ${station.address}` : ""
+                            }`;
                           }
-                          if (typeof station === 'string') return station;
-                          return 'Chưa chọn điểm nhận';
+                          if (typeof station === "string") return station;
+                          return "Chưa chọn điểm nhận";
                         })()}
                       </p>
 
@@ -473,7 +551,7 @@ export default function Checkout() {
                   <h4 style={{ marginTop: "1.5rem", marginBottom: "1rem" }}>
                     Chọn phương thức thanh toán online:
                   </h4>
-                  
+
                   <div className="payment-methods">
                     <label className="payment-option">
                       <input
@@ -520,125 +598,144 @@ export default function Checkout() {
                 </div>
               )}
 
-              {paymentMethod === "online_disabled" && onlinePaymentMethod === "credit_card" && (
-                <form onSubmit={handlePaymentSubmit} className="payment-form">
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>Số thẻ *</label>
-                      <input
-                        type="text"
-                        placeholder="1234 5678 9012 3456"
-                        value={paymentData.cardNumber}
-                        onChange={(e) =>
-                          handleInputChange("cardNumber", e.target.value)
-                        }
-                        required
-                      />
+              {paymentMethod === "online_disabled" &&
+                onlinePaymentMethod === "credit_card" && (
+                  <form onSubmit={handlePaymentSubmit} className="payment-form">
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Số thẻ *</label>
+                        <input
+                          type="text"
+                          placeholder="1234 5678 9012 3456"
+                          value={paymentData.cardNumber}
+                          onChange={(e) =>
+                            handleInputChange("cardNumber", e.target.value)
+                          }
+                          required
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label>Tên chủ thẻ *</label>
+                        <input
+                          type="text"
+                          placeholder="NGUYEN VAN A"
+                          value={paymentData.cardName}
+                          onChange={(e) =>
+                            handleInputChange("cardName", e.target.value)
+                          }
+                          required
+                        />
+                      </div>
                     </div>
 
-                    <div className="form-group">
-                      <label>Tên chủ thẻ *</label>
-                      <input
-                        type="text"
-                        placeholder="NGUYEN VAN A"
-                        value={paymentData.cardName}
-                        onChange={(e) =>
-                          handleInputChange("cardName", e.target.value)
-                        }
-                        required
-                      />
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Ngày hết hạn *</label>
+                        <input
+                          type="text"
+                          placeholder="MM/YY"
+                          value={paymentData.expiryDate}
+                          onChange={(e) =>
+                            handleInputChange("expiryDate", e.target.value)
+                          }
+                          required
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label>CVV *</label>
+                        <input
+                          type="text"
+                          placeholder="123"
+                          value={paymentData.cvv}
+                          onChange={(e) =>
+                            handleInputChange("cvv", e.target.value)
+                          }
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="payment-actions">
+                      <button
+                        type="button"
+                        className="btn secondary"
+                        onClick={() => setStep(1)}
+                      >
+                        ← Quay lại
+                      </button>
+                      <button
+                        type="submit"
+                        className="btn primary"
+                        disabled={isProcessing}
+                      >
+                        {isProcessing
+                          ? "🔄 Đang xử lý..."
+                          : `💳 Thanh toán ${formatPrice(total, "VNĐ")}`}
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+              {paymentMethod === "online_disabled" &&
+                onlinePaymentMethod !== "credit_card" && (
+                  <div className="alternative-payment">
+                    <p>
+                      Phương thức thanh toán này sẽ được hỗ trợ trong phiên bản
+                      tiếp theo.
+                    </p>
+                    <div className="payment-actions">
+                      <button
+                        className="btn secondary"
+                        onClick={() => setStep(1)}
+                      >
+                        ← Quay lại
+                      </button>
+                      <button
+                        className="btn primary"
+                        onClick={() => setOnlinePaymentMethod("credit_card")}
+                      >
+                        Chọn thẻ tín dụng
+                      </button>
                     </div>
                   </div>
-
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>Ngày hết hạn *</label>
-                      <input
-                        type="text"
-                        placeholder="MM/YY"
-                        value={paymentData.expiryDate}
-                        onChange={(e) =>
-                          handleInputChange("expiryDate", e.target.value)
-                        }
-                        required
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label>CVV *</label>
-                      <input
-                        type="text"
-                        placeholder="123"
-                        value={paymentData.cvv}
-                        onChange={(e) =>
-                          handleInputChange("cvv", e.target.value)
-                        }
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="payment-actions">
-                    <button
-                      type="button"
-                      className="btn secondary"
-                      onClick={() => setStep(1)}
-                    >
-                      ← Quay lại
-                    </button>
-                    <button
-                      type="submit"
-                      className="btn primary"
-                      disabled={isProcessing}
-                    >
-                      {isProcessing
-                        ? "🔄 Đang xử lý..."
-                        : `💳 Thanh toán ${formatPrice(total, "VNĐ")}`}
-                    </button>
-                  </div>
-                </form>
-              )}
-
-              {paymentMethod === "online_disabled" && onlinePaymentMethod !== "credit_card" && (
-                <div className="alternative-payment">
-                  <p>
-                    Phương thức thanh toán này sẽ được hỗ trợ trong phiên bản
-                    tiếp theo.
-                  </p>
-                  <div className="payment-actions">
-                    <button
-                      className="btn secondary"
-                      onClick={() => setStep(1)}
-                    >
-                      ← Quay lại
-                    </button>
-                    <button
-                      className="btn primary"
-                      onClick={() => setOnlinePaymentMethod("credit_card")}
-                    >
-                      Chọn thẻ tín dụng
-                    </button>
-                  </div>
-                </div>
-              )}
+                )}
 
               {/* PayOS Payment */}
               {paymentMethod === "payos" && (
                 <div className="payos-payment-section">
-                  <div className="payos-info" style={{
-                    background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
-                    padding: '2rem',
-                    borderRadius: '12px',
-                    marginTop: '1.5rem',
-                    border: '2px solid #0ea5e9'
-                  }}>
-                    <h4 style={{ color: '#0369a1', marginBottom: '1rem', fontSize: '1.3rem' }}>
+                  <div
+                    className="payos-info"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)",
+                      padding: "2rem",
+                      borderRadius: "12px",
+                      marginTop: "1.5rem",
+                      border: "2px solid #0ea5e9",
+                    }}
+                  >
+                    <h4
+                      style={{
+                        color: "#0369a1",
+                        marginBottom: "1rem",
+                        fontSize: "1.3rem",
+                      }}
+                    >
                       💳 Thanh toán qua PayOS
                     </h4>
-                    <p style={{ color: '#0c4a6e', marginBottom: '1rem' }}>
-                      Bạn sẽ được chuyển hướng đến trang thanh toán PayOS để hoàn tất giao dịch.
+                    <p style={{ color: "#0c4a6e", marginBottom: "1rem" }}>
+                      Bạn sẽ được chuyển hướng đến trang thanh toán PayOS để
+                      hoàn tất giao dịch.
                     </p>
-                    <ul style={{ color: '#0c4a6e', paddingLeft: '1.5rem', lineHeight: '1.8' }}>
+                    <ul
+                      style={{
+                        color: "#0c4a6e",
+                        paddingLeft: "1.5rem",
+                        lineHeight: "1.8",
+                      }}
+                    >
                       <li>✓ Hỗ trợ thanh toán qua QR Code</li>
                       <li>✓ Chuyển khoản ngân hàng</li>
                       <li>✓ Ví điện tử (Momo, ZaloPay, VNPay)</li>
@@ -673,16 +770,26 @@ export default function Checkout() {
                   <div className="info-box">
                     <h4>💵 Hướng dẫn thanh toán tại điểm</h4>
                     <ul>
-                      <li>✅ Bạn sẽ thanh toán trực tiếp khi nhận xe tại điểm</li>
+                      <li>
+                        ✅ Bạn sẽ thanh toán trực tiếp khi nhận xe tại điểm
+                      </li>
                       <li>✅ Vui lòng mang theo CMND/CCCD và bằng lái xe</li>
-                      <li>✅ Số tiền cần thanh toán: <strong>{formatPrice(total, "VNĐ")}</strong></li>
+                      <li>
+                        ✅ Số tiền cần thanh toán:{" "}
+                        <strong>{formatPrice(total, "VNĐ")}</strong>
+                      </li>
                       <li>✅ Nhân viên sẽ xác nhận và giao xe cho bạn</li>
                     </ul>
                     <div className="note-box">
-                      <p><strong>⚠️ Lưu ý:</strong></p>
+                      <p>
+                        <strong>⚠️ Lưu ý:</strong>
+                      </p>
                       <p>• Vui lòng đến đúng giờ đã đặt</p>
                       <p>• Chuẩn bị đầy đủ giấy tờ cần thiết</p>
-                      <p>• Liên hệ hotline nếu cần hỗ trợ: <strong>1900-xxxx</strong></p>
+                      <p>
+                        • Liên hệ hotline nếu cần hỗ trợ:{" "}
+                        <strong>1900-xxxx</strong>
+                      </p>
                     </div>
                   </div>
                   <div className="payment-actions">
@@ -697,9 +804,7 @@ export default function Checkout() {
                       onClick={handlePaymentSubmit}
                       disabled={isProcessing}
                     >
-                      {isProcessing
-                        ? "🔄 Đang xử lý..."
-                        : `✅ Xác nhận đặt xe`}
+                      {isProcessing ? "🔄 Đang xử lý..." : `✅ Xác nhận đặt xe`}
                     </button>
                   </div>
                 </div>
