@@ -148,7 +148,7 @@ namespace API.Controllers
                 rental.InitialBattery = 100; // Default initial battery
                 rental.RentalDate = DateTime.Now;
                 rental.Deposit = paymentDto.Amount;
-                rental.Status = (int)RentalStatus.Reserved;
+                rental.Status = (int)RentalStatus.Pending; // Changed from Reserved to Pending (0)
                 rental.LicensePlate = availableStock.LicensePlate;
                 rental.StartDate = paymentDto.StartTime;
                 rental.EndDate = paymentDto.EndTime;

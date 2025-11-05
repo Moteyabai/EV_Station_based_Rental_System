@@ -74,6 +74,12 @@ export const getBikeById = async (bikeId) => {
     console.log('Get bike response status:', response.status);
 
     if (!response.ok) {
+      if (response.status === 404) {
+        console.warn(`⚠️ Bike with ID ${bikeId} not found (404), will use provided ID`);
+        // Return a minimal object with the provided bikeID so caller can use it
+        return { bikeID: bikeId, notFound: true };
+      }
+      
       const errorText = await response.text();
       console.error('Get bike error:', errorText);
       throw new Error(`Failed to get bike: ${response.status}`);
@@ -85,6 +91,11 @@ export const getBikeById = async (bikeId) => {
     return data;
   } catch (error) {
     console.error('❌ Error fetching bike:', error);
+    // If it's a network error or other error, return minimal object
+    if (error.message.includes('fetch')) {
+      console.warn('⚠️ Network error, using provided bike ID:', bikeId);
+      return { bikeID: bikeId, notFound: true };
+    }
     throw error;
   }
 };

@@ -8,6 +8,7 @@ import {
   verifyPayment,
   rejectPayment,
 } from "../utils/bookingStorage";
+import { getPendingRentals } from "../api/rentals";
 import "../styles/Staff.css";
 
 export default function Staff() {
@@ -108,7 +109,7 @@ export default function Staff() {
           className={`nav-tab ${activeTab === "payment" ? "active" : ""}`}
           onClick={() => setActiveTab("payment")}
         >
-          � Thanh toán
+          💳 Thanh toán
         </button>
         <button
           className={`nav-tab ${activeTab === "vehicles" ? "active" : ""}`}
@@ -1394,16 +1395,23 @@ function ProfileViewModal({ customer, onClose }) {
 function PaymentManagement() {
   const { user } = useAuth();
   const [payments, setPayments] = useState([]);
+  const [apiRentals, setApiRentals] = useState([]);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [paymentFilter, setPaymentFilter] = useState("pending"); // 'pending' hoặc 'verified'
+  const [paymentFilter, setPaymentFilter] = useState("pending"); // 'pending', 'verified', hoặc 'api'
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // Load bookings chờ xác nhận thanh toán
   useEffect(() => {
     loadPendingPayments();
+    loadApiRentals();
 
     // Auto refresh mỗi 5 giây
-    const interval = setInterval(loadPendingPayments, 5000);
+    const interval = setInterval(() => {
+      loadPendingPayments();
+      loadApiRentals();
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -1465,6 +1473,38 @@ function PaymentManagement() {
     );
 
     setPayments(paymentData);
+  };
+
+  const loadApiRentals = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.warn("⚠️ [API RENTALS] No token found");
+        setApiRentals([]);
+        return;
+      }
+
+      console.log("📋 [API RENTALS] Fetching pending rentals (status=0) from API...");
+      
+      const response = await getPendingRentals(token);
+      
+      if (response && Array.isArray(response)) {
+        setApiRentals(response);
+        console.log(`✅ [API RENTALS] Loaded ${response.length} pending rentals (status=0) from API`);
+      } else {
+        setApiRentals([]);
+        console.warn("⚠️ [API RENTALS] Invalid response format");
+      }
+    } catch (err) {
+      console.error("❌ [API RENTALS] Error:", err);
+      setError(err.message || "Không thể tải dữ liệu từ API");
+      setApiRentals([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getTypeBadge = (type) => {
@@ -1561,6 +1601,33 @@ function PaymentManagement() {
     return true;
   });
 
+  // Merge API rentals into pending payments for display
+  const displayItems = paymentFilter === "pending" 
+    ? [...filteredPayments, ...apiRentals.map(rental => ({
+        ...rental,
+        id: `api-${rental.rentalID}`,
+        bookingId: rental.rentalID,
+        amount: rental.deposit,
+        status: "pending",
+        type: "rental",
+        isApiRental: true,
+        date: rental.rentalDate,
+      }))]
+    : filteredPayments;
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleString("vi-VN");
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(amount);
+  };
+
   return (
     <div className="management-section">
       <div className="section-header">
@@ -1568,9 +1635,9 @@ function PaymentManagement() {
         <div className="section-stats">
           <div className="stat-card">
             <span className="stat-number">
-              {totalPending.toLocaleString()} đ
+              {apiRentals.length}
             </span>
-            <span className="stat-label">Các đơn chưa xác nhận</span>
+            <span className="stat-label">Đơn chưa xác nhận</span>
           </div>
           <div className="stat-card">
             <span className="stat-number">
@@ -1590,7 +1657,7 @@ function PaymentManagement() {
           onClick={() => setPaymentFilter("pending")}
         >
           ⏳ Chưa xác nhận (
-          {payments.filter((p) => p.status === "pending").length})
+          {payments.filter((p) => p.status === "pending").length + apiRentals.length})
         </button>
         <button
           className={`filter-tab ${
@@ -1603,60 +1670,104 @@ function PaymentManagement() {
         </button>
       </div>
 
-      <div className="payment-list">
-        {filteredPayments.length === 0 && (
-          <div className="empty-state">
-            {paymentFilter === "pending" ? (
-              <p>📭 Chưa có booking nào cần xác nhận thanh toán</p>
-            ) : (
-              <p>📭 Chưa có booking nào đã xác nhận</p>
-            )}
-          </div>
-        )}
+      {error && (
+        <div className="error-message">
+          <p>❌ {error}</p>
+        </div>
+      )}
 
-        {filteredPayments.map((payment) => (
+      <div className="payment-list">
+        {displayItems.length === 0 && (
+            <div className="empty-state">
+              {paymentFilter === "pending" ? (
+                <p>📭 Chưa có booking nào cần xác nhận thanh toán</p>
+              ) : (
+                <p>📭 Chưa có booking nào đã xác nhận</p>
+              )}
+            </div>
+          )}
+
+          {displayItems.map((payment) => (
           <div key={payment.id} className="payment-card">
             <div className="payment-header">
               <div className="payment-info">
                 <h3>
-                  #{payment.bookingId} - {payment.customerName}
+                  {payment.isApiRental ? (
+                    <>🆔 Rental #{payment.bookingId} <span style={{color: '#00a8ff', fontSize: '0.9em'}}>(API)</span></>
+                  ) : (
+                    <>#{payment.bookingId} - {payment.customerName}</>
+                  )}
                 </h3>
                 <p className="vehicle-info">
-                  🏍️ {payment.vehicleName} ({payment.licensePlate})
+                  {payment.isApiRental ? (
+                    <>🏍️ Biển số: {payment.licensePlate || "N/A"}</>
+                  ) : (
+                    <>🏍️ {payment.vehicleName} ({payment.licensePlate})</>
+                  )}
                 </p>
                 <span className="payment-date">
-                  📅 {new Date(payment.date).toLocaleString("vi-VN")}
+                  📅 {payment.isApiRental ? formatDate(payment.date) : new Date(payment.date).toLocaleString("vi-VN")}
                 </span>
               </div>
               <div className="payment-badges">
-                {getTypeBadge(payment.type)}
-                {getStatusBadge(payment.status)}
+                {payment.isApiRental ? (
+                  <span className="status-badge status-pending">
+                    ⏳ Chờ xử lý (API - Status=0)
+                  </span>
+                ) : (
+                  <>
+                    {getTypeBadge(payment.type)}
+                    {getStatusBadge(payment.status)}
+                  </>
+                )}
               </div>
             </div>
 
             <div className="payment-details">
               <div className="payment-amount">
-                <span className="amount-label">Số tiền:</span>
+                <span className="amount-label">{payment.isApiRental ? "💰 Tiền cọc:" : "Số tiền:"}</span>
                 <span className="amount-value">
-                  {payment.amount.toLocaleString()} VNĐ
+                  {payment.isApiRental 
+                    ? formatCurrency(payment.amount) 
+                    : `${payment.amount.toLocaleString()} VNĐ`
+                  }
                 </span>
               </div>
-              <div className="payment-method">
-                <span className="method-label">Phương thức:</span>
-                <span className="method-value">
-                  {payment.method === "card" && "� Thẻ tín dụng"}
-                  {payment.method === "transfer" && "🏦 Chuyển khoản"}
-                  {payment.method === "ewallet" && "📱 Ví điện tử"}
-                  {payment.method === "cash" && "💵 Tiền mặt"}
-                </span>
-              </div>
-              <div className="rental-period">
-                <span className="period-label">Thời gian thuê:</span>
-                <span className="period-value">{payment.days} ngày</span>
-              </div>
+              {payment.isApiRental ? (
+                <>
+                  <div className="payment-method">
+                    <span className="method-label">📅 Ngày thuê:</span>
+                    <span className="method-value">
+                      {formatDate(payment.startDate)}
+                    </span>
+                  </div>
+                  <div className="rental-period">
+                    <span className="period-label">📅 Ngày trả:</span>
+                    <span className="period-value">
+                      {formatDate(payment.endDate)}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="payment-method">
+                    <span className="method-label">Phương thức:</span>
+                    <span className="method-value">
+                      {payment.method === "card" && "💳 Thẻ tín dụng"}
+                      {payment.method === "transfer" && "🏦 Chuyển khoản"}
+                      {payment.method === "ewallet" && "📱 Ví điện tử"}
+                      {payment.method === "cash" && "💵 Tiền mặt"}
+                    </span>
+                  </div>
+                  <div className="rental-period">
+                    <span className="period-label">Thời gian thuê:</span>
+                    <span className="period-value">{payment.days} ngày</span>
+                  </div>
+                </>
+              )}
             </div>
 
-            {payment.paymentVerified && payment.paymentVerifiedAt && (
+            {!payment.isApiRental && payment.paymentVerified && payment.paymentVerifiedAt && (
               <div className="verification-info">
                 <p>
                   ✅ Xác nhận bởi: <strong>{payment.paymentVerifiedBy}</strong>
@@ -1668,7 +1779,7 @@ function PaymentManagement() {
               </div>
             )}
 
-            {payment.status === "cancelled" && payment.rejectionReason && (
+            {!payment.isApiRental && payment.status === "cancelled" && payment.rejectionReason && (
               <div className="rejection-info">
                 <p>
                   ❌ Từ chối bởi: <strong>{payment.rejectedBy}</strong>
