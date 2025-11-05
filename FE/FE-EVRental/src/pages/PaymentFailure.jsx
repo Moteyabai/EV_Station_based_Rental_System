@@ -61,7 +61,7 @@ const PaymentFailure = () => {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '2rem',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: '#4db6ac',
     }}>
       <div style={{
         background: 'white',
@@ -85,11 +85,46 @@ const PaymentFailure = () => {
           alignItems: 'center',
           justifyContent: 'center',
           border: '4px solid #ef4444',
+          position: 'relative',
         }}>
-          <i className="fas fa-times-circle" style={{
-            fontSize: '3.5rem',
-            color: '#ef4444',
-          }}></i>
+          {/* SVG X Icon */}
+          <svg 
+            width="60" 
+            height="60" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              filter: 'drop-shadow(0 2px 4px rgba(239, 68, 68, 0.2))',
+            }}
+          >
+            <circle 
+              cx="12" 
+              cy="12" 
+              r="10" 
+              stroke="#ef4444" 
+              strokeWidth="2" 
+              fill="transparent"
+            />
+            <line 
+              x1="8" 
+              y1="8" 
+              x2="16" 
+              y2="16" 
+              stroke="#ef4444" 
+              strokeWidth="2.5" 
+              strokeLinecap="round"
+            />
+            <line 
+              x1="16" 
+              y1="8" 
+              x2="8" 
+              y2="16" 
+              stroke="#ef4444" 
+              strokeWidth="2.5" 
+              strokeLinecap="round"
+            />
+          </svg>
         </div>
 
         {/* Title */}
@@ -263,6 +298,32 @@ const PaymentFailure = () => {
               opacity: 1;
               transform: translateY(0);
             }
+          }
+          
+          @keyframes drawCircle {
+            from {
+              stroke-dasharray: 0 100;
+            }
+            to {
+              stroke-dasharray: 100 0;
+            }
+          }
+          
+          @keyframes drawX {
+            from {
+              stroke-dasharray: 0 20;
+            }
+            to {
+              stroke-dasharray: 20 0;
+            }
+          }
+          
+          svg circle {
+            animation: drawCircle 0.6s ease-out 0.2s both;
+          }
+          
+          svg line {
+            animation: drawX 0.3s ease-out 0.6s both;
           }
         `}</style>
       </div>

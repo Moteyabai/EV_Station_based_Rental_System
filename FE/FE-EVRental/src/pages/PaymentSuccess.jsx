@@ -43,7 +43,7 @@ const PaymentSuccess = () => {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '2rem',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: '#4db6ac',
     }}>
       <div style={{
         background: 'white',
