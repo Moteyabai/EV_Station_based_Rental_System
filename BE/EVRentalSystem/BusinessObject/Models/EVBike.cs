@@ -36,9 +36,6 @@ namespace BusinessObject.Models
         [Range(0, int.MaxValue, ErrorMessage = "Số lần thuê không được âm")]
         public int TimeRented { get; set; } = 0;
 
-        [Range(0, int.MaxValue, ErrorMessage = "Số lượng không được âm")]
-        public int Quantity { get; set; } = 0;
-
         [Required(ErrorMessage = "Mô tả là bắt buộc")]
         [StringLength(500, ErrorMessage = "Mô tả không được quá 500 ký tự")]
         public string Description { get; set; }

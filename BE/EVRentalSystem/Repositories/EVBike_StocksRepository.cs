@@ -58,5 +58,19 @@ namespace Repositories
                 .ToListAsync();
         }
 
+        //stock countby bikeID
+        public async Task<int> GetStockCountByBikeIDAsync(int bikeID)
+        {
+            return await _context.EVBike_Stocks
+                .CountAsync(stock => stock.BikeID == bikeID);
+        }
+
+        //stock count by stationID
+        public async Task<int> GetStockCountByStationIDAsync(int stationID)
+        {
+            return await _context.EVBike_Stocks
+                .CountAsync(stock => stock.StationID == stationID);
+        }
+
     }
 }

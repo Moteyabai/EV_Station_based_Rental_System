@@ -161,8 +161,6 @@ namespace API.Controllers
 
                 await _evbike_StocksService.UpdateAsync(availableStock);
 
-                // Update Bike quantity
-                bike.Quantity -= 1;
 
                 await _evbikeService.UpdateAsync(bike);
 
@@ -500,13 +498,6 @@ namespace API.Controllers
                     bikeStock.Status = (int)BikeStatus.Available;
                     bikeStock.UpdatedAt = DateTime.Now;
                     await _evbike_StocksService.UpdateAsync(bikeStock);
-                    // Update Bike quantity
-                    var bike = await _evbikeService.GetByIdAsync(bikeStock.BikeID);
-                    if (bike != null)
-                    {
-                        bike.Quantity += 1;
-                        await _evbikeService.UpdateAsync(bike);
-                    }
                 }
                 var failedRes = new ResponseDTO
                 {

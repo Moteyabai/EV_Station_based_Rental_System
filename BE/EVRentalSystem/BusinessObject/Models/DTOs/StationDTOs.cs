@@ -35,6 +35,23 @@ namespace BusinessObject.Models.DTOs
         public bool IsActive { get; set; } = false;
     }
 
+    public class StationDisplayDTO
+    {
+        public int StationID { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public int BikeCapacity { get; set; }
+        public string OpeningHours { get; set; } = string.Empty;
+        public string? ContactNumber { get; set; }
+        public string? ImageUrl { get; set; }
+        public string? ExteriorImageUrl { get; set; }
+        public string? ThumbnailImageUrl { get; set; }
+        public bool IsActive { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
+    }
+
     public class StationUpdateDTO
     {
         [Required(ErrorMessage = "Station ID là b?t bu?c")]
@@ -72,18 +89,6 @@ namespace BusinessObject.Models.DTOs
         public bool? IsActive { get; set; }
     }
 
-    public class StationStatusUpdateDTO
-    {
-        [Required(ErrorMessage = "Station ID là b?t bu?c")]
-        public int StationID { get; set; }
-
-        [Required(ErrorMessage = "Tr?ng thái ho?t ??ng là b?t bu?c")]
-        public bool IsActive { get; set; }
-
-        [StringLength(500, ErrorMessage = "Ghi chú không ???c quá 500 ký t?")]
-        public string? Note { get; set; }
-    }
-
     public class StationSearchDTO
     {
         [StringLength(255, ErrorMessage = "Tên tìm ki?m không ???c quá 255 ký t?")]
@@ -106,48 +111,5 @@ namespace BusinessObject.Models.DTOs
 
         [StringLength(100, ErrorMessage = "Gi? m? c?a không ???c quá 100 ký t?")]
         public string? OpeningHours { get; set; }
-    }
-
-    public class StationStatisticsDTO
-    {
-        public int TotalStations { get; set; }
-        public int ActiveStations { get; set; }
-        public int InactiveStations { get; set; }
-        public int TotalBikeCapacity { get; set; }
-        public int AverageCapacityPerStation { get; set; }
-        public DateTime? LatestStationCreated { get; set; }
-        public DateTime? LatestStationUpdated { get; set; }
-        public Dictionary<string, int> StationsByOpeningHours { get; set; } = new();
-        public Dictionary<int, int> StationsByCapacityRange { get; set; } = new();
-    }
-
-    public class StationSummaryDTO
-    {
-        public int StationID { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string Address { get; set; } = string.Empty;
-        public string? Description { get; set; }
-        public int BikeCapacity { get; set; }
-        public string OpeningHours { get; set; } = string.Empty;
-        public string? ContactNumber { get; set; }
-        public bool IsActive { get; set; }
-        public string StatusText { get; set; } = string.Empty;
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
-        public int AvailableBikes { get; set; } // This would be calculated from actual bike data
-        public int OccupiedSlots { get; set; } // This would be calculated from actual bike data
-    }
-
-    public class StationCapacityUpdateDTO
-    {
-        [Required(ErrorMessage = "Station ID là b?t bu?c")]
-        public int StationID { get; set; }
-
-        [Required(ErrorMessage = "S?c ch?a xe là b?t bu?c")]
-        [Range(1, 1000, ErrorMessage = "S?c ch?a xe ph?i t? 1 ??n 1000")]
-        public int BikeCapacity { get; set; }
-
-        [StringLength(500, ErrorMessage = "Lý do thay ??i không ???c quá 500 ký t?")]
-        public string? Reason { get; set; }
     }
 }

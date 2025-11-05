@@ -38,29 +38,25 @@ const PaymentSuccess = () => {
   }, [orderCode]);
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "2rem",
-        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-      }}
-    >
-      <div
-        style={{
-          background: "white",
-          borderRadius: "24px",
-          padding: "3rem",
-          maxWidth: "600px",
-          width: "100%",
-          boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
-          textAlign: "center",
-          animation: "slideUp 0.6s ease-out",
-          borderTop: "6px solid #10b981",
-        }}
-      >
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '2rem',
+      background: '#4db6ac',
+    }}>
+      <div style={{
+        background: 'white',
+        borderRadius: '24px',
+        padding: '3rem',
+        maxWidth: '600px',
+        width: '100%',
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+        textAlign: 'center',
+        animation: 'slideUp 0.6s ease-out',
+        borderTop: '6px solid #10b981',
+      }}>
         {/* Success Icon */}
         <div
           style={{
