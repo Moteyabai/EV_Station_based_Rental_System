@@ -1201,6 +1201,27 @@
   color: #1e293b;
 }
 
+.input-error {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.form-group input.error,
+.form-group select.error {
+  border-color: #ef4444;
+}
+
+.avatar-preview {
+  margin-top: 0.5rem;
+}
+
+.avatar-preview img {
+  border: 2px solid #e2e8f0;
+  object-fit: cover;
+}
+
 .required {
   color: #ef4444;
 }

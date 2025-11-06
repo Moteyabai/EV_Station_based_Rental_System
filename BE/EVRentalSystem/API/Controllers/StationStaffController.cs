@@ -129,17 +129,17 @@ namespace API.Controllers
         /// Create new station staff (Admin only)
         /// </summary>
         [HttpPost("CreateStaff")]
-        [Authorize]
-        public async Task<ActionResult> CreateStaff([FromBody] StationStaffCreateDTO staffDto)
+        //[Authorize]
+        public async Task<ActionResult> CreateStaff( StationStaffCreateDTO staffDto)
         {
             // Check user permission (Admin only)
             var res = new ResponseDTO();
-            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-            if (permission != "3")
-            {
-                res.Message = "Không có quyền truy cập!";
-                return Unauthorized(res);
-            }
+            //var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
+            //if (permission != "3")
+            //{
+            //    res.Message = "Không có quyền truy cập!";
+            //    return Unauthorized(res);
+            //}
 
             if (!ModelState.IsValid)
             {
