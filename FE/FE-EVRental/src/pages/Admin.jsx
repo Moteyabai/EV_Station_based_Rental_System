@@ -253,6 +253,19 @@ const Admin = () => {
   const [staffLoading, setStaffLoading] = useState(false);
   const [staffError, setStaffError] = useState(null);
 
+  // Add staff modal & form state
+  const [showAddStaffModal, setShowAddStaffModal] = useState(false);
+  const [creatingStaff, setCreatingStaff] = useState(false);
+  const [newStaff, setNewStaff] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    password: "",
+    avatarFile: null, // Store File object instead of base64
+    avatarPreview: null, // Store preview URL for display
+  });
+  const [apiErrors, setApiErrors] = useState({});
+
   const [reports, setReports] = useState({
     revenueByStation: [
       { station: "Quận 1", revenue: 18500000, rentals: 45 },
@@ -712,6 +725,7 @@ const Admin = () => {
   }, [activeTab]);
 
   const fetchStaff = async () => {
+    console.log("🔵 fetchStaff called");
     setStaffLoading(true);
     setStaffError(null);
     // clear previous/mock staff while loading
@@ -720,28 +734,51 @@ const Admin = () => {
     try {
       const token = getToken();
       if (!token) {
+        console.error("❌ No token found");
         throw new Error("Vui lòng đăng nhập lại");
       }
 
-      const response = await fetch(
-        "http://localhost:5168/api/StationStaff/GetAllStaff",
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
+      console.log("📤 Fetching staff from API...");
+      console.log("🔑 Using token:", token.substring(0, 20) + "...");
+
+      const url = "http://localhost:5168/api/StationStaff/GetAllStaff";
+      console.log("🌐 Calling URL:", url);
+
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      console.log("📥 Staff API response status:", response.status);
+      console.log(
+        "📥 Staff API response headers:",
+        Object.fromEntries(response.headers.entries())
       );
 
       if (!response.ok) {
         if (response.status === 401) {
           throw new Error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại");
         }
-        throw new Error(`HTTP error! status: ${response.status}`);
+        if (response.status === 404) {
+          console.warn(
+            "⚠️ API endpoint GetAllStaff not found (404). Backend may not be running or route not implemented."
+          );
+          throw new Error(
+            "API GetAllStaff không tồn tại. Vui lòng kiểm tra backend hoặc liên hệ admin."
+          );
+        }
+        const errorText = await response.text();
+        console.error("API error response:", errorText);
+        throw new Error(
+          `HTTP error! status: ${response.status} - ${errorText}`
+        );
       }
 
       const data = await response.json();
+      console.log("✅ Staff data received:", data);
 
       // Map API response to existing staff shape (fall back to sensible defaults)
       const mapped = Array.isArray(data)
@@ -755,18 +792,259 @@ const Admin = () => {
             totalDeliveries: s.totalDeliveries || 0,
             phone: s.phone || s.phoneNumber || s.mobile || "",
             email: s.email || s.userEmail || s.emailAddress || "",
+            avatar: s.avatarPicture || s.avatar || s.profilePicture || null,
           }))
         : [];
 
+      console.log("✅ Mapped staff:", mapped);
+      console.log(`✅ Total staff count: ${mapped.length}`);
       setStaff(mapped);
     } catch (error) {
-      console.error("Error fetching staff:", error);
+      console.error("❌ Error fetching staff:", error);
       setStaffError(error.message || "Lỗi khi tải danh sách nhân viên");
       // clear staff on error to avoid showing stale/mock data
       setStaff([]);
     } finally {
       setStaffLoading(false);
+      console.log("🏁 fetchStaff finished");
     }
+  };
+
+  // Open add-staff modal
+  const handleOpenAddStaff = (stationId = "") => {
+    setNewStaff({
+      fullName: "",
+      email: "",
+      phone: "",
+      password: "",
+      avatarFile: null,
+      avatarPreview: null,
+    });
+    setApiErrors({});
+    setShowAddStaffModal(true);
+  };
+
+  // Create staff via API
+  const handleCreateStaff = async () => {
+    console.log("🔵 handleCreateStaff called");
+    console.log("Current newStaff:", newStaff);
+
+    // client-side validation
+    const errors = {};
+    if (!newStaff.fullName || newStaff.fullName.trim().length === 0)
+      errors.fullName = "Vui lòng nhập họ tên";
+    if (!newStaff.email || newStaff.email.trim().length === 0)
+      errors.email = "Vui lòng nhập email";
+    if (!newStaff.password || newStaff.password.length < 6)
+      errors.password = "Mật khẩu phải có ít nhất 6 ký tự";
+    if (!newStaff.phone || newStaff.phone.trim().length === 0)
+      errors.phone = "Vui lòng nhập số điện thoại";
+    // Vietnamese phone number basic check
+    const phoneRegex = /^(?:\+84|0)(?:3|5|7|8|9)\d{8}$/;
+    if (newStaff.phone && !phoneRegex.test(newStaff.phone))
+      errors.phone =
+        "Vui lòng nhập đúng định dạng số điện thoại Việt Nam (0xxxxxxxxx)";
+    if (!newStaff.avatarFile) errors.avatar = "Vui lòng tải ảnh đại diện";
+
+    if (Object.keys(errors).length > 0) {
+      console.log("❌ Validation errors:", errors);
+      setApiErrors(errors);
+      alert("⚠️ Vui lòng điền đầy đủ thông tin bắt buộc");
+      return;
+    }
+
+    try {
+      console.log("⏳ Starting staff creation...");
+      setCreatingStaff(true);
+      setApiErrors({});
+      const token = getToken();
+      if (!token) {
+        alert("❌ Vui lòng đăng nhập lại");
+        setCreatingStaff(false);
+        return;
+      }
+
+      // Backend expects multipart/form-data, NOT JSON
+      const formData = new FormData();
+      formData.append("FullName", newStaff.fullName);
+      formData.append("Email", newStaff.email);
+      formData.append("Password", newStaff.password);
+      formData.append("Phone", newStaff.phone);
+
+      // Add avatar file directly (already a File object)
+      if (newStaff.avatarFile) {
+        formData.append("AvatarPicture", newStaff.avatarFile);
+      }
+
+      console.log("📤 Sending FormData with fields:");
+      for (let [key, value] of formData.entries()) {
+        if (key === "Password") {
+          console.log(`  ${key}: ***`);
+        } else if (key === "AvatarPicture") {
+          console.log(
+            `  ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`
+          );
+        } else {
+          console.log(`  ${key}: ${value}`);
+        }
+      }
+
+      const resp = await fetch(
+        "http://localhost:5168/api/StationStaff/CreateStaff",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            // Do NOT set Content-Type for FormData - browser will set it with boundary
+          },
+          body: formData,
+        }
+      );
+
+      console.log("📥 Response status:", resp.status);
+
+      if (!resp.ok) {
+        // try to parse structured validation errors (common from ASP.NET)
+        let bodyText = await resp.text();
+        console.log("❌ Error response body:", bodyText);
+
+        try {
+          const json = JSON.parse(bodyText);
+          if (json && json.errors) {
+            const serverErrors = {};
+            const errorMessages = [];
+
+            Object.keys(json.errors).forEach((k) => {
+              // join messages array if present
+              const val = json.errors[k];
+              const message = Array.isArray(val) ? val.join(" ") : String(val);
+              serverErrors[k.toLowerCase()] = message;
+              errorMessages.push(`${k}: ${message}`);
+            });
+
+            console.log("Server validation errors:", serverErrors);
+            console.log("Error messages:", errorMessages);
+
+            setApiErrors(serverErrors);
+            setCreatingStaff(false);
+
+            // Show detailed error in alert
+            alert("❌ Có lỗi validation:\n\n" + errorMessages.join("\n"));
+            return;
+          }
+        } catch (e) {
+          console.log("Response is not JSON");
+        }
+
+        setCreatingStaff(false);
+        alert(`❌ Lỗi: HTTP ${resp.status} - ${bodyText}`);
+        throw new Error(`HTTP ${resp.status} - ${bodyText}`);
+      }
+
+      // Parse success response
+      const result = await resp.json();
+      console.log("✅ Success response:", result);
+
+      // success: refresh staff list
+      console.log("🔄 Refreshing staff list...");
+      await fetchStaff();
+
+      // Reset form
+      setNewStaff({
+        fullName: "",
+        email: "",
+        phone: "",
+        password: "",
+        avatarFile: null,
+        avatarPreview: null,
+      });
+      setApiErrors({});
+
+      // Close modal
+      setShowAddStaffModal(false);
+
+      // Show success message
+      console.log("✅ Staff added successfully!");
+      alert("✅ Đã thêm nhân viên thành công!");
+    } catch (err) {
+      console.error("💥 Exception in handleCreateStaff:", err);
+      alert("❌ Không thể thêm nhân viên: " + (err.message || err));
+    } finally {
+      setCreatingStaff(false);
+      console.log("🏁 handleCreateStaff finished");
+    }
+  };
+
+  // Handle avatar file selection
+  const handleAvatarChange = (file) => {
+    if (!file) {
+      setNewStaff((s) => ({ ...s, avatarFile: null, avatarPreview: null }));
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      setApiErrors((prev) => ({ ...prev, avatar: "Vui lòng chọn file ảnh" }));
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setApiErrors((prev) => ({
+        ...prev,
+        avatar: "Kích thước ảnh tối đa 5MB",
+      }));
+      return;
+    }
+
+    // Store file object and create preview URL
+    const previewUrl = URL.createObjectURL(file);
+    setNewStaff((s) => ({
+      ...s,
+      avatarFile: file,
+      avatarPreview: previewUrl,
+    }));
+
+    // Clear avatar error if any
+    setApiErrors((prev) => {
+      const { avatar, ...rest } = prev;
+      return rest;
+    });
+
+    console.log(
+      "📸 Avatar file selected:",
+      file.name,
+      file.size,
+      "bytes",
+      file.type
+    );
+  };
+
+  const getError = (keys) => {
+    if (!apiErrors || Object.keys(apiErrors).length === 0) return null;
+
+    for (const k of keys) {
+      const lowerKey = k.toLowerCase();
+      // Check both original key and lowercase version
+      if (apiErrors[k]) {
+        console.log(`Found error for key "${k}":`, apiErrors[k]);
+        return apiErrors[k];
+      }
+      if (apiErrors[lowerKey]) {
+        console.log(
+          `Found error for lowercase key "${lowerKey}":`,
+          apiErrors[lowerKey]
+        );
+        return apiErrors[lowerKey];
+      }
+    }
+
+    // Debug: show what keys are available
+    console.log(
+      `No error found for keys [${keys.join(", ")}]. Available error keys:`,
+      Object.keys(apiErrors)
+    );
+    return null;
   };
 
   // Fetch brands from API
@@ -2799,6 +3077,59 @@ const Admin = () => {
   );
 
   const renderStaffManagement = () => {
+    // Show loading state
+    if (staffLoading) {
+      return (
+        <div className="management-content">
+          <div className="section-header">
+            <h2>Quản lý nhân viên</h2>
+          </div>
+          <div
+            style={{ textAlign: "center", padding: "3rem", color: "#6b7280" }}
+          >
+            <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>⏳</div>
+            <div style={{ fontSize: "1.2rem", fontWeight: "500" }}>
+              Đang tải danh sách nhân viên...
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Show error state
+    if (staffError) {
+      return (
+        <div className="management-content">
+          <div className="section-header">
+            <h2>Quản lý nhân viên</h2>
+            <button
+              className="btn-primary"
+              onClick={() => handleOpenAddStaff()}
+            >
+              + Thêm nhân viên
+            </button>
+          </div>
+          <div
+            style={{ textAlign: "center", padding: "3rem", color: "#ef4444" }}
+          >
+            <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>⚠️</div>
+            <div
+              style={{
+                fontSize: "1.2rem",
+                fontWeight: "500",
+                marginBottom: "1rem",
+              }}
+            >
+              {staffError}
+            </div>
+            <button className="btn-primary" onClick={fetchStaff}>
+              🔄 Thử lại
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     // Filter staff based on search and filters
     const filteredStaff = staff.filter((member) => {
       // Filter by station
@@ -2863,7 +3194,12 @@ const Admin = () => {
             >
               🧪 Test Filters
             </button>
-            <button className="btn-primary">+ Thêm nhân viên</button>
+            <button
+              className="btn-primary"
+              onClick={() => handleOpenAddStaff()}
+            >
+              + Thêm nhân viên
+            </button>
           </div>
         </div>
 
@@ -2927,9 +3263,76 @@ const Admin = () => {
               {filteredStaff.map((member) => (
                 <tr key={member.id}>
                   <td>#{member.id}</td>
-                  <td className="staff-name">{member.name}</td>
-                  <td>{member.station}</td>
-                  <td>{member.role}</td>
+                  <td className="staff-name">
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                      }}
+                    >
+                      {member.avatar ? (
+                        <img
+                          src={member.avatar}
+                          alt={member.name}
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: "50%",
+                            objectFit: "cover",
+                            border: "2px solid #e2e8f0",
+                          }}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: "50%",
+                            background: "#0baf8c",
+                            color: "white",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {member.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div>
+                        <div style={{ fontWeight: "500" }}>{member.name}</div>
+                        {member.email && (
+                          <div
+                            style={{ fontSize: "0.85rem", color: "#6b7280" }}
+                          >
+                            {member.email}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    {member.station || (
+                      <span style={{ color: "#6b7280", fontStyle: "italic" }}>
+                        Chưa phân trạm
+                      </span>
+                    )}
+                  </td>
+                  <td>
+                    <span
+                      style={{
+                        padding: "4px 12px",
+                        borderRadius: "12px",
+                        background: "#eff6ff",
+                        color: "#3b82f6",
+                        fontSize: "0.875rem",
+                        fontWeight: "500",
+                      }}
+                    >
+                      {member.role}
+                    </span>
+                  </td>
                   <td>
                     <div className="performance-bar">
                       <div
@@ -4320,6 +4723,196 @@ const Admin = () => {
           {activeTab === "bikeTypes" && renderBikeTypeManagement()}
           {activeTab === "reports" && renderReports()}
         </div>
+        {/* Add Staff Modal (global) */}
+        {showAddStaffModal && (
+          <div
+            className="modal-overlay"
+            onMouseDown={(e) => {
+              if (e.target.classList.contains("modal-overlay")) {
+                setShowAddStaffModal(false);
+              }
+            }}
+          >
+            <div className="modal-content">
+              <div className="modal-header">
+                <h2>➕ Thêm nhân viên mới</h2>
+                <button
+                  className="btn-close"
+                  onClick={() => setShowAddStaffModal(false)}
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="modal-body">
+                {/* Show all validation errors at the top */}
+                {apiErrors && Object.keys(apiErrors).length > 0 && (
+                  <div
+                    style={{
+                      background: "#fee2e2",
+                      border: "1px solid #ef4444",
+                      borderRadius: "8px",
+                      padding: "12px 16px",
+                      marginBottom: "20px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontWeight: "bold",
+                        color: "#dc2626",
+                        marginBottom: "8px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                    >
+                      <span>⚠️</span>
+                      <span>Lỗi validation:</span>
+                    </div>
+                    <ul
+                      style={{
+                        margin: 0,
+                        paddingLeft: "24px",
+                        color: "#991b1b",
+                      }}
+                    >
+                      {Object.entries(apiErrors).map(([key, value]) => (
+                        <li key={key} style={{ marginBottom: "4px" }}>
+                          <strong>{key}:</strong> {value}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="form-group">
+                  <label>Họ tên *</label>
+                  <input
+                    type="text"
+                    name="staff-fullname"
+                    autoComplete="off"
+                    value={newStaff.fullName}
+                    onChange={(e) =>
+                      setNewStaff((s) => ({ ...s, fullName: e.target.value }))
+                    }
+                  />
+                  {getError(["fullName", "fullname"]) && (
+                    <div className="input-error">
+                      {getError(["fullName", "fullname"])}
+                    </div>
+                  )}
+                </div>
+                <div className="form-group">
+                  <label>Email *</label>
+                  <input
+                    type="email"
+                    name="staff-email"
+                    autoComplete="off"
+                    value={newStaff.email}
+                    onChange={(e) =>
+                      setNewStaff((s) => ({ ...s, email: e.target.value }))
+                    }
+                  />
+                  {getError(["email"]) && (
+                    <div className="input-error">{getError(["email"])}</div>
+                  )}
+                </div>
+                <div className="form-group">
+                  <label>Điện thoại</label>
+                  <input
+                    type="tel"
+                    name="staff-phone"
+                    autoComplete="off"
+                    placeholder="0xxxxxxxxx"
+                    value={newStaff.phone}
+                    onChange={(e) =>
+                      setNewStaff((s) => ({ ...s, phone: e.target.value }))
+                    }
+                  />
+                  {getError(["phone"]) && (
+                    <div className="input-error">{getError(["phone"])}</div>
+                  )}
+                </div>
+                <div className="form-group">
+                  <label>Mật khẩu *</label>
+                  <input
+                    type="password"
+                    name="staff-password"
+                    autoComplete="new-password"
+                    placeholder="Tối thiểu 6 ký tự"
+                    value={newStaff.password}
+                    onChange={(e) =>
+                      setNewStaff((s) => ({ ...s, password: e.target.value }))
+                    }
+                  />
+                  {getError(["password", "Password"]) && (
+                    <div className="input-error">
+                      {getError(["password", "Password"])}
+                    </div>
+                  )}
+                </div>
+                <div className="form-group">
+                  <label>Ảnh đại diện *</label>
+                  <input
+                    type="file"
+                    name="staff-avatar"
+                    accept="image/*"
+                    onChange={(e) => handleAvatarChange(e.target.files[0])}
+                  />
+                  {newStaff.avatarPreview && (
+                    <div className="avatar-preview" style={{ marginTop: 12 }}>
+                      <img
+                        src={newStaff.avatarPreview}
+                        alt="preview"
+                        style={{
+                          maxWidth: 120,
+                          maxHeight: 120,
+                          borderRadius: 8,
+                          border: "2px solid #e2e8f0",
+                          objectFit: "cover",
+                        }}
+                      />
+                      <div
+                        style={{
+                          fontSize: "0.875rem",
+                          color: "#6b7280",
+                          marginTop: 4,
+                        }}
+                      >
+                        {newStaff.avatarFile?.name} (
+                        {(newStaff.avatarFile?.size / 1024).toFixed(1)} KB)
+                      </div>
+                    </div>
+                  )}
+                  {getError(["avatar", "avatarpicture"]) && (
+                    <div className="input-error">
+                      {getError(["avatar", "avatarpicture"])}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="btn-cancel"
+                  onClick={() => setShowAddStaffModal(false)}
+                  disabled={creatingStaff}
+                >
+                  Hủy
+                </button>
+                <button
+                  className="btn-primary"
+                  onClick={handleCreateStaff}
+                  disabled={creatingStaff}
+                  style={{
+                    opacity: creatingStaff ? 0.7 : 1,
+                    cursor: creatingStaff ? "not-allowed" : "pointer",
+                  }}
+                >
+                  {creatingStaff ? "⏳ Đang lưu..." : "💾 Lưu nhân viên"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
