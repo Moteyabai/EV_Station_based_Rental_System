@@ -1,18 +1,19 @@
 ﻿using BusinessObject.Models;
 using Repositories;
+using Repositories.DBContext;
 using Services.Interfaces;
 
 namespace Services
 {
     public class EVBikeService : IBaseService<EVBike>
     {
-        private readonly EVBikeRepository _repository;
+        private readonly EVBikeRepository _repository = new EVBikeRepository();
 
+        // Default constructor for backward compatibility
         public EVBikeService()
         {
             _repository = EVBikeRepository.Instance;
         }
-
         public async Task AddAsync(EVBike entity) => await _repository.AddAsync(entity);
 
         public async Task DeleteAsync(int id) => await _repository.DeleteAsync(id);

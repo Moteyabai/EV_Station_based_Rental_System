@@ -6,7 +6,7 @@ namespace Services
 {
     public class StationService : IBaseService<Station>
     {
-        private readonly StationRepository _stationRepository;
+        private readonly StationRepository _stationRepository = new StationRepository();
 
         public StationService()
         {

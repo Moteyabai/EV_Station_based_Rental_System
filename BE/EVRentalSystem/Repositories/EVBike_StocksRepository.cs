@@ -2,6 +2,7 @@
 using BusinessObject.Models.Enum;
 using Microsoft.EntityFrameworkCore;
 using Repositories.BaseRepository;
+using Repositories.DBContext;
 
 namespace Repositories
 {
@@ -31,7 +32,8 @@ namespace Repositories
 
         public async Task<List<EVBike_Stocks>> GetStocksByBikeIDAsync(int bikeID)
         {
-            return await _context.EVBike_Stocks
+            using (var context = new EVRenterDBContext())
+                return await context.EVBike_Stocks
                 .Include(s => s.Station)
                 .Where(stock => stock.BikeID == bikeID)
                 .ToListAsync();
@@ -39,20 +41,25 @@ namespace Repositories
 
         public async Task<EVBike_Stocks> GetStockByLicensePlateAsync(string licensePlate)
         {
-            return await _context.EVBike_Stocks
-                .FirstOrDefaultAsync(stock => stock.LicensePlate == licensePlate);
+            using (var context = new EVRenterDBContext())
+            {
+                return await context.EVBike_Stocks
+                    .FirstOrDefaultAsync(stock => stock.LicensePlate == licensePlate);
+            }
         }
 
         //Get 1 stock that is available from a specific bikeID
         public async Task<EVBike_Stocks?> GetAvailableStockByBikeIDAsync(int bikeID)
         {
-            return await _context.EVBike_Stocks
+            using (var context = new EVRenterDBContext())
+                return await context.EVBike_Stocks
                 .FirstOrDefaultAsync(stock => stock.BikeID == bikeID && stock.Status == (int)BikeStatus.Available);
         }
 
         public async Task<List<EVBike_Stocks>> GetAvailbStocksAtStationByBikeIDAsync(int bikeID)
         {
-            return await _context.EVBike_Stocks
+            using (var context = new EVRenterDBContext())
+                return await context.EVBike_Stocks
                 .Include(s => s.Station)
                 .Where(stock => stock.BikeID == bikeID && stock.Status == (int)BikeStatus.Available)
                 .ToListAsync();
@@ -61,14 +68,16 @@ namespace Repositories
         //stock countby bikeID
         public async Task<int> GetStockCountByBikeIDAsync(int bikeID)
         {
-            return await _context.EVBike_Stocks
+            using (var context = new EVRenterDBContext())
+                return await context.EVBike_Stocks
                 .CountAsync(stock => stock.BikeID == bikeID);
         }
 
         //stock count by stationID
         public async Task<int> GetStockCountByStationIDAsync(int stationID)
         {
-            return await _context.EVBike_Stocks
+            using (var context = new EVRenterDBContext())
+                return await context.EVBike_Stocks
                 .CountAsync(stock => stock.StationID == stationID);
         }
 

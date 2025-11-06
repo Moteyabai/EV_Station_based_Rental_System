@@ -2,6 +2,7 @@
 using BusinessObject.Models.Enum;
 using Microsoft.EntityFrameworkCore;
 using Repositories.BaseRepository;
+using Repositories.DBContext;
 
 namespace Repositories
 {
@@ -33,7 +34,8 @@ namespace Repositories
         {
             try
             {
-                return await _context.EVBikes.Include(x=> x.Brand).Where(bike => bike.Status == (int)BikeStatus.Available).ToListAsync();
+                using (var _context = new EVRenterDBContext())
+                    return await _context.EVBikes.Include(x=> x.Brand).Where(bike => bike.Status == (int)BikeStatus.Available).ToListAsync();
             }
             catch (Exception ex)
             {
@@ -48,7 +50,8 @@ namespace Repositories
         {
             try
             {
-                return await _context.EVBikes
+                using (var _context = new EVRenterDBContext())
+                    return await _context.EVBikes
                     .Include(x => x.Brand)
                     .Where(bike => bike.BrandID == brandId)
                     .OrderByDescending(bike => bike.CreatedAt)
