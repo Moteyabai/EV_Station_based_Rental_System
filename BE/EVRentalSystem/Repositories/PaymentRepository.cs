@@ -1,4 +1,5 @@
 using BusinessObject.Models;
+using BusinessObject.Models.Enum;
 using Microsoft.EntityFrameworkCore;
 using Repositories.BaseRepository;
 
@@ -32,6 +33,14 @@ namespace Repositories
         {
             return await _context.Payments
                 .FirstOrDefaultAsync(payment => payment.PaymentID == ID);
+        }
+
+        public async Task<IEnumerable<Payment>> GetPendingPayment()
+        {
+            return await _context.Payments
+                .Include(payment => payment.Renter)
+                .Where(payment => payment.Status == (int)PaymentStatus.Pending)
+                .ToListAsync();
         }
     }
 }

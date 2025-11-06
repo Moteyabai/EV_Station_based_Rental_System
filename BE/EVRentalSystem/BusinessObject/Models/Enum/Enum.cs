@@ -28,6 +28,7 @@
     {
         Pending = 0,
         Completed = 1,
+        PendingPayment = 2,
         Failed = -1
     }
 

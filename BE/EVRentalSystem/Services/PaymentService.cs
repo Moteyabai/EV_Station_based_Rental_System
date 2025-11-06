@@ -83,5 +83,7 @@ namespace Services
 
             return createPayment.checkoutUrl;
         }
+
+        public async Task<IEnumerable<Payment>> GetPendingPayment() => await _paymentRepository.GetPendingPayment();
     }
 }

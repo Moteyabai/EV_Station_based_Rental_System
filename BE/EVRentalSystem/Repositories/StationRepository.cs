@@ -1,4 +1,5 @@
 using BusinessObject.Models;
+using Microsoft.EntityFrameworkCore;
 using Repositories.BaseRepository;
 
 namespace Repositories
@@ -25,6 +26,13 @@ namespace Repositories
                     return instance;
                 }
             }
+        }
+        //Get activity stations
+        public async Task<IEnumerable<Station>> GetActiveStationsAsync()
+        {
+            return await _context.Stations
+                .Where(station => station.IsActive)
+                .ToListAsync();
         }
     }
 }
