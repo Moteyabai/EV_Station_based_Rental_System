@@ -8,9 +8,18 @@ namespace Repositories.BaseRepository
         protected readonly EVRenterDBContext _context;
         private DbSet<TEntity> _dbSet;
 
+        // Default constructor for backward compatibility (creates own context)
         public BaseRepository()
         {
             _context = new EVRenterDBContext();
+            _dbSet = _context.Set<TEntity>();
+        }
+
+        // ✅ NEW: Constructor for Dependency Injection (RECOMMENDED)
+        // Each request gets its own DbContext instance - thread-safe
+        public BaseRepository(EVRenterDBContext context)
+        {
+            _context = context;
             _dbSet = _context.Set<TEntity>();
         }
 

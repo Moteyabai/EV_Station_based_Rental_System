@@ -1,6 +1,7 @@
 using BusinessObject.Models;
 using Microsoft.EntityFrameworkCore;
 using Repositories.BaseRepository;
+using Repositories.DBContext;
 
 namespace Repositories
 {
@@ -30,7 +31,8 @@ namespace Repositories
         //Get activity stations
         public async Task<IEnumerable<Station>> GetActiveStationsAsync()
         {
-            return await _context.Stations
+            using (var _context = new EVRenterDBContext())
+                return await _context.Stations
                 .Where(station => station.IsActive)
                 .ToListAsync();
         }
