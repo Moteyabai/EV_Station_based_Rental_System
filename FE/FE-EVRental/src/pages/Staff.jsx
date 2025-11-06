@@ -8,6 +8,7 @@ import {
   verifyPayment,
   rejectPayment,
 } from "../utils/bookingStorage";
+import { getPendingRentals } from "../api/rentals";
 import "../styles/Staff.css";
 
 export default function Staff() {
@@ -108,7 +109,7 @@ export default function Staff() {
           className={`nav-tab ${activeTab === "payment" ? "active" : ""}`}
           onClick={() => setActiveTab("payment")}
         >
-          � Thanh toán
+          💳 Thanh toán
         </button>
         <button
           className={`nav-tab ${activeTab === "vehicles" ? "active" : ""}`}
@@ -1396,187 +1397,170 @@ function PaymentManagement() {
   const [payments, setPayments] = useState([]);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [paymentFilter, setPaymentFilter] = useState("pending"); // 'pending' hoặc 'verified'
+  const [showRentalInfoModal, setShowRentalInfoModal] = useState(false);
+  const [rentalInfo, setRentalInfo] = useState(null);
+  const [paymentFilter, setPaymentFilter] = useState("pending"); // 'pending' (status=0), 'verified' (status=1), 'cancelled' (status=-1)
+  const [loading, setLoading] = useState(false);
+  const [loadingRental, setLoadingRental] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Load bookings chờ xác nhận thanh toán
+  // Load payments from API
   useEffect(() => {
-    loadPendingPayments();
+    loadPayments();
 
-    // Auto refresh mỗi 5 giây
-    const interval = setInterval(loadPendingPayments, 5000);
+    // Auto refresh mỗi 10 giây
+    const interval = setInterval(() => {
+      loadPayments();
+    }, 10000);
     return () => clearInterval(interval);
   }, []);
 
-  const loadPendingPayments = () => {
-    const allBookings = getAllBookings();
+  const loadPayments = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-    console.log(
-      "🔍 PaymentManagement: Loading bookings...",
-      allBookings.length
-    );
-
-    // Lấy tất cả bookings (bao gồm pending_payment, booked, completed)
-    const paymentData = allBookings.map((booking) => ({
-      id: booking.id,
-      bookingId: booking.id, // Sử dụng booking.id thay vì booking.bookingId
-      customerName: booking.userName,
-      customerPhone: booking.userPhone,
-      customerEmail: booking.userEmail,
-      vehicleName: booking.vehicleName,
-      licensePlate: booking.licensePlate,
-      type: "rental", // Phí thuê xe
-      amount: booking.totalPrice,
-      status:
-        booking.status === "pending_payment"
-          ? "pending"
-          : booking.status === "cancelled"
-          ? "cancelled"
-          : "verified",
-      method:
-        booking.paymentMethod === "credit_card"
-          ? "card"
-          : booking.paymentMethod === "bank_transfer"
-          ? "transfer"
-          : booking.paymentMethod === "e_wallet"
-          ? "ewallet"
-          : "cash",
-      date: booking.createdAt,
-      pickupDate: `${booking.pickupDate} ${booking.pickupTime}`,
-      returnDate: `${booking.returnDate} ${booking.returnTime}`,
-      days: booking.days,
-      pickupStation: booking.pickupStation, // Đã là string
-      returnStation: booking.returnStation, // Đã là string
-      paymentVerified: booking.paymentVerified,
-      paymentVerifiedAt: booking.paymentVerifiedAt,
-      paymentVerifiedBy: booking.paymentVerifiedBy,
-      rejectedAt: booking.rejectedAt,
-      rejectedBy: booking.rejectedBy,
-      rejectionReason: booking.rejectionReason,
-    }));
-
-    console.log("✅ PaymentManagement: Loaded payments:", paymentData.length);
-    console.log(
-      "📊 Pending:",
-      paymentData.filter((p) => p.status === "pending").length
-    );
-    console.log(
-      "📊 Verified:",
-      paymentData.filter((p) => p.status === "verified").length
-    );
-
-    setPayments(paymentData);
-  };
-
-  const getTypeBadge = (type) => {
-    const config = {
-      rental: { text: "Phí thuê", class: "type-rental", icon: "💰" },
-    };
-    const c = config[type] || config.rental;
-    return (
-      <span className={`type-badge ${c.class}`}>
-        {c.icon} {c.text}
-      </span>
-    );
-  };
-
-  const getStatusBadge = (status) => {
-    const config = {
-      pending: { text: "Chờ xác nhận", class: "status-pending", icon: "⏳" },
-      verified: { text: "Đã xác nhận", class: "status-completed", icon: "✅" },
-      cancelled: { text: "Đã từ chối", class: "status-cancelled", icon: "❌" },
-    };
-    const c = config[status] || config.pending;
-    return (
-      <span className={`status-badge ${c.class}`}>
-        {c.icon} {c.text}
-      </span>
-    );
-  };
-
-  const handleProcessPayment = (payment) => {
-    setSelectedPayment(payment);
-    setShowPaymentModal(true);
-  };
-
-  const handleVerifyPayment = (paymentId) => {
-    const staffName = user?.fullName || user?.name || "Staff";
-    verifyPayment(paymentId, staffName);
-    loadPendingPayments();
-    setShowPaymentModal(false);
-    setSelectedPayment(null);
-    alert("✅ Đã xác nhận thanh toán! Booking chuyển sang tab Giao nhận xe.");
-  };
-
-  const handleRejectPayment = (paymentId, reason) => {
-    const staffName = user?.fullName || user?.name || "Staff";
-    rejectPayment(paymentId, reason, staffName);
-    loadPendingPayments();
-    setShowPaymentModal(false);
-    setSelectedPayment(null);
-    alert("❌ Đã từ chối thanh toán!");
-  };
-
-  const handleDeletePayment = (payment) => {
-    if (
-      window.confirm(
-        `⚠️ Bạn có chắc muốn xóa đơn hàng #${payment.bookingId}?\nXe: ${payment.vehicleName}\nKhách hàng: ${payment.customerName}`
-      )
-    ) {
-      try {
-        // Lấy tất cả bookings
-        const allBookings = getAllBookings();
-
-        // Xóa booking này
-        const updatedBookings = allBookings.filter((b) => b.id !== payment.id);
-
-        // Lưu lại
-        localStorage.setItem(
-          "ev_rental_bookings",
-          JSON.stringify(updatedBookings)
-        );
-
-        // Reload danh sách
-        loadPendingPayments();
-
-        alert("🗑️ Đã xóa đơn hàng thành công!");
-      } catch (error) {
-        console.error("❌ Lỗi khi xóa booking:", error);
-        alert("❌ Có lỗi xảy ra khi xóa đơn hàng!");
+      const token = getToken();
+      if (!token) {
+        console.warn("⚠️ [PAYMENTS] No token found");
+        setPayments([]);
+        return;
       }
+
+      console.log("📋 [PAYMENTS] Fetching all payments from API...");
+      
+      // Call API to get all payments
+      const response = await fetch('http://localhost:5168/api/Payment/GetAllPayments', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data && Array.isArray(data)) {
+        setPayments(data);
+        console.log(`✅ [PAYMENTS] Loaded ${data.length} payments from API`);
+        console.log(`📊 Status=0 (Pending): ${data.filter(p => p.status === 0).length}`);
+        console.log(`📊 Status=1 (Verified): ${data.filter(p => p.status === 1).length}`);
+        console.log(`📊 Status=-1 (Cancelled): ${data.filter(p => p.status === -1).length}`);
+      } else {
+        setPayments([]);
+        console.warn("⚠️ [PAYMENTS] Invalid response format");
+      }
+    } catch (err) {
+      console.error("❌ [PAYMENTS] Error:", err);
+      setError(err.message || "Không thể tải dữ liệu thanh toán");
+      setPayments([]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const totalPending = payments
-    .filter((p) => p.status === "pending")
-    .reduce((sum, p) => sum + p.amount, 0);
+  const loadRentalInfo = async (rentalId) => {
+    try {
+      setLoadingRental(true);
+      const token = getToken();
+      
+      console.log(`📋 [RENTAL INFO] Fetching rental ${rentalId}...`);
+      
+      const response = await fetch(`http://localhost:5168/api/Rental/GetRentalById/${rentalId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
-  const totalVerified = payments
-    .filter((p) => p.status === "verified")
-    .reduce((sum, p) => sum + p.amount, 0);
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setRentalInfo(data);
+      setShowRentalInfoModal(true);
+      console.log("✅ [RENTAL INFO] Loaded:", data);
+    } catch (err) {
+      console.error("❌ [RENTAL INFO] Error:", err);
+      alert(`Không thể tải thông tin rental: ${err.message}`);
+    } finally {
+      setLoadingRental(false);
+    }
+  };
 
   // Filter payments based on selected filter
   const filteredPayments = payments.filter((p) => {
-    if (paymentFilter === "pending") return p.status === "pending";
-    if (paymentFilter === "verified") return p.status === "verified";
+    if (paymentFilter === "pending") return p.status === 0;
+    if (paymentFilter === "verified") return p.status === 1;
+    if (paymentFilter === "cancelled") return p.status === -1;
     return true;
   });
+
+  // Calculate totals
+  const totalPending = payments
+    .filter((p) => p.status === 0)
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
+
+  const totalVerified = payments
+    .filter((p) => p.status === 1)
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
+
+  const totalCancelled = payments
+    .filter((p) => p.status === -1)
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleString("vi-VN");
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(amount || 0);
+  };
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 0:
+        return <span className="status-badge status-pending">⏳ Chưa xác nhận</span>;
+      case 1:
+        return <span className="status-badge status-verified">✅ Đã xác nhận</span>;
+      case -1:
+        return <span className="status-badge status-cancelled">❌ Đã hủy</span>;
+      default:
+        return <span className="status-badge">❓ Không xác định</span>;
+    }
+  };
 
   return (
     <div className="management-section">
       <div className="section-header">
-        <h2>💰 Xác Nhận Thanh Toán</h2>
+        <h2>💰 Quản Lý Thanh Toán</h2>
         <div className="section-stats">
           <div className="stat-card">
             <span className="stat-number">
-              {totalPending.toLocaleString()} đ
+              {payments.filter((p) => p.status === 0).length}
             </span>
-            <span className="stat-label">Các đơn chưa xác nhận</span>
+            <span className="stat-label">Chưa xác nhận</span>
           </div>
           <div className="stat-card">
             <span className="stat-number">
-              {totalVerified.toLocaleString()} đ
+              {payments.filter((p) => p.status === 1).length}
             </span>
-            <span className="stat-label">Các đơn đã xác nhận</span>
+            <span className="stat-label">Đã xác nhận</span>
+          </div>
+          <div className="stat-card">
+            <span className="stat-number">
+              {payments.filter((p) => p.status === -1).length}
+            </span>
+            <span className="stat-label">Đã hủy</span>
           </div>
         </div>
       </div>
@@ -1589,8 +1573,7 @@ function PaymentManagement() {
           }`}
           onClick={() => setPaymentFilter("pending")}
         >
-          ⏳ Chưa xác nhận (
-          {payments.filter((p) => p.status === "pending").length})
+          ⏳ Chưa xác nhận ({payments.filter((p) => p.status === 0).length})
         </button>
         <button
           className={`filter-tab ${
@@ -1598,125 +1581,129 @@ function PaymentManagement() {
           }`}
           onClick={() => setPaymentFilter("verified")}
         >
-          ✅ Đã xác nhận (
-          {payments.filter((p) => p.status === "verified").length})
+          ✅ Đã xác nhận ({payments.filter((p) => p.status === 1).length})
+        </button>
+        <button
+          className={`filter-tab ${
+            paymentFilter === "cancelled" ? "active" : ""
+          }`}
+          onClick={() => setPaymentFilter("cancelled")}
+        >
+          ❌ Đã hủy ({payments.filter((p) => p.status === -1).length})
         </button>
       </div>
+
+      {error && (
+        <div className="error-message">
+          <p>❌ {error}</p>
+        </div>
+      )}
 
       <div className="payment-list">
         {filteredPayments.length === 0 && (
           <div className="empty-state">
-            {paymentFilter === "pending" ? (
-              <p>📭 Chưa có booking nào cần xác nhận thanh toán</p>
-            ) : (
-              <p>📭 Chưa có booking nào đã xác nhận</p>
-            )}
+            {paymentFilter === "pending" && <p>📭 Chưa có thanh toán nào cần xác nhận</p>}
+            {paymentFilter === "verified" && <p>📭 Chưa có thanh toán nào đã xác nhận</p>}
+            {paymentFilter === "cancelled" && <p>📭 Chưa có thanh toán nào bị hủy</p>}
           </div>
         )}
 
         {filteredPayments.map((payment) => (
-          <div key={payment.id} className="payment-card">
+          <div key={payment.paymentID} className="payment-card">
             <div className="payment-header">
               <div className="payment-info">
-                <h3>
-                  #{payment.bookingId} - {payment.customerName}
-                </h3>
+                <h3>🆔 Payment #{payment.paymentID}</h3>
                 <p className="vehicle-info">
-                  🏍️ {payment.vehicleName} ({payment.licensePlate})
+                  📦 Rental ID: {payment.rentalID}
                 </p>
                 <span className="payment-date">
-                  📅 {new Date(payment.date).toLocaleString("vi-VN")}
+                  📅 {formatDate(payment.paymentDate)}
                 </span>
               </div>
               <div className="payment-badges">
-                {getTypeBadge(payment.type)}
                 {getStatusBadge(payment.status)}
               </div>
             </div>
 
             <div className="payment-details">
               <div className="payment-amount">
-                <span className="amount-label">Số tiền:</span>
+                <span className="amount-label">💰 Số tiền:</span>
                 <span className="amount-value">
-                  {payment.amount.toLocaleString()} VNĐ
+                  {formatCurrency(payment.amount)}
                 </span>
               </div>
               <div className="payment-method">
-                <span className="method-label">Phương thức:</span>
+                <span className="method-label">� Phương thức:</span>
                 <span className="method-value">
-                  {payment.method === "card" && "� Thẻ tín dụng"}
-                  {payment.method === "transfer" && "🏦 Chuyển khoản"}
-                  {payment.method === "ewallet" && "📱 Ví điện tử"}
-                  {payment.method === "cash" && "💵 Tiền mặt"}
+                  {payment.paymentMethod || "N/A"}
                 </span>
-              </div>
-              <div className="rental-period">
-                <span className="period-label">Thời gian thuê:</span>
-                <span className="period-value">{payment.days} ngày</span>
               </div>
             </div>
 
-            {payment.paymentVerified && payment.paymentVerifiedAt && (
-              <div className="verification-info">
-                <p>
-                  ✅ Xác nhận bởi: <strong>{payment.paymentVerifiedBy}</strong>
-                </p>
-                <p>
-                  🕐 Thời gian:{" "}
-                  {new Date(payment.paymentVerifiedAt).toLocaleString("vi-VN")}
-                </p>
-              </div>
-            )}
-
-            {payment.status === "cancelled" && payment.rejectionReason && (
-              <div className="rejection-info">
-                <p>
-                  ❌ Từ chối bởi: <strong>{payment.rejectedBy}</strong>
-                </p>
-                <p>
-                  🕐 Thời gian:{" "}
-                  {new Date(payment.rejectedAt).toLocaleString("vi-VN")}
-                </p>
-                <p>📝 Lý do: {payment.rejectionReason}</p>
-              </div>
-            )}
-
             <div className="payment-actions">
-              {payment.status === "pending" && (
-                <button
-                  className="btn-action btn-pay"
-                  onClick={() => handleProcessPayment(payment)}
-                >
-                  ✅ Xác nhận thanh toán
-                </button>
-              )}
               <button
                 className="btn-action btn-view"
-                onClick={() => handleProcessPayment(payment)}
+                onClick={() => loadRentalInfo(payment.rentalID)}
+                disabled={loadingRental}
               >
-                👁️ Xem thông tin
-              </button>
-              <button
-                className="btn-action btn-delete"
-                onClick={() => handleDeletePayment(payment)}
-              >
-                🗑️ Xóa đơn
+                {loadingRental ? "⏳ Đang tải..." : "👁️ Xem thông tin"}
               </button>
             </div>
           </div>
         ))}
       </div>
 
-      {showPaymentModal && selectedPayment && (
-        <PaymentModal
-          payment={selectedPayment}
-          onClose={() => {
-            setShowPaymentModal(false);
-            setSelectedPayment(null);
-          }}
-          onVerify={handleVerifyPayment}
-          onReject={handleRejectPayment}
-        />
+      {/* Rental Info Modal */}
+      {showRentalInfoModal && rentalInfo && (
+        <div className="modal-overlay" onClick={() => setShowRentalInfoModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>📋 Thông Tin Rental #{rentalInfo.rentalID}</h2>
+              <button
+                className="modal-close"
+                onClick={() => setShowRentalInfoModal(false)}
+              >
+                ✖️
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="info-section">
+                <h3>🏍️ Thông Tin Xe</h3>
+                <p><strong>Biển số:</strong> {rentalInfo.evBike?.licensePlate || "N/A"}</p>
+                <p><strong>Màu sắc:</strong> {rentalInfo.evBike?.color || "N/A"}</p>
+              </div>
+              <div className="info-section">
+                <h3>👤 Thông Tin Khách Hàng</h3>
+                <p><strong>Tên:</strong> {rentalInfo.renter?.fullName || "N/A"}</p>
+                <p><strong>Email:</strong> {rentalInfo.renter?.account?.email || "N/A"}</p>
+                <p><strong>SĐT:</strong> {rentalInfo.renter?.phoneNumber || "N/A"}</p>
+              </div>
+              <div className="info-section">
+                <h3>� Thời Gian Thuê</h3>
+                <p><strong>Ngày bắt đầu:</strong> {formatDate(rentalInfo.startDate)}</p>
+                <p><strong>Ngày kết thúc:</strong> {formatDate(rentalInfo.endDate)}</p>
+              </div>
+              <div className="info-section">
+                <h3>💵 Tài Chính</h3>
+                <p><strong>Tiền cọc:</strong> {formatCurrency(rentalInfo.deposit)}</p>
+                <p><strong>Tổng tiền:</strong> {formatCurrency(rentalInfo.totalAmount)}</p>
+              </div>
+              <div className="info-section">
+                <h3>� Trạm</h3>
+                <p><strong>Trạm lấy:</strong> {rentalInfo.pickupStation?.stationName || "N/A"}</p>
+                <p><strong>Trạm trả:</strong> {rentalInfo.returnStation?.stationName || "N/A"}</p>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button
+                className="btn-secondary"
+                onClick={() => setShowRentalInfoModal(false)}
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

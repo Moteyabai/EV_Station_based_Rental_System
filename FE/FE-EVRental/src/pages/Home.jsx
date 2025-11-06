@@ -18,6 +18,7 @@ export default function Home() {
   const [vehicles, setVehicles] = React.useState([]);
   const [loadingStations, setLoadingStations] = React.useState(true);
   const [loadingVehicles, setLoadingVehicles] = React.useState(true);
+  const [vehiclesError, setVehiclesError] = React.useState(null);
 
   // Background images array with cache busting
   // Background images (keep static paths so browser can cache them)
@@ -71,6 +72,7 @@ export default function Home() {
     async function loadVehicles() {
       try {
         setLoadingVehicles(true);
+        setVehiclesError(null);
         const token = localStorage.getItem("ev_token");
         console.log("🚀 [HOME] Calling getAvailableBikes API... (Reload safe)");
         const bikesData = await getAvailableBikes(token);
@@ -99,11 +101,14 @@ export default function Home() {
         setVehicles(mapped);
       } catch (error) {
         console.error("❌ [HOME] Error loading vehicles:", error);
-        if (isMounted) setVehicles([]);
+        if (isMounted) {
+          setVehicles([]);
+          setVehiclesError(error.message || "Không thể tải danh sách xe");
+        }
       } finally {
         if (isMounted) {
           setLoadingVehicles(false);
-          console.log("✅ [HOME] Vehicles loaded successfully");
+          console.log("✅ [HOME] Vehicles loading completed");
         }
       }
     }
@@ -237,6 +242,36 @@ export default function Home() {
           {loadingVehicles ? (
             <div className="loading-message">
               <p>🔄 Đang tải xe máy điện...</p>
+            </div>
+          ) : vehiclesError ? (
+            <div className="no-vehicles-message" style={{ 
+              background: '#fff3cd', 
+              border: '2px solid #ffc107',
+              padding: '2rem',
+              borderRadius: '12px'
+            }}>
+              <p style={{ color: '#856404', fontSize: '1.1rem', marginBottom: '0.5rem' }}>
+                ⚠️ Không thể tải danh sách xe
+              </p>
+              <p style={{ color: '#856404', fontSize: '0.95rem' }}>
+                {vehiclesError}
+              </p>
+              <p style={{ color: '#856404', fontSize: '0.9rem', marginTop: '1rem' }}>
+                💡 <strong>Hướng dẫn khắc phục:</strong>
+              </p>
+              <ul style={{ 
+                textAlign: 'left', 
+                color: '#856404', 
+                fontSize: '0.9rem',
+                maxWidth: '600px',
+                margin: '0.5rem auto',
+                paddingLeft: '1.5rem'
+              }}>
+                <li>Kiểm tra Backend đang chạy tại <code>http://localhost:5168</code></li>
+                <li>Kiểm tra API <code>/api/EVBike/AvailableBikes</code> không bị lỗi 500</li>
+                <li>Xem Console F12 để biết chi tiết lỗi</li>
+                <li>Thử refresh lại trang (Ctrl+R)</li>
+              </ul>
             </div>
           ) : featuredVehicles.length === 0 ? (
             <div className="no-vehicles-message">

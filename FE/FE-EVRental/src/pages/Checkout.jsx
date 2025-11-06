@@ -4,7 +4,7 @@ import { useCart } from "../contexts/CartContext";
 import { useAuth } from "../contexts/AuthContext";
 import { formatPrice, formatDate } from "../utils/helpers";
 import { saveBooking } from "../utils/bookingStorage";
-import { createPayOSPayment } from "../api/payment";
+import { createPayOSPayment, createCashPayment } from "../api/payment";
 import { getBikeById } from "../api/bikes";
 import { fetchStationById } from "../api/stations";
 import "../styles/Checkout.css";
@@ -90,10 +90,17 @@ export default function Checkout() {
     e.preventDefault();
     setIsProcessing(true);
 
+    console.log('=== 🚀 PAYMENT SUBMIT START ===');
+    console.log('👤 User:', user);
+    console.log('🔑 Token exists:', !!getToken());
+    console.log('🛒 Cart items:', cartItems.length);
+    console.log('💳 Payment method:', paymentMethod);
+
     try {
       // Validate data
       if (!user || !user.email) {
-        throw new Error("Thông tin người dùng không hợp lệ");
+        console.error('❌ User validation failed:', { user, email: user?.email });
+        throw new Error("Thông tin người dùng không hợp lệ. Vui lòng đăng xuất và đăng nhập lại.");
       }
 
       if (cartItems.length === 0) {
@@ -108,14 +115,22 @@ export default function Checkout() {
         try {
           // Get JWT token from localStorage
           const token = getToken();
+          console.log('🔑 [PAYOS] Token check:', {
+            exists: !!token,
+            length: token?.length || 0,
+            startsWithBearer: token?.startsWith('Bearer ') || false,
+            firstChars: token ? token.substring(0, 20) + '...' : 'null'
+          });
+          
           if (!token) {
+            console.error('❌ [PAYOS] No token found! User must login first.');
             throw new Error("Vui lòng đăng nhập để thanh toán");
           }
 
           // Get accountID from user
-          console.log("👤 User object:", user);
+          console.log("👤 [PAYOS] User object:", user);
           const accountID = user?.accountID || user?.AccountID || user?.id;
-          console.log("📋 AccountID extracted:", accountID);
+          console.log("📋 [PAYOS] AccountID extracted:", accountID);
 
           if (!accountID) {
             throw new Error("Không tìm thấy thông tin tài khoản");
@@ -130,6 +145,12 @@ export default function Checkout() {
             if (!item.vehicle || !item.rentalDetails) continue;
 
             try {
+              console.log('🔍 [CHECKOUT] Processing item:', {
+                vehicleId: item.vehicle.id,
+                vehicleName: item.vehicle.name,
+                pickupStation: item.rentalDetails.pickupStation,
+              });
+
               // Get real BikeID from backend API
               let realBikeID = null;
               const mockBikeId = item.vehicle.id;
@@ -140,21 +161,28 @@ export default function Checkout() {
                   ? parseInt(mockBikeId.replace(/\D/g, ""))
                   : mockBikeId;
 
-              if (extractedId) {
+              console.log('🔍 [CHECKOUT] Bike ID extraction:', {
+                mockBikeId,
+                extractedId,
+                isValid: !isNaN(extractedId) && extractedId > 0
+              });
+
+              if (!isNaN(extractedId) && extractedId > 0) {
                 try {
                   const bikeData = await getBikeById(extractedId, token);
                   realBikeID = bikeData.bikeID; // Get BikeID from database
-                  console.log(
-                    `✅ Found bike in database: BikeID = ${realBikeID}`
-                  );
+                  
+                  if (bikeData.notFound) {
+                    console.warn(`⚠️ Bike ID ${extractedId} not in database, using as-is for rental`);
+                  } else {
+                    console.log(`✅ Found bike in database: BikeID = ${realBikeID}`);
+                  }
                 } catch (error) {
-                  console.warn(
-                    `⚠️ Bike with ID ${extractedId} not found in database, using extracted ID`
-                  );
+                  console.warn(`⚠️ Error fetching bike ${extractedId}:`, error.message);
                   realBikeID = extractedId; // Fallback to extracted ID
                 }
               } else {
-                throw new Error("Cannot extract bike ID from vehicle data");
+                throw new Error(`Cannot extract bike ID from vehicle data. Vehicle ID: ${mockBikeId}`);
               }
 
               // Get real StationID from backend API
@@ -169,25 +197,32 @@ export default function Checkout() {
                   ? parseInt(mockStationId.replace(/\D/g, ""))
                   : mockStationId;
 
-              if (extractedStationId) {
+              console.log('🔍 [CHECKOUT] Station ID extraction:', {
+                mockStationId,
+                extractedStationId,
+                isValid: !isNaN(extractedStationId) && extractedStationId > 0
+              });
+
+              if (!isNaN(extractedStationId) && extractedStationId > 0) {
                 try {
                   const stationData = await fetchStationById(
                     extractedStationId,
                     token
                   );
                   realStationID = stationData.stationID; // Get StationID from database
-                  console.log(
-                    `✅ Found station in database: StationID = ${realStationID}`
-                  );
+                  
+                  if (stationData.notFound) {
+                    console.warn(`⚠️ Station ID ${extractedStationId} not in database, using as-is for rental`);
+                  } else {
+                    console.log(`✅ Found station in database: StationID = ${realStationID}`);
+                  }
                 } catch (error) {
-                  console.warn(
-                    `⚠️ Station with ID ${extractedStationId} not found in database, using extracted ID`
-                  );
+                  console.warn(`⚠️ Error fetching station ${extractedStationId}:`, error.message);
                   realStationID = extractedStationId; // Fallback to extracted ID
                 }
               } else {
                 throw new Error(
-                  "Cannot extract station ID from rental details"
+                  `Cannot extract station ID from rental details. Station ID: ${mockStationId}`
                 );
               }
 
@@ -207,13 +242,18 @@ export default function Checkout() {
               );
               console.log("🔗 API URL:", import.meta.env.VITE_API_BASE_URL);
 
+              console.log('📞 [PAYOS] === CALLING createPayOSPayment API ===');
+              console.log('📞 [PAYOS] Function: createPayOSPayment');
+              console.log('📞 [PAYOS] Params:', { paymentData, tokenExists: !!token });
+
               // Call backend API to create payment
               const paymentResponse = await createPayOSPayment(
                 paymentData,
                 token
               );
 
-              console.log("✅ Payment response received:", paymentResponse);
+              console.log("✅ [PAYOS] === API RESPONSE RECEIVED ===");
+              console.log("✅ [PAYOS] Payment response received:", paymentResponse);
 
               if (paymentResponse && paymentResponse.paymentUrl) {
                 paymentUrls.push(paymentResponse.paymentUrl);
@@ -303,89 +343,205 @@ export default function Checkout() {
         }
       }
 
-      // Cash payment - original flow
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      const savedBookings = [];
-      let itemIndex = 1;
-
-      for (const item of cartItems) {
-        if (!item.vehicle || !item.rentalDetails) {
-          continue;
+      // Cash payment - API call flow
+      try {
+        console.log('💵 [CASH PAYMENT] Starting cash payment flow...');
+        
+        // Get JWT token
+        const token = getToken();
+        console.log('🔑 [CASH] Token check:', {
+          exists: !!token,
+          length: token?.length || 0,
+          startsWithBearer: token?.startsWith('Bearer ') || false,
+          firstChars: token ? token.substring(0, 20) + '...' : 'null'
+        });
+        
+        if (!token) {
+          console.error('❌ [CASH] No token found! User must login first.');
+          throw new Error('Vui lòng đăng nhập để thanh toán');
         }
 
-        const itemBookingId = `${bookingId}-${itemIndex}`;
-        const pickupStation = item.rentalDetails.pickupStation;
-        const returnStation = item.rentalDetails.returnStation || pickupStation;
-
-        const bookingData = {
-          userId: user.email,
-          userEmail: user.email,
-          userName: user.fullName || user.name || user.email,
-          userPhone: user.phone || user.phoneNumber || "Chưa cập nhật",
-          vehicleName: item.vehicle.name,
-          vehicleId: item.vehicle.id,
-          licensePlate:
-            item.vehicle.licensePlate ||
-            `59${String.fromCharCode(
-              65 + Math.floor(Math.random() * 26)
-            )}-${Math.floor(10000 + Math.random() * 90000)}`,
-          vehicleImage: item.vehicle.image,
-          pickupDate: item.rentalDetails.pickupDate,
-          returnDate: item.rentalDetails.returnDate,
-          pickupTime: item.rentalDetails.pickupTime || "09:00",
-          returnTime: item.rentalDetails.returnTime || "18:00",
-          pickupStation:
-            typeof pickupStation === "object"
-              ? pickupStation.name
-              : pickupStation || "Chưa chọn",
-          pickupStationId:
-            typeof pickupStation === "object" ? pickupStation.id : null,
-          pickupStationAddress:
-            typeof pickupStation === "object" ? pickupStation.address : null,
-          returnStation:
-            typeof returnStation === "object"
-              ? returnStation.name
-              : returnStation || "Chưa chọn",
-          returnStationId:
-            typeof returnStation === "object" ? returnStation.id : null,
-          returnStationAddress:
-            typeof returnStation === "object" ? returnStation.address : null,
-          days: item.rentalDetails.days || 1,
-          totalPrice: item.totalPrice || 0,
-          additionalServices: item.rentalDetails.additionalServices || {},
-          paymentMethod: "cash",
-          paymentStatus: "confirmed",
-          battery: "100%",
-          lastCheck: new Date().toISOString(),
-        };
-
-        try {
-          const savedBooking = saveBooking(bookingData, itemBookingId);
-          savedBookings.push(savedBooking);
-          itemIndex++;
-        } catch (saveError) {
-          throw new Error(`Không thể lưu booking cho xe ${item.vehicle.name}`);
+        // Get accountID from user
+        console.log('👤 [CASH] User object:', user);
+        console.log('👤 [CASH] User properties:', {
+          accountID: user?.accountID,
+          AccountID: user?.AccountID,
+          id: user?.id,
+        });
+        const accountID = user?.accountID || user?.AccountID || user?.id;
+        console.log('📋 [CASH] Final AccountID extracted:', accountID);
+        if (!accountID) {
+          throw new Error('Không tìm thấy thông tin tài khoản');
         }
+
+        // Generate unique order code (same format as PayOS)
+        const orderCode = parseInt(Date.now().toString().slice(-6));
+        const savedBookings = [];
+        let itemIndex = 1;
+        
+        for (const item of cartItems) {
+          if (!item.vehicle || !item.rentalDetails) {
+            continue;
+          }
+
+          try {
+            console.log('🔍 [CASH] Processing item:', {
+              vehicleId: item.vehicle.id,
+              vehicleName: item.vehicle.name,
+              pickupStation: item.rentalDetails.pickupStation,
+            });
+
+            // Get real BikeID from backend API
+            let realBikeID = null;
+            const mockBikeId = item.vehicle.id;
+            
+            const extractedId = typeof mockBikeId === 'string' 
+              ? parseInt(mockBikeId.replace(/\D/g, '')) 
+              : mockBikeId;
+            
+            console.log('🔍 [CASH] Bike ID extraction:', {
+              mockBikeId,
+              extractedId,
+              isValid: !isNaN(extractedId) && extractedId > 0
+            });
+
+            if (!isNaN(extractedId) && extractedId > 0) {
+              try {
+                const bikeData = await getBikeById(extractedId, token);
+                realBikeID = bikeData.bikeID;
+                
+                if (bikeData.notFound) {
+                  console.warn(`⚠️ [CASH] Bike ID ${extractedId} not in database, using as-is for rental`);
+                } else {
+                  console.log(`✅ [CASH] Found bike in database: BikeID = ${realBikeID}`);
+                }
+              } catch (error) {
+                console.warn(`⚠️ [CASH] Error fetching bike ${extractedId}:`, error.message);
+                realBikeID = extractedId;
+              }
+            } else {
+              throw new Error(`Cannot extract bike ID from vehicle data. Vehicle ID: ${mockBikeId}`);
+            }
+
+            // Get real StationID from backend API
+            let realStationID = null;
+            const mockStationId = item.rentalDetails.pickupStation?.id || 
+                                 item.rentalDetails.pickupStation?.stationID;
+            
+            const extractedStationId = typeof mockStationId === 'string'
+              ? parseInt(mockStationId.replace(/\D/g, ''))
+              : mockStationId;
+            
+            console.log('🔍 [CASH] Station ID extraction:', {
+              mockStationId,
+              extractedStationId,
+              isValid: !isNaN(extractedStationId) && extractedStationId > 0
+            });
+
+            if (!isNaN(extractedStationId) && extractedStationId > 0) {
+              try {
+                const stationData = await fetchStationById(extractedStationId, token);
+                realStationID = stationData.stationID;
+                
+                if (stationData.notFound) {
+                  console.warn(`⚠️ [CASH] Station ID ${extractedStationId} not in database, using as-is for rental`);
+                } else {
+                  console.log(`✅ [CASH] Found station in database: StationID = ${realStationID}`);
+                }
+              } catch (error) {
+                console.warn(`⚠️ [CASH] Error fetching station ${extractedStationId}:`, error.message);
+                realStationID = extractedStationId;
+              }
+            } else {
+              throw new Error(`Cannot extract station ID from rental details. Station ID: ${mockStationId}`);
+            }
+
+            // Prepare payment data
+            const paymentData = {
+              accountID: accountID,
+              amount: item.totalPrice || 0,
+              bikeID: realBikeID,
+              stationID: realStationID,
+              startTime: item.rentalDetails.pickupDate,
+              endTime: item.rentalDetails.returnDate
+            };
+
+            console.log('💵 [CASH] Creating cash payment with data:', paymentData);
+            console.log('💵 [CASH] ⚠️ QUAN TRỌNG - Kiểm tra database:');
+            console.log('   → Bảng Accounts: Có AccountID =', accountID, '?');
+            console.log('   → Bảng Renters: Có RenterID với AccountID =', accountID, '?');
+            console.log('   → Nếu chưa có, hãy INSERT INTO Renters với AccountID này!');
+
+            console.log('📞 [CASH] === CALLING createCashPayment API ===');
+            console.log('📞 [CASH] Function: createCashPayment');
+            console.log('📞 [CASH] Params:', { paymentData, tokenExists: !!token });
+            
+            // Call backend API to create cash payment
+            const paymentResponse = await createCashPayment(paymentData, token);
+            
+            console.log('✅ [CASH] === API RESPONSE RECEIVED ===');
+            console.log('✅ [CASH] Payment response:', paymentResponse);
+            console.log('✅ [CASH] Rental created with status = 0 (Pending) in backend');
+
+            // Save booking data to localStorage for BookingSuccess page
+            const itemBookingId = `${bookingId}-${itemIndex}`;
+            const pickupStation = item.rentalDetails.pickupStation;
+            const returnStation = item.rentalDetails.returnStation || pickupStation;
+
+            const bookingData = {
+              orderId: orderCode, // Same format as PayOS
+              userId: user.email,
+              userEmail: user.email,
+              userName: user.fullName || user.name || user.email,
+              userPhone: user.phone || user.phoneNumber || 'Chưa cập nhật',
+              vehicleName: item.vehicle.name,
+              vehicleId: item.vehicle.id,
+              bikeID: realBikeID,
+              licensePlate: paymentResponse.licensePlate || 'Đang cập nhật',
+              vehicleImage: item.vehicle.image,
+              pickupDate: item.rentalDetails.pickupDate,
+              returnDate: item.rentalDetails.returnDate,
+              pickupTime: item.rentalDetails.pickupTime || '09:00',
+              returnTime: item.rentalDetails.returnTime || '18:00',
+              pickupStation: typeof pickupStation === 'object' ? pickupStation.name : (pickupStation || 'Chưa chọn'),
+              pickupStationId: typeof pickupStation === 'object' ? pickupStation.id : null,
+              pickupStationAddress: typeof pickupStation === 'object' ? pickupStation.address : null,
+              stationID: realStationID,
+              returnStation: typeof returnStation === 'object' ? returnStation.name : (returnStation || 'Chưa chọn'),
+              returnStationId: typeof returnStation === 'object' ? returnStation.id : null,
+              returnStationAddress: typeof returnStation === 'object' ? returnStation.address : null,
+              days: item.rentalDetails.days || 1,
+              totalPrice: item.totalPrice || 0,
+              additionalServices: item.rentalDetails.additionalServices || {},
+              paymentMethod: 'cash',
+              paymentStatus: 'pending',
+              rentalID: paymentResponse.rentalID || null,
+              paymentID: paymentResponse.paymentID || null,
+            };
+
+            const savedBooking = saveBooking(bookingData, itemBookingId);
+            savedBookings.push(savedBooking);
+            itemIndex++;
+          } catch (itemError) {
+            console.error(`❌ [CASH] Error processing item ${itemIndex}:`, itemError);
+            throw new Error(`Lỗi xử lý xe ${item.vehicle?.name || 'không xác định'}: ${itemError.message}`);
+          }
+        }
+
+        if (savedBookings.length === 0) {
+          throw new Error('Không có booking nào được lưu thành công');
+        }
+
+        // Clear cart after successful payment
+        clearCart();
+        
+        // Redirect to booking success page
+        console.log('✅ [CASH] Redirecting to booking success with orderId:', orderCode);
+        navigate(`/booking-success/${orderCode}`);
+      } catch (cashError) {
+        console.error('💵 [CASH] Cash Payment Error:', cashError);
+        throw new Error(cashError.message || 'Không thể tạo đơn đặt xe. Vui lòng thử lại sau.');
       }
-
-      if (savedBookings.length === 0) {
-        throw new Error("Không có booking nào được lưu thành công");
-      }
-
-      // Clear cart and redirect
-      clearCart();
-
-      // Show success message based on payment method
-      if (paymentMethod === "cash") {
-        alert(
-          "✅ Đặt xe thành công! Vui lòng thanh toán khi nhận xe tại điểm."
-        );
-      } else {
-        alert("✅ Thanh toán thành công! Đang chuyển đến trang xác nhận...");
-      }
-
-      navigate(`/booking-success/${bookingId}`);
     } catch (error) {
       alert(
         `❌ Lỗi: ${

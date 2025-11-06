@@ -29,9 +29,16 @@ export const getAvailableBikes = async (token) => {
       headers['Authorization'] = `Bearer ${token}`;
     }
     
-    const response = await fetch(`${API_BASE_URL}/api/EVBike/AvailableBikes`, {
+    // Add timestamp to prevent caching and ensure fresh data on reload
+    const timestamp = new Date().getTime();
+    const url = `${API_BASE_URL}/api/EVBike/AvailableBikes?_t=${timestamp}`;
+    
+    console.log('🔄 [API] Calling:', url);
+    
+    const response = await fetch(url, {
       method: 'GET',
-      headers
+      headers,
+      cache: 'no-store' // Disable browser cache
     });
 
     console.log('Available bikes response status:', response.status);
@@ -64,16 +71,27 @@ export const getBikeById = async (bikeId) => {
   try {
     console.log(`🔍 Fetching bike with ID: ${bikeId}`);
     
-    const response = await fetch(`${API_BASE_URL}/api/EVBike/GetBikeByID/${bikeId}`, {
+    // Add timestamp to prevent caching
+    const timestamp = new Date().getTime();
+    const url = `${API_BASE_URL}/api/EVBike/GetBikeByID/${bikeId}?_t=${timestamp}`;
+    
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
-      }
+      },
+      cache: 'no-store'
     });
 
     console.log('Get bike response status:', response.status);
 
     if (!response.ok) {
+      if (response.status === 404) {
+        console.warn(`⚠️ Bike with ID ${bikeId} not found (404), will use provided ID`);
+        // Return a minimal object with the provided bikeID so caller can use it
+        return { bikeID: bikeId, notFound: true };
+      }
+      
       const errorText = await response.text();
       console.error('Get bike error:', errorText);
       throw new Error(`Failed to get bike: ${response.status}`);
@@ -85,6 +103,11 @@ export const getBikeById = async (bikeId) => {
     return data;
   } catch (error) {
     console.error('❌ Error fetching bike:', error);
+    // If it's a network error or other error, return minimal object
+    if (error.message.includes('fetch')) {
+      console.warn('⚠️ Network error, using provided bike ID:', bikeId);
+      return { bikeID: bikeId, notFound: true };
+    }
     throw error;
   }
 };
@@ -101,11 +124,16 @@ export const getBikesByStation = async (stationId) => {
   try {
     console.log(`🏪 Fetching bikes for station: ${stationId}`);
     
-    const response = await fetch(`${API_BASE_URL}/api/EVBike/GetBikesByStation/${stationId}`, {
+    // Add timestamp to prevent caching
+    const timestamp = new Date().getTime();
+    const url = `${API_BASE_URL}/api/EVBike/GetBikesByStation/${stationId}?_t=${timestamp}`;
+    
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
-      }
+      },
+      cache: 'no-store'
     });
 
     if (!response.ok) {

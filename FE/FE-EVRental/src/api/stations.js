@@ -6,8 +6,14 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5168
  */
 export async function fetchActiveStations() {
   try {
-    console.log('🏪 Calling API:', `${API_BASE_URL}/api/Station/GetActiveStations`);
-    const res = await fetch(`${API_BASE_URL}/api/Station/GetActiveStations`);
+    // Add timestamp to prevent caching and ensure fresh data on reload
+    const timestamp = new Date().getTime();
+    const url = `${API_BASE_URL}/api/Station/GetActiveStations?_t=${timestamp}`;
+    
+    console.log('🏪 Calling API:', url);
+    const res = await fetch(url, {
+      cache: 'no-store' // Disable browser cache
+    });
     console.log('🏪 Response status:', res.status);
     
     if (!res.ok) {
@@ -33,20 +39,52 @@ export async function fetchActiveStations() {
  * @returns {Promise<Object>} Station data with StationID from database
  */
 export async function fetchStationById(id, token) {
-  const headers = {
-    'Content-Type': 'application/json'
-  };
-  
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+  try {
+    const headers = {
+      'Content-Type': 'application/json'
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    console.log(`🏪 Fetching station with ID: ${id}`);
+    
+    // Add timestamp to prevent caching
+    const timestamp = new Date().getTime();
+    const url = `${API_BASE_URL}/api/Station/GetStationById/${id}?_t=${timestamp}`;
+    
+    const res = await fetch(url, {
+      headers,
+      cache: 'no-store'
+    });
+    
+    console.log('🏪 Get station response status:', res.status);
+    
+    if (!res.ok) {
+      if (res.status === 404) {
+        console.warn(`⚠️ Station with ID ${id} not found (404), will use provided ID`);
+        // Return a minimal object with the provided stationID so caller can use it
+        return { stationID: id, notFound: true };
+      }
+      
+      const errorText = await res.text();
+      console.error('🏪 Get station error:', errorText);
+      throw new Error(`Failed to fetch station by id: ${res.status}`);
+    }
+    
+    const data = await res.json();
+    console.log('✅ Station data from API:', data);
+    return data;
+  } catch (error) {
+    console.error('❌ Error fetching station:', error);
+    // If it's a network error, return minimal object
+    if (error.message.includes('fetch') || error.message.includes('Failed to fetch')) {
+      console.warn('⚠️ Network error, using provided station ID:', id);
+      return { stationID: id, notFound: true };
+    }
+    throw error;
   }
-  
-  const res = await fetch(`${API_BASE_URL}/api/Station/GetStationById/${id}`, {
-    headers
-  });
-  
-  if (!res.ok) throw new Error('Failed to fetch station by id');
-  return res.json();
 }
 
 

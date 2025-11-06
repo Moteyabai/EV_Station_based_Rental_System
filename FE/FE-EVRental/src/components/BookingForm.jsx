@@ -50,31 +50,52 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
     let isMounted = true;
     async function loadStations() {
       try {
+        console.log('🏪 [BOOKING FORM] Loading stations for vehicle:', vehicle);
+        console.log('🏪 [BOOKING FORM] Vehicle ID:', vehicle.id);
+        
         // Use the new API endpoint with bikeID
         const token = getToken();
-        const response = await fetch(
-          `http://localhost:5168/api/Station/AvailableStockInStationsByBikeID?bikeID=${vehicle.id}`,
-          {
-            headers: {
-              Authorization: token ? `Bearer ${token}` : "",
-            },
-          }
-        );
+        const apiUrl = `http://localhost:5168/api/Station/AvailableStockInStationsByBikeID?bikeID=${vehicle.id}`;
+        console.log('🏪 [BOOKING FORM] API URL:', apiUrl);
+        console.log('🏪 [BOOKING FORM] Token exists:', !!token);
+        
+        const response = await fetch(apiUrl, {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        });
+
+        console.log('🏪 [BOOKING FORM] Response status:', response.status);
 
         if (!response.ok) {
+          if (response.status === 404) {
+            console.warn('⚠️ [BOOKING FORM] No stocks found for this bike - not showing any stations');
+            if (!isMounted) return;
+            setStations([]);
+            message.warning('Hiện tại xe chưa có sẵn tại các trạm');
+            return;
+          }
+          
+          const errorText = await response.text();
+          console.error('❌ [BOOKING FORM] API Error:', errorText);
           throw new Error("Failed to fetch stations");
         }
 
         const apiStations = await response.json();
+        console.log('✅ [BOOKING FORM] Stations from API:', apiStations);
+        
         if (!isMounted) return;
+        
         const mapped = apiStations.map((s) => ({
           id: s.stationID || s.StationID || s.id,
           name: s.name || s.Name,
           address: s.address || s.Address,
         }));
+        
+        console.log('✅ [BOOKING FORM] Mapped stations:', mapped);
         setStations(mapped);
       } catch (error) {
-        console.error("Error loading stations:", error);
+        console.error("❌ [BOOKING FORM] Error loading stations:", error);
         message.error("Không thể tải danh sách trạm");
         setStations([]);
       } finally {
