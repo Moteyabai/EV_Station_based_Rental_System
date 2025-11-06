@@ -22,13 +22,9 @@ namespace Services
         public async Task<Station> GetByIdAsync(int id) => await _stationRepository.GetByIdAsync(id);
 
         public async Task UpdateAsync(Station entity) => await _stationRepository.UpdateAsync(entity);
+        public async Task<IEnumerable<Station>> GetActiveStationsAsync() => await _stationRepository.GetActiveStationsAsync();
 
         // Additional business methods for Station
-        public async Task<IEnumerable<Station>> GetActiveStationsAsync()
-        {
-            var stations = await GetAllAsync();
-            return stations.Where(s => s.IsActive);
-        }
 
         public async Task<IEnumerable<Station>> GetInactiveStationsAsync()
         {
