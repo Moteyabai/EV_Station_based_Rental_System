@@ -2,10 +2,48 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 
 const CartContext = createContext();
 
+// Helper function to get cart storage key for current user
+const getCartStorageKey = () => {
+  try {
+    // Try both "ev_user" and "user" keys for compatibility
+    const userStr = localStorage.getItem("ev_user") || localStorage.getItem("user") || sessionStorage.getItem("user");
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      const accountId = user.accountID || user.AccountID || user.id;
+      console.log("🔑 [CART] Getting cart key for AccountID:", accountId);
+      if (accountId) {
+        return `ev_rental_cart_${accountId}`;
+      }
+    }
+
+    // Fallback: Try to get AccountID from token
+    const token = localStorage.getItem("ev_token") || sessionStorage.getItem("ev_token");
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const accountId = payload.accountID || payload.AccountID || payload.sub || payload.nameid;
+        console.log("🔑 [CART] Getting cart key from token for AccountID:", accountId);
+        if (accountId) {
+          return `ev_rental_cart_${accountId}`;
+        }
+      } catch (tokenError) {
+        console.warn("⚠️ [CART] Could not decode token:", tokenError);
+      }
+    }
+  } catch (error) {
+    console.error("❌ [CART] Error getting cart storage key:", error);
+  }
+  // Fallback to generic key if no user
+  console.log("🔑 [CART] No user found, using guest cart");
+  return "ev_rental_cart_guest";
+};
+
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState(() => {
     try {
-      const savedCart = localStorage.getItem("ev_rental_cart");
+      const cartKey = getCartStorageKey();
+      const savedCart = localStorage.getItem(cartKey);
+      console.log(`🛒 Loading cart from: ${cartKey}`, savedCart ? JSON.parse(savedCart) : []);
       return savedCart ? JSON.parse(savedCart) : [];
     } catch {
       return [];
@@ -14,8 +52,27 @@ export function CartProvider({ children }) {
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem("ev_rental_cart", JSON.stringify(cartItems));
+    const cartKey = getCartStorageKey();
+    localStorage.setItem(cartKey, JSON.stringify(cartItems));
+    console.log(`💾 Saving cart to: ${cartKey}`, cartItems);
   }, [cartItems]);
+
+  // Clear cart when user changes (logout/login)
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const cartKey = getCartStorageKey();
+      const savedCart = localStorage.getItem(cartKey);
+      console.log(`🔄 User changed, reloading cart from: ${cartKey}`);
+      setCartItems(savedCart ? JSON.parse(savedCart) : []);
+    };
+
+    // Listen for custom event when user logs in/out
+    window.addEventListener("userChanged", handleStorageChange);
+    
+    return () => {
+      window.removeEventListener("userChanged", handleStorageChange);
+    };
+  }, []);
 
   // Add vehicle to cart
   const addToCart = (vehicle, rentalDetails = null) => {

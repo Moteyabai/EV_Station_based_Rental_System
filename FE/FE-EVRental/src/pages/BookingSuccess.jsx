@@ -2,11 +2,13 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { formatPrice, formatDate } from "../utils/helpers";
 import { getBookingById } from "../utils/bookingStorage";
+import { useCart } from "../contexts/CartContext";
 import "../styles/BookingSuccess.css";
 
 export default function BookingSuccess() {
   const { bookingId } = useParams();
   const [booking, setBooking] = useState(null);
+  const { clearCart } = useCart();
 
   useEffect(() => {
     console.log('🔍 Looking for booking with ID:', bookingId);
@@ -41,7 +43,13 @@ export default function BookingSuccess() {
     }
     
     setBooking(foundBooking);
-  }, [bookingId]);
+
+    // Clear cart after successful booking
+    if (foundBooking) {
+      console.log('🛒 Clearing cart after successful payment');
+      clearCart();
+    }
+  }, [bookingId, clearCart]);
 
   if (!booking) {
     return (

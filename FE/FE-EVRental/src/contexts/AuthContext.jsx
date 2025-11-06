@@ -63,7 +63,12 @@ export function AuthProvider({ children }) {
     sessionStorage.removeItem("ev_login_time");
     removeToken();
     localStorage.removeItem("ev_verification_status");
+    
+    // Dispatch event to notify cart context
+    window.dispatchEvent(new Event("userChanged"));
+    
     alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+    console.log("⏰ Session timeout - cart cleared");
   }, []);
 
   // Setup session timeout khi user login
@@ -151,6 +156,10 @@ export function AuthProvider({ children }) {
       ...userData,
       isAuthenticated: true,
     });
+
+    // Dispatch event to notify cart context about user change
+    window.dispatchEvent(new Event("userChanged"));
+    console.log("🔔 User login - cart will reload for new user");
   }
 
   function logout() {
@@ -171,7 +180,9 @@ export function AuthProvider({ children }) {
     setUser(null);
     setVerificationStatus(null);
 
-    console.log("👋 User logged out");
+    // Dispatch event to notify cart context about user change
+    window.dispatchEvent(new Event("userChanged"));
+    console.log("👋 User logged out - cart cleared");
   }
 
   function register(userData) {
@@ -197,6 +208,10 @@ export function AuthProvider({ children }) {
       verificationMessage:
         "Tài khoản của bạn đã được tạo. Vui lòng đến bất kỳ điểm thuê nào để hoàn tất xác minh.",
     });
+
+    // Dispatch event to notify cart context about user change
+    window.dispatchEvent(new Event("userChanged"));
+    console.log("🔔 User registered - cart will load for new user");
   }
 
   function updateVerificationStatus(status) {
