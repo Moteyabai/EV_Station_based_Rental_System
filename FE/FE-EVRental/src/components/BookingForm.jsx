@@ -69,22 +69,10 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
 
         if (!response.ok) {
           if (response.status === 404) {
-            console.warn('⚠️ [BOOKING FORM] No stocks found for this bike, loading all active stations as fallback');
-            // Fallback: Load all active stations
-            const allStationsResponse = await fetchActiveStations(token);
-            console.log('✅ [BOOKING FORM] Fallback stations:', allStationsResponse);
-            
+            console.warn('⚠️ [BOOKING FORM] No stocks found for this bike - not showing any stations');
             if (!isMounted) return;
-            
-            const mapped = allStationsResponse.map((s) => ({
-              id: s.stationID || s.StationID || s.id,
-              name: s.name || s.Name,
-              address: s.address || s.Address,
-            }));
-            
-            console.log('✅ [BOOKING FORM] Mapped fallback stations:', mapped);
-            setStations(mapped);
-            message.warning('Hiện tại xe chưa có sẵn tại các trạm, vui lòng chọn trạm để đặt trước');
+            setStations([]);
+            message.warning('Hiện tại xe chưa có sẵn tại các trạm');
             return;
           }
           

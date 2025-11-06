@@ -11,6 +11,19 @@ console.log('Payment API Base URL:', API_BASE_URL);
  */
 export async function createPayOSPayment(paymentData, token) {
   try {
+    // Validate token first
+    if (!token || token === 'null' || token === 'undefined') {
+      console.error('❌ [PAYOS API] Invalid token:', token);
+      throw new Error('Token không hợp lệ. Vui lòng đăng nhập lại.');
+    }
+    
+    console.log('🔑 [PAYOS API] Token validation:', {
+      exists: true,
+      length: token.length,
+      isBearer: token.startsWith('Bearer '),
+      preview: token.substring(0, 30) + '...'
+    });
+    
     const requestBody = {
       AccountID: parseInt(paymentData.accountID) || 0,
       Amount: parseFloat(paymentData.amount) || 0,
@@ -206,6 +219,19 @@ export async function markPaymentFailed(orderID, token) {
  */
 export async function createCashPayment(paymentData, token) {
   try {
+    // Validate token first
+    if (!token || token === 'null' || token === 'undefined') {
+      console.error('❌ [CASH API] Invalid token:', token);
+      throw new Error('Token không hợp lệ. Vui lòng đăng nhập lại.');
+    }
+    
+    console.log('🔑 [CASH API] Token validation:', {
+      exists: true,
+      length: token.length,
+      isBearer: token.startsWith('Bearer '),
+      preview: token.substring(0, 30) + '...'
+    });
+    
     // Validate input data
     console.log('🔍 [CASH PAYMENT] Input validation:', {
       accountID: paymentData.accountID,

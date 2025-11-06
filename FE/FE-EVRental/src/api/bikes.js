@@ -29,9 +29,16 @@ export const getAvailableBikes = async (token) => {
       headers['Authorization'] = `Bearer ${token}`;
     }
     
-    const response = await fetch(`${API_BASE_URL}/api/EVBike/AvailableBikes`, {
+    // Add timestamp to prevent caching and ensure fresh data on reload
+    const timestamp = new Date().getTime();
+    const url = `${API_BASE_URL}/api/EVBike/AvailableBikes?_t=${timestamp}`;
+    
+    console.log('🔄 [API] Calling:', url);
+    
+    const response = await fetch(url, {
       method: 'GET',
-      headers
+      headers,
+      cache: 'no-store' // Disable browser cache
     });
 
     console.log('Available bikes response status:', response.status);
@@ -64,11 +71,16 @@ export const getBikeById = async (bikeId) => {
   try {
     console.log(`🔍 Fetching bike with ID: ${bikeId}`);
     
-    const response = await fetch(`${API_BASE_URL}/api/EVBike/GetBikeByID/${bikeId}`, {
+    // Add timestamp to prevent caching
+    const timestamp = new Date().getTime();
+    const url = `${API_BASE_URL}/api/EVBike/GetBikeByID/${bikeId}?_t=${timestamp}`;
+    
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
-      }
+      },
+      cache: 'no-store'
     });
 
     console.log('Get bike response status:', response.status);
@@ -112,11 +124,16 @@ export const getBikesByStation = async (stationId) => {
   try {
     console.log(`🏪 Fetching bikes for station: ${stationId}`);
     
-    const response = await fetch(`${API_BASE_URL}/api/EVBike/GetBikesByStation/${stationId}`, {
+    // Add timestamp to prevent caching
+    const timestamp = new Date().getTime();
+    const url = `${API_BASE_URL}/api/EVBike/GetBikesByStation/${stationId}?_t=${timestamp}`;
+    
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
-      }
+      },
+      cache: 'no-store'
     });
 
     if (!response.ok) {

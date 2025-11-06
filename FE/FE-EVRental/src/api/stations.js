@@ -6,8 +6,14 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5168
  */
 export async function fetchActiveStations() {
   try {
-    console.log('🏪 Calling API:', `${API_BASE_URL}/api/Station/GetActiveStations`);
-    const res = await fetch(`${API_BASE_URL}/api/Station/GetActiveStations`);
+    // Add timestamp to prevent caching and ensure fresh data on reload
+    const timestamp = new Date().getTime();
+    const url = `${API_BASE_URL}/api/Station/GetActiveStations?_t=${timestamp}`;
+    
+    console.log('🏪 Calling API:', url);
+    const res = await fetch(url, {
+      cache: 'no-store' // Disable browser cache
+    });
     console.log('🏪 Response status:', res.status);
     
     if (!res.ok) {
@@ -44,8 +50,13 @@ export async function fetchStationById(id, token) {
     
     console.log(`🏪 Fetching station with ID: ${id}`);
     
-    const res = await fetch(`${API_BASE_URL}/api/Station/GetStationById/${id}`, {
-      headers
+    // Add timestamp to prevent caching
+    const timestamp = new Date().getTime();
+    const url = `${API_BASE_URL}/api/Station/GetStationById/${id}?_t=${timestamp}`;
+    
+    const res = await fetch(url, {
+      headers,
+      cache: 'no-store'
     });
     
     console.log('🏪 Get station response status:', res.status);

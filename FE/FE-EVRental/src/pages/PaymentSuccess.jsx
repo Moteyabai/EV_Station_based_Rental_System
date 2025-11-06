@@ -1,16 +1,30 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const orderCode = searchParams.get('orderCode') || 'N/A';
+  const [bookingInfo, setBookingInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const callSuccessAPI = async () => {
       if (orderCode && orderCode !== "N/A") {
         try {
           const token = localStorage.getItem('token');
+          
+          // Get booking info from localStorage
+          const allBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+          const booking = allBookings.find(b => 
+            b.id?.includes(orderCode) || 
+            b.orderCode == orderCode ||
+            b.paymentStatus === 'pending'
+          );
+          
+          console.log('📦 Found booking:', booking);
+          
+          // Call payment success API
           const response = await fetch(
             `http://localhost:5168/api/Payment/success?orderID=${orderCode}`,
             {
@@ -23,12 +37,88 @@ const PaymentSuccess = () => {
           );
 
           if (response.ok) {
-            console.log('Payment success recorded successfully');
+            console.log('✅ Payment success recorded');
+            
+            // Update booking status in localStorage
+            if (booking) {
+              booking.paymentStatus = 'completed';
+            }
+            
+            // Fetch Payment details to get RentalID
+            try {
+              const paymentResponse = await fetch(
+                `http://localhost:5168/api/Payment/GetPaymentById/${orderCode}`,
+                {
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                  },
+                }
+              );
+              
+              if (paymentResponse.ok) {
+                const paymentData = await paymentResponse.json();
+                console.log('💳 Payment data:', paymentData);
+                
+                // Get Rental details with real license plate
+                if (paymentData.rentalID || paymentData.RentalID) {
+                  const rentalID = paymentData.rentalID || paymentData.RentalID;
+                  const rentalResponse = await fetch(
+                    `http://localhost:5168/api/Rental/GetRentalById/${rentalID}`,
+                    {
+                      headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                      },
+                    }
+                  );
+                  
+                  if (rentalResponse.ok) {
+                    const rentalData = await rentalResponse.json();
+                    console.log('🏍️ Rental data:', rentalData);
+                    
+                    // Update booking with real license plate from database
+                    if (booking && rentalData.licensePlate) {
+                      booking.licensePlate = rentalData.licensePlate || rentalData.LicensePlate;
+                      console.log('✅ Updated license plate:', booking.licensePlate);
+                    }
+                  } else {
+                    console.warn('⚠️ Could not fetch rental details');
+                  }
+                }
+              } else {
+                console.warn('⚠️ Could not fetch payment details');
+              }
+            } catch (fetchError) {
+              console.error('⚠️ Error fetching rental details:', fetchError);
+            }
+            
+            // Update localStorage and state
+            if (booking) {
+              localStorage.setItem('bookings', JSON.stringify(allBookings));
+              setBookingInfo(booking);
+            }
           } else {
-            console.error('Failed to record payment success');
+            console.error('❌ Failed to record payment success');
+            // Still set booking info even if API fails
+            if (booking) {
+              setBookingInfo(booking);
+            }
           }
         } catch (error) {
-          console.error('Error calling payment success API:', error);
+          console.error('💥 Error:', error);
+          // Still set booking info even if error occurs
+          const allBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+          const booking = allBookings.find(b => 
+            b.id?.includes(orderCode) || 
+            b.orderCode == orderCode ||
+            b.paymentStatus === 'pending'
+          );
+          if (booking) {
+            setBookingInfo(booking);
+          }
+        } finally {
+          setLoading(false);
         }
       }
     };
@@ -106,20 +196,55 @@ const PaymentSuccess = () => {
           Cảm ơn bạn đã hoàn tất thanh toán. Đơn hàng của bạn đã được xác nhận.
         </p>
 
-        {/* Order Info */}
-        <div style={{
+        {loading ? (
+          <div style={{
+            padding: '3rem',
+            textAlign: 'center',
+          }}>
+            <div style={{
+              display: 'inline-block',
+              width: '50px',
+              height: '50px',
+              border: '4px solid #f3f4f6',
+              borderTop: '4px solid #10b981',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite',
+            }}></div>
+            <p style={{
+              marginTop: '1rem',
+              color: '#6b7280',
+            }}>
+              Đang tải thông tin đặt xe...
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Order Info */}
+            <div style={{
           background: '#f9fafb',
           borderRadius: '12px',
           padding: '1.5rem',
           marginBottom: '2rem',
+          textAlign: 'left',
         }}>
+          <h3 style={{
+            fontSize: '1.1rem',
+            fontWeight: '700',
+            color: '#1f2937',
+            marginBottom: '1rem',
+            textAlign: 'center',
+          }}>
+            📋 Thông tin đặt xe
+          </h3>
+          
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             padding: '0.75rem 0',
+            borderBottom: '1px solid #e5e7eb',
           }}>
             <span style={{ fontWeight: '600', color: '#4b5563' }}>Mã đơn hàng:</span>
-            <span style={{ fontWeight: '500', color: '#1f2937' }}>{orderCode}</span>
+            <span style={{ fontWeight: '700', color: '#10b981' }}>{orderCode}</span>
           </div>
 
           {bookingInfo && (
@@ -387,6 +512,8 @@ const PaymentSuccess = () => {
             <i className="fas fa-home"></i> Về trang chủ
           </button>
         </div>
+        </>
+        )}
 
         <style>{`
           @keyframes slideUp {

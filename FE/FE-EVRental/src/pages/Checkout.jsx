@@ -115,14 +115,22 @@ export default function Checkout() {
         try {
           // Get JWT token from localStorage
           const token = getToken();
+          console.log('🔑 [PAYOS] Token check:', {
+            exists: !!token,
+            length: token?.length || 0,
+            startsWithBearer: token?.startsWith('Bearer ') || false,
+            firstChars: token ? token.substring(0, 20) + '...' : 'null'
+          });
+          
           if (!token) {
+            console.error('❌ [PAYOS] No token found! User must login first.');
             throw new Error("Vui lòng đăng nhập để thanh toán");
           }
 
           // Get accountID from user
-          console.log("👤 User object:", user);
+          console.log("👤 [PAYOS] User object:", user);
           const accountID = user?.accountID || user?.AccountID || user?.id;
-          console.log("📋 AccountID extracted:", accountID);
+          console.log("📋 [PAYOS] AccountID extracted:", accountID);
 
           if (!accountID) {
             throw new Error("Không tìm thấy thông tin tài khoản");
@@ -234,13 +242,18 @@ export default function Checkout() {
               );
               console.log("🔗 API URL:", import.meta.env.VITE_API_BASE_URL);
 
+              console.log('📞 [PAYOS] === CALLING createPayOSPayment API ===');
+              console.log('📞 [PAYOS] Function: createPayOSPayment');
+              console.log('📞 [PAYOS] Params:', { paymentData, tokenExists: !!token });
+
               // Call backend API to create payment
               const paymentResponse = await createPayOSPayment(
                 paymentData,
                 token
               );
 
-              console.log("✅ Payment response received:", paymentResponse);
+              console.log("✅ [PAYOS] === API RESPONSE RECEIVED ===");
+              console.log("✅ [PAYOS] Payment response received:", paymentResponse);
 
               if (paymentResponse && paymentResponse.paymentUrl) {
                 paymentUrls.push(paymentResponse.paymentUrl);
@@ -336,12 +349,27 @@ export default function Checkout() {
         
         // Get JWT token
         const token = getToken();
+        console.log('🔑 [CASH] Token check:', {
+          exists: !!token,
+          length: token?.length || 0,
+          startsWithBearer: token?.startsWith('Bearer ') || false,
+          firstChars: token ? token.substring(0, 20) + '...' : 'null'
+        });
+        
         if (!token) {
+          console.error('❌ [CASH] No token found! User must login first.');
           throw new Error('Vui lòng đăng nhập để thanh toán');
         }
 
         // Get accountID from user
+        console.log('👤 [CASH] User object:', user);
+        console.log('👤 [CASH] User properties:', {
+          accountID: user?.accountID,
+          AccountID: user?.AccountID,
+          id: user?.id,
+        });
         const accountID = user?.accountID || user?.AccountID || user?.id;
+        console.log('📋 [CASH] Final AccountID extracted:', accountID);
         if (!accountID) {
           throw new Error('Không tìm thấy thông tin tài khoản');
         }
@@ -439,10 +467,19 @@ export default function Checkout() {
             };
 
             console.log('💵 [CASH] Creating cash payment with data:', paymentData);
+            console.log('💵 [CASH] ⚠️ QUAN TRỌNG - Kiểm tra database:');
+            console.log('   → Bảng Accounts: Có AccountID =', accountID, '?');
+            console.log('   → Bảng Renters: Có RenterID với AccountID =', accountID, '?');
+            console.log('   → Nếu chưa có, hãy INSERT INTO Renters với AccountID này!');
 
+            console.log('📞 [CASH] === CALLING createCashPayment API ===');
+            console.log('📞 [CASH] Function: createCashPayment');
+            console.log('📞 [CASH] Params:', { paymentData, tokenExists: !!token });
+            
             // Call backend API to create cash payment
             const paymentResponse = await createCashPayment(paymentData, token);
             
+            console.log('✅ [CASH] === API RESPONSE RECEIVED ===');
             console.log('✅ [CASH] Payment response:', paymentResponse);
             console.log('✅ [CASH] Rental created with status = 0 (Pending) in backend');
 
