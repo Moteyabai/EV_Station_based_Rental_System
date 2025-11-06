@@ -1,5 +1,6 @@
 ﻿using BusinessObject.Models;
 using Repositories;
+using Repositories.DBContext;
 using Services.Interfaces;
 
 namespace Services
@@ -8,9 +9,16 @@ namespace Services
     {
         private readonly EVBike_StocksRepository _evBikeStocksRepository;
 
+        // Default constructor for backward compatibility
         public EVBike_StocksService()
         {
             _evBikeStocksRepository = EVBike_StocksRepository.Instance;
+        }
+
+        // ✅ NEW: Constructor for Dependency Injection (RECOMMENDED)
+        public EVBike_StocksService(EVRenterDBContext context)
+        {
+            _evBikeStocksRepository = new EVBike_StocksRepository(context);
         }
 
         public async Task AddAsync(EVBike_Stocks entity) => await _evBikeStocksRepository.AddAsync(entity);
@@ -31,5 +39,7 @@ namespace Services
         public async Task<List<EVBike_Stocks>> GetAvailbStocksAtStationByBikeIDAsync(int bikeID) => await _evBikeStocksRepository.GetAvailbStocksAtStationByBikeIDAsync(bikeID);
         public async Task<int> GetStockCountByBikeIDAsync(int bikeID) => await _evBikeStocksRepository.GetStockCountByBikeIDAsync(bikeID);
         public async Task<int> GetStockCountByStationIDAsync(int stationID) => await _evBikeStocksRepository.GetStockCountByStationIDAsync(stationID);
+        public async Task<List<Station>> GetStationsWithAvailableStockByBikeIDAsync(int bikeID) => await _evBikeStocksRepository.GetStationsWithAvailableStockByBikeIDAsync(bikeID);
+        public async Task<Dictionary<int, int>> GetAvailableStockCountByStationAsync(int bikeID) => await _evBikeStocksRepository.GetAvailableStockCountByStationAsync(bikeID);
     }
 }

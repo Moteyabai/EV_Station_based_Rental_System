@@ -11,10 +11,18 @@ namespace Repositories
         private static EVBikeRepository instance;
         private static readonly object instancelock = new object();
 
-        public EVBikeRepository()
+        // Default constructor for backward compatibility
+        public EVBikeRepository() : base()
         {
         }
 
+        // ✅ NEW: Constructor for Dependency Injection (RECOMMENDED)
+        public EVBikeRepository(EVRenterDBContext context) : base(context)
+        {
+        }
+
+        // ⚠️ DEPRECATED: Singleton pattern - Use DI instead
+        // This is kept for backward compatibility but should not be used
         public static EVBikeRepository Instance
         {
             get
@@ -34,8 +42,11 @@ namespace Repositories
         {
             try
             {
-                using (var _context = new EVRenterDBContext())
-                    return await _context.EVBikes.Include(x=> x.Brand).Where(bike => bike.Status == (int)BikeStatus.Available).ToListAsync();
+                return await _context.EVBikes
+                    .AsNoTracking()  // ✅ Read-only, no tracking needed
+                    .Include(x => x.Brand)
+                    .Where(bike => bike.Status == (int)BikeStatus.Available)
+                    .ToListAsync();
             }
             catch (Exception ex)
             {
@@ -50,8 +61,8 @@ namespace Repositories
         {
             try
             {
-                using (var _context = new EVRenterDBContext())
-                    return await _context.EVBikes
+                return await _context.EVBikes
+                    .AsNoTracking()  // ✅ Read-only, no tracking needed
                     .Include(x => x.Brand)
                     .Where(bike => bike.BrandID == brandId)
                     .OrderByDescending(bike => bike.CreatedAt)
@@ -60,6 +71,24 @@ namespace Repositories
             catch (Exception ex)
             {
                 throw new Exception($"Error getting bikes by BrandID: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Get bike by ID with Brand - read-only (no tracking)
+        /// </summary>
+        public async Task<EVBike?> GetByIdWithBrandAsync(int id)
+        {
+            try
+            {
+                return await _context.EVBikes
+                    .AsNoTracking()  // ✅ Read-only, prevents tracking conflicts
+                    .Include(x => x.Brand)
+                    .FirstOrDefaultAsync(bike => bike.BikeID == id);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error getting bike by ID: {ex.Message}");
             }
         }
     }
