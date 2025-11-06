@@ -200,7 +200,8 @@ namespace API.Controllers
         {
             try
             {
-                var bike = await _evBikeService.GetByIdAsync(id);
+                // ✅ Use no-tracking version to avoid conflicts
+                var bike = await _evBikeService.GetByIdWithBrandAsync(id);
                 if (bike == null)
                 {
                     var res = new ResponseDTO();
@@ -208,6 +209,7 @@ namespace API.Controllers
                     return NotFound(res);
                 }
 
+                // ✅ This query uses AsNoTracking internally
                 var quantity = await _stocks.GetStockCountByBikeIDAsync(bike.BikeID);
 
                 var bikeDTO = new EVBikeDisplayDTO
