@@ -38,6 +38,46 @@ namespace API.Controllers
         }
 
         /// <summary>
+        /// Convert local file path to public URL
+        /// </summary>
+        private string? ConvertToPublicUrl(string? imagePath)
+        {
+            // If null or empty, return null
+            if (string.IsNullOrWhiteSpace(imagePath))
+                return null;
+
+            // If already a valid HTTP/HTTPS URL, return as-is
+            if (imagePath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                imagePath.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                return imagePath;
+            }
+
+            // If it's a local file path (C:\, /uploads/, etc.), convert to API endpoint
+            if (imagePath.Contains(":\\") || imagePath.StartsWith("/uploads/") || imagePath.StartsWith("uploads/"))
+            {
+                // Extract filename from path
+                string fileName = Path.GetFileName(imagePath);
+
+                // Get base URL from configuration or use default
+                var baseUrl = _configuration.GetValue<string>("ApiBaseUrl") ?? "http://localhost:5168";
+
+                // Return API endpoint URL
+                return $"{baseUrl}/api/Station/images/{fileName}";
+            }
+
+            // If it's just a filename, convert to API endpoint
+            if (!imagePath.Contains("/") && !imagePath.Contains("\\"))
+            {
+                var baseUrl = _configuration.GetValue<string>("ApiBaseUrl") ?? "http://localhost:5168";
+                return $"{baseUrl}/api/Station/images/{imagePath}";
+            }
+
+            // Default: return original if we can't determine the format
+            return imagePath;
+        }
+
+        /// <summary>
         /// Get all stations
         /// </summary>
         [HttpGet("GetAllStations")]
@@ -79,10 +119,17 @@ namespace API.Controllers
                     };
                     return NotFound(res);
                 }
-                
+
                 var display = new List<StationDisplayDTO>();
-                foreach (var station in stations) { 
+                foreach (var station in stations)
+                {
                     var quantity = await _eVBikeStocksService.GetStockCountByStationIDAsync(station.StationID);
+
+                    // Convert local path to URL endpoint if needed
+                    string? imageUrl = ConvertToPublicUrl(station.ImageUrl);
+                    string? exteriorUrl = ConvertToPublicUrl(station.ExteriorImageUrl);
+                    string? thumbnailUrl = ConvertToPublicUrl(station.ThumbnailImageUrl);
+
                     var dis = new StationDisplayDTO
                     {
                         StationID = station.StationID,
@@ -92,9 +139,9 @@ namespace API.Controllers
                         BikeCapacity = quantity,
                         OpeningHours = station.OpeningHours,
                         ContactNumber = station.ContactNumber,
-                        ImageUrl = station.ImageUrl,
-                        ExteriorImageUrl = station.ExteriorImageUrl,
-                        ThumbnailImageUrl = station.ThumbnailImageUrl,
+                        ImageUrl = imageUrl,
+                        ExteriorImageUrl = exteriorUrl,
+                        ThumbnailImageUrl = thumbnailUrl,
                         IsActive = station.IsActive,
                         CreatedAt = station.CreatedAt,
                         UpdatedAt = station.UpdatedAt
@@ -106,6 +153,55 @@ namespace API.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Serve station image from local storage (if needed)
+        /// </summary>
+        /// <param name="fileName">Image file name (e.g., "station-1-abc123.jpg")</param>
+        [HttpGet("images/{fileName}")]
+        public IActionResult GetStationImage(string fileName)
+        {
+            try
+            {
+                // Validate filename to prevent directory traversal attacks
+                if (string.IsNullOrWhiteSpace(fileName) ||
+                    fileName.Contains("..") ||
+                    fileName.Contains("/") ||
+                    fileName.Contains("\\"))
+                {
+                    return BadRequest(new ResponseDTO { Message = "Tên file không hợp lệ" });
+                }
+
+                // Construct file path (adjust path as needed)
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "uploads", "stations");
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                // Check if file exists
+                if (!System.IO.File.Exists(filePath))
+                {
+                    return NotFound(new ResponseDTO { Message = "Không tìm thấy hình ảnh" });
+                }
+
+                // Determine content type based on file extension
+                var extension = Path.GetExtension(fileName).ToLowerInvariant();
+                var contentType = extension switch
+                {
+                    ".jpg" or ".jpeg" => "image/jpeg",
+                    ".png" => "image/png",
+                    ".gif" => "image/gif",
+                    ".webp" => "image/webp",
+                    _ => "application/octet-stream"
+                };
+
+                // Read and return file
+                var imageBytes = System.IO.File.ReadAllBytes(filePath);
+                return File(imageBytes, contentType);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ResponseDTO { Message = $"Lỗi khi tải hình ảnh: {ex.Message}" });
             }
         }
 
@@ -265,7 +361,10 @@ namespace API.Controllers
                             );
 
                 var imageID = response.Id;
+                // Use Appwrite CDN URL for better performance
                 var imageUrl = $"{_appWriteClient.Endpoint}/storage/buckets/{response.BucketId}/files/{imageID}/view?project={projectID}";
+
+                Console.WriteLine($"[STATION] Uploaded image URL: {imageUrl}"); // Debug log
 
                 //Upload exterior image
 

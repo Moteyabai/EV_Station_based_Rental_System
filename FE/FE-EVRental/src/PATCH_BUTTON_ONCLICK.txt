@@ -1,0 +1,55 @@
+CẦN SỬA Ở DÒNG 1790 - Staff.jsx
+
+THAY ĐỔI onClick của button "Xem thông tin":
+
+=== CODE CŨ (XÓA) ===
+onClick={async () => {
+  console.log("🔵 [BUTTON CLICK] Payment data BEFORE refresh:", payment);
+  console.log("🔵 [BUTTON CLICK] accountID BEFORE refresh:", payment.accountID);
+  
+  // Refresh payments FIRST to get latest data
+  console.log("🔄 [REFRESH] Refreshing payments before showing modal...");
+  await loadPayments();
+  
+  // Find the updated payment object from state
+  const updatedPayment = payments.find(p => p.paymentID === payment.paymentID);
+  
+  if (updatedPayment) {
+    console.log("✅ [REFRESH] Found updated payment:", updatedPayment);
+    console.log("✅ [REFRESH] Updated accountID:", updatedPayment.accountID);
+    loadRentalInfo(updatedPayment.rentalID, updatedPayment.accountID);
+  } else {
+    console.warn("⚠️ [REFRESH] Payment not found after refresh, using original data");
+    loadRentalInfo(payment.rentalID, payment.accountID);
+  }
+}}
+
+=== CODE MỚI (THAY THẾ) ===
+onClick={async () => {
+  // Refresh payments to get fresh data
+  const freshPayments = await loadPayments();
+  const updatedPayment = freshPayments.find(p => p.paymentID === payment.paymentID);
+  
+  // Get accountID from renter object (renter.accountID)
+  const accountID = updatedPayment?.renter?.accountID || payment.renter?.accountID;
+  const rentalID = updatedPayment?.rentalID || payment.rentalID;
+  
+  console.log("[BUTTON] AccountID from renter:", accountID);
+  console.log("[BUTTON] RentalID:", rentalID);
+  
+  loadRentalInfo(rentalID, accountID);
+}}
+
+=== GIẢI THÍCH ===
+Trong API GetPendingPayments, accountID nằm trong object renter:
+{
+  "paymentID": 20,
+  "rentalID": 20,
+  "renter": {
+    "renterID": 3,
+    "accountID": 5,  ← ĐÂY!
+    "documentID": 3
+  }
+}
+
+Vì vậy phải lấy: payment.renter.accountID

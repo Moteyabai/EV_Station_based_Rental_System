@@ -28,94 +28,160 @@ export default function Home() {
     `/images/background/background-3.jpg`,
   ];
 
-  // Load stations from API
+  // Load both stations and vehicles from API in a single effect to prevent race conditions
   React.useEffect(() => {
     let isMounted = true;
-    async function loadStations() {
+    const abortController = new AbortController();
+    
+    async function loadData() {
       try {
-        setLoadingStations(true);
-        console.log(
-          "🚀 [HOME] Calling fetchActiveStations API... (Reload safe)"
-        );
-        const apiStations = await fetchActiveStations();
         if (!isMounted) return;
-        console.log("✅ [HOME] Stations data received:", apiStations);
-        const mapped = apiStations.map((s) => ({
-          id: s.stationID || s.StationID || s.id,
-          name: s.name || s.Name,
-          address: s.address || s.Address,
-          description: s.description || s.Description,
-          image: s.imageUrl || s.ThumbnailImageUrl || stationImg,
-          availableVehicles: s.availableBikes || 0,
-        }));
-        setStations(mapped);
-      } catch (error) {
-        console.error("❌ [HOME] Error loading stations:", error);
-        if (isMounted) setStations([]);
-      } finally {
-        if (isMounted) {
-          setLoadingStations(false);
-          console.log("✅ [HOME] Stations loaded successfully");
+        
+        // Load stations and vehicles in parallel but update state carefully
+        console.log("🚀 [HOME] Loading stations and vehicles...");
+        
+        // Start both API calls in parallel
+        const [stationsPromise, vehiclesPromise] = [
+          fetchActiveStations().catch(err => {
+            console.error("❌ [HOME] Error loading stations:", err);
+            return [];
+          }),
+          (async () => {
+            try {
+              const token = localStorage.getItem("ev_token");
+              return await getAvailableBikes(token);
+            } catch (err) {
+              console.error("❌ [HOME] Error loading vehicles:", err);
+              throw err;
+            }
+          })()
+        ];
+        
+        // Wait for stations first
+        const apiStations = await stationsPromise;
+        
+        // Check if component is still mounted before updating state
+        if (!isMounted || abortController.signal.aborted) {
+          console.log("⚠️ [HOME] Data loading aborted");
+          return;
         }
-      }
-    }
-    // Always call loadStations on mount/reload
-    loadStations();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  // Load vehicles from API
-  React.useEffect(() => {
-    let isMounted = true;
-    async function loadVehicles() {
-      try {
-        setLoadingVehicles(true);
-        setVehiclesError(null);
-        const token = localStorage.getItem("ev_token");
-        console.log("🚀 [HOME] Calling getAvailableBikes API... (Reload safe)");
-        const bikesData = await getAvailableBikes(token);
-        if (!isMounted) return;
-        console.log("✅ [HOME] Bikes data received:", bikesData);
-
-        const mapped = bikesData.map((bike) => {
-          const quantity = bike.quantity || 0;
+        
+        console.log("✅ [HOME] Stations data received:", apiStations);
+        
+        // Debug: Log first station to check image field names
+        if (apiStations && apiStations.length > 0) {
+          console.log("🔍 [DEBUG] First station raw data:", apiStations[0]);
+          console.log("🔍 [DEBUG] First station image fields:", {
+            imageUrl: apiStations[0].imageUrl,
+            ImageUrl: apiStations[0].ImageUrl,
+            ThumbnailImageUrl: apiStations[0].ThumbnailImageUrl,
+            ExteriorImageUrl: apiStations[0].ExteriorImageUrl,
+          });
+        }
+        
+        const mappedStations = apiStations.map((s) => {
+          // Backend trả imageUrl (có thể là local path hoặc URL)
+          let imageUrl = s.imageUrl || s.ImageUrl || s.ThumbnailImageUrl || s.ExteriorImageUrl;
+          
+          // Check nếu là local path (C:\, D:\, /uploads/, etc.) → dùng placeholder
+          if (imageUrl && (
+            imageUrl.includes(':\\') ||           // Windows path: C:\
+            imageUrl.startsWith('/uploads/') ||   // Linux path: /uploads/
+            imageUrl.startsWith('uploads/')       // Relative path: uploads/
+          )) {
+            console.warn(`⚠️ [HOME] Station "${s.name}" có local path, dùng placeholder:`, imageUrl);
+            imageUrl = null; // Set null để dùng stationImg placeholder
+          }
+          
           return {
-            id: bike.bikeID || bike.BikeID,
-            name: bike.bikeName || bike.model || bike.Model || "Xe điện",
-            brand: bike.brandName || bike.BrandName || "Unknown",
-            image:
-              bike.thumbnailImageUrl ||
-              bike.ThumbnailImageUrl ||
-              bike.frontImg ||
-              defaultBikeImg,
-            price: bike.pricePerDay || bike.PricePerDay || 0,
-            priceUnit: "/ngày",
-            short: `${
-              bike.brandName || bike.BrandName || "Xe điện"
-            } - ${quantity} xe có sẵn`,
-            quantity: quantity,
+            id: s.stationID || s.StationID || s.id,
+            name: s.name || s.Name,
+            address: s.address || s.Address,
+            description: s.description || s.Description,
+            image: imageUrl || stationImg,
+            availableVehicles: s.availableBikes || 0,
           };
         });
-        setVehicles(mapped);
-      } catch (error) {
-        console.error("❌ [HOME] Error loading vehicles:", error);
-        if (isMounted) {
-          setVehicles([]);
-          setVehiclesError(error.message || "Không thể tải danh sách xe");
+        
+        // Debug: Log mapped stations with images
+        console.log("🔍 [DEBUG] Mapped stations with images:", mappedStations.map(m => ({ 
+          id: m.id, 
+          name: m.name, 
+          image: m.image 
+        })));
+        
+        // Update stations state
+        setStations(mappedStations);
+        setLoadingStations(false);
+        console.log("✅ [HOME] Stations loaded successfully");
+        
+        // Now wait for vehicles
+        try {
+          const bikesData = await vehiclesPromise;
+          
+          // Check again if component is still mounted
+          if (!isMounted || abortController.signal.aborted) {
+            console.log("⚠️ [HOME] Vehicles loading aborted");
+            return;
+          }
+          
+          console.log("✅ [HOME] Bikes data received:", bikesData);
+
+          const mappedVehicles = bikesData.map((bike) => {
+            const quantity = bike.quantity || 0;
+            return {
+              id: bike.bikeID || bike.BikeID,
+              name: bike.bikeName || bike.model || bike.Model || "Xe điện",
+              brand: bike.brandName || bike.BrandName || "Unknown",
+              image:
+                bike.thumbnailImageUrl ||
+                bike.ThumbnailImageUrl ||
+                bike.frontImg ||
+                defaultBikeImg,
+              price: bike.pricePerDay || bike.PricePerDay || 0,
+              priceUnit: "/ngày",
+              short: `${
+                bike.brandName || bike.BrandName || "Xe điện"
+              } - ${quantity} xe có sẵn`,
+              quantity: quantity,
+            };
+          });
+          
+          setVehicles(mappedVehicles);
+          setVehiclesError(null);
+          console.log("✅ [HOME] Vehicles loaded successfully");
+        } catch (vehicleError) {
+          if (!abortController.signal.aborted) {
+            console.error("❌ [HOME] Error loading vehicles:", vehicleError);
+            setVehicles([]);
+            setVehiclesError(vehicleError.message || "Không thể tải danh sách xe");
+          }
+        } finally {
+          if (isMounted && !abortController.signal.aborted) {
+            setLoadingVehicles(false);
+          }
         }
-      } finally {
+        
+      } catch (error) {
+        if (abortController.signal.aborted) {
+          console.log("⚠️ [HOME] Data loading cancelled");
+          return;
+        }
+        console.error("❌ [HOME] Critical error loading data:", error);
         if (isMounted) {
+          setStations([]);
+          setVehicles([]);
+          setLoadingStations(false);
           setLoadingVehicles(false);
-          console.log("✅ [HOME] Vehicles loading completed");
         }
       }
     }
-    // Always call loadVehicles on mount/reload
-    loadVehicles();
+    
+    loadData();
+    
     return () => {
       isMounted = false;
+      abortController.abort();
     };
   }, []);
 

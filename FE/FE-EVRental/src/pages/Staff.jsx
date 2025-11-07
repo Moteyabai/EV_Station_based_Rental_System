@@ -124,7 +124,7 @@ export default function Staff() {
         <div className="content-container">
           {activeTab === "handover" && <VehicleHandover />}
           {activeTab === "verification" && <CustomerVerification />}
-          {activeTab === "payment" && <PaymentManagement />}
+          {activeTab === "payment" && <PaymentManagement key={activeTab} />}
           {activeTab === "vehicles" && <VehicleManagement />}
         </div>
       </main>
@@ -1404,8 +1404,9 @@ function PaymentManagement() {
   const [loadingRental, setLoadingRental] = useState(false);
   const [error, setError] = useState(null);
 
-  // Load payments from API
+  // Load payments from API when component mounts
   useEffect(() => {
+    console.log("🔄 [PAYMENTS] Component mounted - Loading payments...");
     loadPayments();
   }, []);
 
@@ -1418,7 +1419,7 @@ function PaymentManagement() {
       if (!token) {
         console.warn("⚠️ [PAYMENTS] No token found");
         setPayments([]);
-        return;
+        return [];
       }
 
       console.log("📋 [PAYMENTS] Fetching pending payments from API...");
@@ -1438,45 +1439,148 @@ function PaymentManagement() {
       const data = await response.json();
       
       if (data && Array.isArray(data)) {
+        console.log("🔍 [PAYMENTS] Sample payment data:", data[0]);
+        console.log("🔍 [PAYMENTS] First payment accountID:", data[0]?.accountID);
+        console.log("🔍 [PAYMENTS] All payment keys:", data[0] ? Object.keys(data[0]) : []);
+        
         setPayments(data);
         console.log(`✅ [PAYMENTS] Loaded ${data.length} pending payments from API`);
         console.log(`📊 Status=0 (Cash - Chưa thanh toán): ${data.filter(p => p.status === 0).length}`);
         console.log(`📊 Status=2 (PayOS - Đã thanh toán): ${data.filter(p => p.status === 2).length}`);
+        return data; // Return data for use in onClick
       } else {
         setPayments([]);
         console.warn("⚠️ [PAYMENTS] Invalid response format");
+        return [];
       }
     } catch (err) {
       console.error("❌ [PAYMENTS] Error:", err);
       setError(err.message || "Không thể tải dữ liệu thanh toán");
       setPayments([]);
+      return [];
     } finally {
       setLoading(false);
     }
   };
 
-  const loadRentalInfo = async (rentalId) => {
+  const loadRentalInfo = async (rentalId, accountID) => {
     try {
       setLoadingRental(true);
       const token = getToken();
       
       console.log(`📋 [RENTAL INFO] Fetching rental ${rentalId}...`);
+      console.log(`🔍 [ACCOUNT ID] From payment: ${accountID}`);
       
-      const response = await fetch(`http://localhost:5168/api/Rental/GetRentalById/${rentalId}`, {
+      // 1. Gọi API GetRentalById
+      const rentalResponse = await fetch(`http://localhost:5168/api/Rental/GetRentalById/${rentalId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
 
-      if (!response.ok) {
-        throw new Error(`API Error: ${response.status}`);
+      if (!rentalResponse.ok) {
+        throw new Error(`Rental API Error: ${rentalResponse.status}`);
       }
 
-      const data = await response.json();
-      setRentalInfo(data);
+      const rentalData = await rentalResponse.json();
+      console.log("✅ [RENTAL INFO] Rental data:", rentalData);
+      console.log("✅ [RENTAL INFO] License plate from rental:", rentalData.licensePlate);
+      console.log("✅ [RENTAL INFO] Station fields:", {
+        stationID: rentalData.stationID,
+        pickupStationID: rentalData.pickupStationID,
+        returnStationID: rentalData.returnStationID
+      });
+      
+      // Lấy licensePlate từ rentalData
+      const licensePlate = rentalData.licensePlate || rentalData.LicensePlate || "N/A";
+      
+      // 2. Gọi API GetBikeByID để lấy tên loại xe
+      let bikeName = "N/A";
+      if (rentalData.bikeID) {
+        try {
+          console.log(`🏍️ [BIKE INFO] Fetching bike ${rentalData.bikeID}...`);
+          const bikeResponse = await fetch(`http://localhost:5168/api/EVBike/GetBikeByID/${rentalData.bikeID}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (bikeResponse.ok) {
+            const bikeData = await bikeResponse.json();
+            bikeName = bikeData.bikeName || bikeData.BikeName || bikeData.model || bikeData.Model || "N/A";
+            console.log("✅ [BIKE INFO] Bike name:", bikeName);
+          }
+        } catch (bikeErr) {
+          console.warn("⚠️ [BIKE INFO] Could not fetch bike details:", bikeErr);
+        }
+      }
+      
+      // 3. Gọi API GetAccountById để lấy thông tin khách hàng
+      let accountInfo = null;
+      console.log("🔍 [ACCOUNT CHECK] accountID from payment:", accountID, "exists?", !!accountID);
+      
+      if (accountID) {
+        try {
+          console.log(`👤 [ACCOUNT INFO] Fetching account ${accountID}...`);
+          const accountResponse = await fetch(`http://localhost:5168/api/Account/GetAccountById/${accountID}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          console.log("📡 [ACCOUNT INFO] Response status:", accountResponse.status);
+          
+          if (accountResponse.ok) {
+            const accountData = await accountResponse.json();
+            accountInfo = accountData;
+            console.log("✅ [ACCOUNT INFO] Account data:", accountInfo);
+          } else {
+            console.error("❌ [ACCOUNT INFO] Failed with status:", accountResponse.status);
+          }
+        } catch (accountErr) {
+          console.warn("⚠️ [ACCOUNT INFO] Could not fetch account details:", accountErr);
+        }
+      } else {
+        console.warn("⚠️ [ACCOUNT INFO] No accountID provided from payment!");
+      }
+      
+      // 4. Gọi API GetStationById cho stationID (dùng chung cho pickup và return)
+      let stationName = "N/A";
+      if (rentalData.stationID) {
+        try {
+          console.log(`🏢 [STATION INFO] Fetching station ${rentalData.stationID}...`);
+          const stationResponse = await fetch(`http://localhost:5168/api/Station/GetStationById/${rentalData.stationID}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (stationResponse.ok) {
+            const stationData = await stationResponse.json();
+            stationName = stationData.name || stationData.Name || stationData.stationName || stationData.StationName || "N/A";
+            console.log("✅ [STATION INFO] Station name:", stationName);
+          }
+        } catch (stationErr) {
+          console.warn("⚠️ [STATION INFO] Could not fetch station:", stationErr);
+        }
+      }
+      
+      // 6. Merge tất cả thông tin vào rentalData
+      const enrichedRentalInfo = {
+        ...rentalData,
+        bikeName: bikeName,
+        licensePlate: licensePlate,
+        accountInfo: accountInfo,
+        stationName: stationName,
+      };
+      
+      setRentalInfo(enrichedRentalInfo);
       setShowRentalInfoModal(true);
-      console.log("✅ [RENTAL INFO] Loaded:", data);
+      console.log("✅ [RENTAL INFO] Enriched data:", enrichedRentalInfo);
     } catch (err) {
       console.error("❌ [RENTAL INFO] Error:", err);
       alert(`Không thể tải thông tin rental: ${err.message}`);
@@ -1666,7 +1770,17 @@ function PaymentManagement() {
             <div className="payment-actions">
               <button
                 className="btn-action btn-view"
-                onClick={() => loadRentalInfo(payment.rentalID)}
+                onClick={async () => {
+                  const freshPayments = await loadPayments();
+                  const updatedPayment = freshPayments.find(p => p.paymentID === payment.paymentID);
+                  
+                  const accountID = updatedPayment?.renter?.accountID || payment.renter?.accountID;
+                  const rentalID = updatedPayment?.rentalID || payment.rentalID;
+                  
+                  console.log("[BUTTON] AccountID from renter:", accountID);
+                  
+                  loadRentalInfo(rentalID, accountID);
+                }}
                 disabled={loadingRental}
               >
                 {loadingRental ? "⏳ Đang tải..." : "👁️ Xem thông tin"}
@@ -1692,29 +1806,57 @@ function PaymentManagement() {
             <div className="modal-body">
               <div className="info-section">
                 <h3>🏍️ Thông Tin Xe</h3>
-                <p><strong>Biển số:</strong> {rentalInfo.evBike?.licensePlate || "N/A"}</p>
-                <p><strong>Màu sắc:</strong> {rentalInfo.evBike?.color || "N/A"}</p>
+                <p><strong>Tên loại xe:</strong> {rentalInfo.bikeName || "N/A"}</p>
+                <p><strong>Biển số:</strong> {rentalInfo.licensePlate || "N/A"}</p>
               </div>
               <div className="info-section">
                 <h3>👤 Thông Tin Khách Hàng</h3>
-                <p><strong>Tên:</strong> {rentalInfo.renter?.fullName || "N/A"}</p>
-                <p><strong>Email:</strong> {rentalInfo.renter?.account?.email || "N/A"}</p>
-                <p><strong>SĐT:</strong> {rentalInfo.renter?.phoneNumber || "N/A"}</p>
+                {rentalInfo.accountInfo ? (
+                  <>
+                    <p><strong>Tên:</strong> {rentalInfo.accountInfo.fullName || rentalInfo.accountInfo.FullName || "N/A"}</p>
+                    <p><strong>SĐT:</strong> {rentalInfo.accountInfo.phone || rentalInfo.accountInfo.Phone || "N/A"}</p>
+                    <p><strong>Email:</strong> {rentalInfo.accountInfo.email || rentalInfo.accountInfo.Email || "N/A"}</p>
+                    <p><strong>Địa chỉ:</strong> {rentalInfo.accountInfo.address || rentalInfo.accountInfo.Address || "N/A"}</p>
+                  </>
+                ) : (
+                  <>
+                    <p><strong>Tên:</strong> {rentalInfo.renter?.fullName || "N/A"}</p>
+                    <p><strong>SĐT:</strong> {rentalInfo.renter?.phoneNumber || rentalInfo.renter?.phone || "N/A"}</p>
+                    <p><strong>Email:</strong> {rentalInfo.renter?.account?.email || "N/A"}</p>
+                    <p><em>⚠️ Không tải được thông tin chi tiết khách hàng</em></p>
+                  </>
+                )}
               </div>
               <div className="info-section">
-                <h3>� Thời Gian Thuê</h3>
-                <p><strong>Ngày bắt đầu:</strong> {formatDate(rentalInfo.startDate)}</p>
-                <p><strong>Ngày kết thúc:</strong> {formatDate(rentalInfo.endDate)}</p>
+                <h3>📅 Thời Gian Thuê</h3>
+                <p><strong>Ngày giờ nhận xe:</strong> {formatDate(rentalInfo.startDate)}</p>
+                <p><strong>Ngày giờ trả xe:</strong> {formatDate(rentalInfo.endDate)}</p>
+                <p><strong>Thời gian thuê:</strong> {
+                  (() => {
+                    if (!rentalInfo.startDate || !rentalInfo.endDate) return "N/A";
+                    const start = new Date(rentalInfo.startDate);
+                    const end = new Date(rentalInfo.endDate);
+                    const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+                    return `${days} ngày`;
+                  })()
+                }</p>
+              </div>
+              <div className="info-section">
+                <h3>🏢 Trạm Thuê & Trả</h3>
+                <p><strong>Trạm nhận xe:</strong> {rentalInfo.stationName || "N/A"}</p>
+                <p><strong>Trạm trả xe:</strong> {rentalInfo.stationName || "N/A"}</p>
               </div>
               <div className="info-section">
                 <h3>💵 Tài Chính</h3>
                 <p><strong>Tiền cọc:</strong> {formatCurrency(rentalInfo.deposit)}</p>
-                <p><strong>Tổng tiền:</strong> {formatCurrency(rentalInfo.totalAmount)}</p>
-              </div>
-              <div className="info-section">
-                <h3>� Trạm</h3>
-                <p><strong>Trạm lấy:</strong> {rentalInfo.pickupStation?.stationName || "N/A"}</p>
-                <p><strong>Trạm trả:</strong> {rentalInfo.returnStation?.stationName || "N/A"}</p>
+                <p><strong>Tổng tiền thuê:</strong> {formatCurrency(rentalInfo.totalAmount)}</p>
+                <p><strong>Trạng thái:</strong> {
+                  rentalInfo.status === 0 ? "⏳ Chưa xác nhận" :
+                  rentalInfo.status === 1 ? "✅ Đã xác nhận" :
+                  rentalInfo.status === 2 ? "🚗 Đang thuê" :
+                  rentalInfo.status === 3 ? "✅ Đã hoàn thành" :
+                  rentalInfo.status === -1 ? "❌ Đã hủy" : "N/A"
+                }</p>
               </div>
             </div>
             <div className="modal-footer">
