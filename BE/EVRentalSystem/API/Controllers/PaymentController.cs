@@ -70,7 +70,7 @@ namespace API.Controllers
         {
             // Check user permission
             var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-            if (permission != "3")
+            if (permission != "3" && permission != "2")
             {
                 var res = new ResponseDTO
                 {

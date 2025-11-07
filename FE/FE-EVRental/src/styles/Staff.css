@@ -308,6 +308,27 @@
   color: #92400e;
 }
 
+/* Cash payment - Chưa thanh toán (Yellow) */
+.status-cash-unpaid {
+  background: #fef3c7;
+  color: #92400e;
+  border: 2px solid #fbbf24;
+  font-weight: 600;
+}
+
+/* PayOS payment - Đã thanh toán (Blue) */
+.status-payos-paid {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 2px solid #3b82f6;
+  font-weight: 600;
+}
+
+.status-verified {
+  background: #d1fae5;
+  color: #065f46;
+}
+
 .status-active {
   background: #d1fae5;
   color: #065f46;
@@ -1585,6 +1606,36 @@
   border-radius: 12px;
   padding: 1.5rem;
   transition: all 0.3s ease;
+}
+
+/* Cash payment - Chưa thanh toán (Yellow border) */
+.payment-card-cash-unpaid {
+  background: white;
+  border: 3px solid #fbbf24;
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.2);
+}
+
+.payment-card-cash-unpaid:hover {
+  box-shadow: 0 4px 20px rgba(251, 191, 36, 0.3);
+  transform: translateY(-2px);
+}
+
+/* PayOS payment - Đã thanh toán (Blue border) */
+.payment-card-payos-paid {
+  background: white;
+  border: 3px solid #3b82f6;
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+}
+
+.payment-card-payos-paid:hover {
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+  transform: translateY(-2px);
 }
 
 .payment-card:hover {
