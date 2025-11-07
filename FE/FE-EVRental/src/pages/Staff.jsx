@@ -1407,12 +1407,6 @@ function PaymentManagement() {
   // Load payments from API
   useEffect(() => {
     loadPayments();
-
-    // Auto refresh mỗi 10 giây
-    const interval = setInterval(() => {
-      loadPayments();
-    }, 10000);
-    return () => clearInterval(interval);
   }, []);
 
   const loadPayments = async () => {
@@ -1427,10 +1421,10 @@ function PaymentManagement() {
         return;
       }
 
-      console.log("📋 [PAYMENTS] Fetching all payments from API...");
+      console.log("📋 [PAYMENTS] Fetching pending payments from API...");
       
-      // Call API to get all payments
-      const response = await fetch('http://localhost:5168/api/Payment/GetAllPayments', {
+      // Call API to get pending payments (status = 0 or 2)
+      const response = await fetch('http://localhost:5168/api/Payment/GetPendingPayments', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -1445,10 +1439,9 @@ function PaymentManagement() {
       
       if (data && Array.isArray(data)) {
         setPayments(data);
-        console.log(`✅ [PAYMENTS] Loaded ${data.length} payments from API`);
-        console.log(`📊 Status=0 (Pending): ${data.filter(p => p.status === 0).length}`);
-        console.log(`📊 Status=1 (Verified): ${data.filter(p => p.status === 1).length}`);
-        console.log(`📊 Status=-1 (Cancelled): ${data.filter(p => p.status === -1).length}`);
+        console.log(`✅ [PAYMENTS] Loaded ${data.length} pending payments from API`);
+        console.log(`📊 Status=0 (Cash - Chưa thanh toán): ${data.filter(p => p.status === 0).length}`);
+        console.log(`📊 Status=2 (PayOS - Đã thanh toán): ${data.filter(p => p.status === 2).length}`);
       } else {
         setPayments([]);
         console.warn("⚠️ [PAYMENTS] Invalid response format");
@@ -1494,7 +1487,10 @@ function PaymentManagement() {
 
   // Filter payments based on selected filter
   const filteredPayments = payments.filter((p) => {
-    if (paymentFilter === "pending") return p.status === 0;
+    if (paymentFilter === "pending") {
+      // Show both status 0 (cash unpaid) and status 2 (PayOS paid)
+      return p.status === 0 || p.status === 2;
+    }
     if (paymentFilter === "verified") return p.status === 1;
     if (paymentFilter === "cancelled") return p.status === -1;
     return true;
@@ -1526,17 +1522,50 @@ function PaymentManagement() {
     }).format(amount || 0);
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (payment) => {
+    const status = payment.status;
+    const method = (payment.paymentMethod || '').toString().toLowerCase();
+    
+    // Status = 0: Cash - Chưa thanh toán (Yellow)
+    if (status === 0 && method.includes('cash')) {
+      return <span className="status-badge status-cash-unpaid">💵 Chưa thanh toán (Cash)</span>;
+    }
+    
+    // Status = 2: PayOS - Đã thanh toán (Blue)
+    if (status === 2 && method.includes('payos')) {
+      return <span className="status-badge status-payos-paid">✅ Đã thanh toán (PayOS)</span>;
+    }
+    
+    // Other statuses
     switch (status) {
       case 0:
-        return <span className="status-badge status-pending">⏳ Chưa xác nhận</span>;
+        return <span className="status-badge status-pending">⏳ Chưa thanh toán</span>;
       case 1:
         return <span className="status-badge status-verified">✅ Đã xác nhận</span>;
+      case 2:
+        return <span className="status-badge status-payos-paid">✅ Đã thanh toán</span>;
       case -1:
         return <span className="status-badge status-cancelled">❌ Đã hủy</span>;
       default:
         return <span className="status-badge">❓ Không xác định</span>;
     }
+  };
+
+  const getPaymentCardClass = (payment) => {
+    const status = payment.status;
+    const method = (payment.paymentMethod || '').toString().toLowerCase();
+    
+    // Status = 0 with Cash: Yellow border
+    if (status === 0 && method.includes('cash')) {
+      return 'payment-card payment-card-cash-unpaid';
+    }
+    
+    // Status = 2 with PayOS: Blue border
+    if (status === 2 && method.includes('payos')) {
+      return 'payment-card payment-card-payos-paid';
+    }
+    
+    return 'payment-card';
   };
 
   return (
@@ -1548,19 +1577,13 @@ function PaymentManagement() {
             <span className="stat-number">
               {payments.filter((p) => p.status === 0).length}
             </span>
-            <span className="stat-label">Chưa xác nhận</span>
+            <span className="stat-label">💵 Cash - Chưa TT</span>
           </div>
           <div className="stat-card">
             <span className="stat-number">
-              {payments.filter((p) => p.status === 1).length}
+              {payments.filter((p) => p.status === 2).length}
             </span>
-            <span className="stat-label">Đã xác nhận</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-number">
-              {payments.filter((p) => p.status === -1).length}
-            </span>
-            <span className="stat-label">Đã hủy</span>
+            <span className="stat-label">✅ PayOS - Đã TT</span>
           </div>
         </div>
       </div>
@@ -1573,7 +1596,7 @@ function PaymentManagement() {
           }`}
           onClick={() => setPaymentFilter("pending")}
         >
-          ⏳ Chưa xác nhận ({payments.filter((p) => p.status === 0).length})
+          ⏳ Chưa xác nhận ({payments.filter((p) => p.status === 0 || p.status === 2).length})
         </button>
         <button
           className={`filter-tab ${
@@ -1609,7 +1632,7 @@ function PaymentManagement() {
         )}
 
         {filteredPayments.map((payment) => (
-          <div key={payment.paymentID} className="payment-card">
+          <div key={payment.paymentID} className={getPaymentCardClass(payment)}>
             <div className="payment-header">
               <div className="payment-info">
                 <h3>🆔 Payment #{payment.paymentID}</h3>
@@ -1621,7 +1644,7 @@ function PaymentManagement() {
                 </span>
               </div>
               <div className="payment-badges">
-                {getStatusBadge(payment.status)}
+                {getStatusBadge(payment)}
               </div>
             </div>
 
