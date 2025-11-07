@@ -194,53 +194,7 @@ const Admin = () => {
     },
   ]);
 
-  const [stations, setStations] = useState([
-    {
-      id: "s1",
-      name: "Trạm EV Công Viên Tao Đàn",
-      address: "123 Trương Định, Phường Bến Thành, Quận 1, TP.HCM",
-      availableVehicles: 15,
-      totalVehicles: 20,
-      chargingStations: 8,
-      status: "active",
-    },
-    {
-      id: "s2",
-      name: "Trạm EV Bờ Sông Sài Gòn",
-      address: "456 Tôn Đức Thắng, Phường Bến Nghé, Quận 1, TP.HCM",
-      availableVehicles: 8,
-      totalVehicles: 12,
-      chargingStations: 4,
-      status: "active",
-    },
-    {
-      id: "s3",
-      name: "Trạm EV Trung Tâm Quận 1",
-      address: "789 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP.HCM",
-      availableVehicles: 12,
-      totalVehicles: 15,
-      chargingStations: 6,
-      status: "active",
-    },
-    {
-      id: "s4",
-      name: "Trạm EV Khu Công Nghệ Cao",
-      address: "101 Đường D1, Khu Công Nghệ Cao, Quận 9, TP.HCM",
-      availableVehicles: 10,
-      totalVehicles: 12,
-      chargingStations: 8,
-      status: "active",
-    },
-    {
-      id: "s5",
-      name: "Trạm EV Sân Bay Tân Sơn Nhất",
-      address: "200 Trường Sơn, Phường 2, Quận Tân Bình, TP.HCM",
-      availableVehicles: 18,
-      totalVehicles: 25,
-      chargingStations: 10,
-      status: "maintenance",
-    },
-  ]);
+  const [stations, setStations] = useState([]);
 
   const [customers, setCustomers] = useState([]);
   const [customersLoading, setCustomersLoading] = useState(false);
@@ -672,44 +626,69 @@ const Admin = () => {
     setCustomersError(null);
 
     try {
-      // Lấy token từ storage helper
-      const token = getToken();
+      // Use centralized adminService which handles auth headers
+      const data = await adminService.getAllAccounts();
 
-      if (!token) {
-        throw new Error("Vui lòng đăng nhập lại");
+      console.log("Raw accounts response:", data);
+
+      // Normalize response: accept Array, object with data/accounts, or array-like object
+      let accountsArray = [];
+
+      if (Array.isArray(data)) {
+        accountsArray = data;
+      } else if (data && Array.isArray(data.data)) {
+        accountsArray = data.data;
+      } else if (data && Array.isArray(data.accounts)) {
+        accountsArray = data.accounts;
+      } else if (data && typeof data === "object") {
+        // Some APIs return objects with numeric keys (0,1,2...) — coerce to values
+        const keys = Object.keys(data);
+        const allNumericKeys =
+          keys.length > 0 && keys.every((k) => String(Number(k)) === k);
+        if (allNumericKeys) {
+          accountsArray = Object.values(data);
+        } else {
+          // Fallback: keep as empty array to avoid UI errors
+          accountsArray = [];
+        }
       }
 
-      const response = await fetch(
-        "http://localhost:5168/api/Account/AccountList",
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
+      // Log counts by role for debugging
+      const roleCounts = accountsArray.reduce((acc, a) => {
+        const r = a.roleID ?? a.roleId ?? a.role ?? "unknown";
+        acc[r] = (acc[r] || 0) + 1;
+        return acc;
+      }, {});
+      console.log(
+        "Account role counts:",
+        roleCounts,
+        "total:",
+        accountsArray.length
       );
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại");
-        }
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
       // Lọc chỉ lấy accounts có roleID = 1 (khách hàng)
-      const customerAccounts = data.filter((account) => account.roleID === 1);
+      const customerAccounts = accountsArray.filter((account) => {
+        // handle different property names
+        const role = account.roleID ?? account.roleId ?? account.role;
+        return Number(role) === 1;
+      });
 
-      console.log("✅ Loaded customers:", customerAccounts);
+      console.log(
+        "✅ Loaded customers (normalized):",
+        customerAccounts.length,
+        customerAccounts
+      );
       setCustomers(customerAccounts);
     } catch (error) {
       console.error("❌ Error fetching customers:", error);
-      setCustomersError(error.message);
+      setCustomersError(error.message || "Không thể tải khách hàng");
 
-      if (error.message.includes("đăng nhập")) {
-        alert(error.message);
+      // If the API returned 401 or token issues, prompt logout
+      if (
+        error.message &&
+        (error.message.includes("401") || error.message.includes("đăng nhập"))
+      ) {
+        alert("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại");
         handleLogout();
       }
     } finally {
