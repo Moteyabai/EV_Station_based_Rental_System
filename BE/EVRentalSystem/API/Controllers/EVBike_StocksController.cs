@@ -80,7 +80,7 @@ namespace API.Controllers
                 }
 
                 var display = new List<EVBike_StocksDisplayDTO>();
-                foreach(var stock in stocks)
+                foreach (var stock in stocks)
                 {
                     var dis = new EVBike_StocksDisplayDTO
                     {

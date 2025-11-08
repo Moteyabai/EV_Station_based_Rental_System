@@ -202,7 +202,7 @@ namespace API.Controllers
 
                 // Check if new brand name already exists (excluding current brand)
                 var allBrands = await _brandService.GetAllAsync();
-                if (allBrands.Any(b => b.BrandID != brandDto.BrandID && 
+                if (allBrands.Any(b => b.BrandID != brandDto.BrandID &&
                                       b.BrandName.Equals(brandDto.BrandName, StringComparison.OrdinalIgnoreCase)))
                 {
                     var res = new ResponseDTO
@@ -296,7 +296,7 @@ namespace API.Controllers
                 }
 
                 var brands = await _brandService.GetAllAsync();
-                var filteredBrands = brands.Where(b => 
+                var filteredBrands = brands.Where(b =>
                     b.BrandName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
                 ).ToList();
 

@@ -9,7 +9,6 @@ namespace Services
     {
         private readonly EVBikeRepository _repository;
 
-
         // ✅ NEW: Constructor for Dependency Injection (RECOMMENDED)
         public EVBikeService(EVRenterDBContext context)
         {

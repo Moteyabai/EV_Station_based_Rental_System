@@ -15,12 +15,19 @@ namespace API.Controllers
         private readonly RentalService _rentalService;
         private readonly StationStaffService _stationStaffService;
         private readonly RenterService _renterService;
+        private readonly AccountService _accountService;
+        private readonly EVBikeService _evBikeService;
+        private readonly EVBike_StocksService _evBikeStocksService;
 
-        public RentalController(RentalService rentalService, StationStaffService stationStaffService, RenterService renterService)
+        public RentalController(RentalService rentalService, StationStaffService stationStaffService
+            , RenterService renterService, AccountService accountService, EVBikeService eVBikeService, EVBike_StocksService eVBikeStocksService)
         {
             _rentalService = rentalService;
             _stationStaffService = stationStaffService;
             _renterService = renterService;
+            _accountService = accountService;
+            _evBikeService = eVBikeService;
+            _evBikeStocksService = eVBikeStocksService;
         }
 
         /// <summary>
@@ -67,35 +74,128 @@ namespace API.Controllers
         [Authorize]
         public async Task<ActionResult<Rental>> GetRentalById(int id)
         {
+            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
+            var userId = User.FindFirst(UserClaimTypes.AccountID)?.Value;
+
+            if (permission != "1" && permission != "2")
+            {
+                var res = new ResponseDTO
+                {
+                    Message = "Không có quyền truy cập thông tin này!"
+                };
+                return Unauthorized(res);
+            }
             try
             {
-                var rental = await _rentalService.GetByIdAsync(id);
+                var res = new ResponseDTO();
+                var rental = await _rentalService.GetRentalByIDAsync(id);
                 if (rental == null)
                 {
-                    var res = new ResponseDTO
-                    {
-                        Message = "Không tìm thấy thông tin thuê xe!"
-                    };
+                    res.Message = "Không tìm thấy thông tin thuê xe!";
                     return NotFound(res);
                 }
 
-                // Check if user can access this rental (Renter can only see their own rentals)
-                var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-                var userId = User.FindFirst(UserClaimTypes.AccountID)?.Value;
-
-                if (permission == "1") // Renter
+                var acc = await _accountService.GetByIdAsync(rental.Renter.AccountID);
+                if (permission != "2" && acc.AccountId.ToString() != userId)
                 {
-                    if (rental.RenterID.ToString() != userId)
-                    {
-                        var res = new ResponseDTO
-                        {
-                            Message = "Không có quyền truy cập thông tin này!"
-                        };
-                        return Forbid();
-                    }
+                    res.Message = "Không có quyền truy cập thông tin này!";
+                    return Unauthorized(res);
                 }
 
-                return Ok(rental);
+                var bike = await _evBikeService.GetByIdAsync(rental.BikeID);
+                if (bike == null)
+                {
+                    res.Message = "Không tìm thấy thông tin xe!";
+                    return NotFound(res);
+                }
+
+                var displayDto = new RentalDisplayDTO
+                {
+                    RentalID = rental.RentalID,
+                    BikeName = bike.BikeName,
+                    LicensePlate = rental.LicensePlate,
+                    RenterName = acc.FullName,
+                    PhoneNumber = acc.Phone,
+                    Email = acc.Email,
+                    StartDate = rental.StartDate,
+                    EndDate = rental.EndDate,
+                    HandoverDate = rental.RentalDate,
+                    ReturnDate = rental.ReturnDate,
+                    AssignedStaff = rental.AssignedStaff,
+                    InitialBattery = rental.InitialBattery,
+                    FinalBattery = rental.FinalBattery,
+                    InitBikeCondition = rental.InitBikeCondition,
+                    FinalBikeCondition = rental.FinalBikeCondition,
+                    Deposit = rental.Deposit,
+                    Fee = rental.Fee,
+                    Status = rental.Status,
+                };
+
+                return Ok(displayDto);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpGet("GetRentalsByAccountID/{accountID}")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<RentalDisplayDTO>>> GetRentalsByAccountID(int accountID)
+        {
+            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
+            var userId = User.FindFirst(UserClaimTypes.AccountID)?.Value;
+
+            if (permission != "1" && permission != "2")
+            {
+                var res = new ResponseDTO
+                {
+                    Message = "Không có quyền truy cập thông tin này!"
+                };
+                return Unauthorized(res);
+            }
+
+            try
+            {
+                var res = new ResponseDTO();
+                var renter = await _renterService.GetRenterByAccountIDAsync(accountID);
+                if (renter == null)
+                {
+                    res.Message = "Không tìm thấy thông tin người thuê!";
+                    return NotFound(res);
+                }
+
+                var rentals = await _rentalService.GetRentalsByRenterIDAsync(renter.RenterID);
+                if (rentals == null || !rentals.Any())
+                {
+                    res.Message = "Không tìm thấy thông tin thuê xe!";
+                    return NotFound(res);
+                }
+
+                var displayDtos = new List<RentalDisplayDTO>();
+                foreach (var rental in rentals)
+                {
+                    var bike = await _evBikeService.GetByIdAsync(rental.BikeID);
+                    var acc = await _accountService.GetByIdAsync(renter.AccountID);
+                    var displayDto = new RentalDisplayDTO();
+                    displayDto.RentalID = rental.RentalID;
+                    displayDto.BikeName = bike.BikeName;
+                    displayDto.LicensePlate = rental.LicensePlate;
+                    displayDto.RenterName = acc.FullName;
+                    displayDto.PhoneNumber = acc.Phone;
+                    displayDto.Email = acc.Email;
+                    displayDto.StartDate = rental.StartDate;
+                    displayDto.EndDate = rental.EndDate;
+                    displayDto.HandoverDate = rental.RentalDate;
+                    displayDto.ReturnDate = rental.ReturnDate;
+                    displayDto.AssignedStaff = rental.AssignedStaff;
+                    displayDto.InitialBattery = rental.InitialBattery;
+                    displayDto.FinalBattery = rental.FinalBattery;
+
+                    displayDtos.Add(displayDto);
+                }
+
+                return Ok(displayDtos);
             }
             catch (Exception ex)
             {
@@ -149,7 +249,6 @@ namespace API.Controllers
                     InitialBattery = rentalDto.InitialBattery,
                     InitBikeCondition = rentalDto.InitBikeCondition,
                     RentalDate = rentalDto.RentalDate,
-                    ReservedDate = rentalDto.ReservedDate,
                     ReturnDate = rentalDto.ReturnDate,
                     Deposit = rentalDto.Deposit,
                     Fee = rentalDto.Fee
@@ -227,8 +326,6 @@ namespace API.Controllers
                     existingRental.FinalBikeCondition = rentalDto.FinalBikeCondition;
                 if (rentalDto.RentalDate.HasValue)
                     existingRental.RentalDate = rentalDto.RentalDate.Value;
-                if (rentalDto.ReservedDate.HasValue)
-                    existingRental.ReservedDate = rentalDto.ReservedDate;
                 if (rentalDto.ReturnDate.HasValue)
                     existingRental.ReturnDate = rentalDto.ReturnDate;
                 if (rentalDto.Deposit.HasValue)
@@ -428,258 +525,6 @@ namespace API.Controllers
                     Message = "Xóa thông tin thuê xe thành công!"
                 };
                 return Ok(successRes);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Get rentals by renter ID
-        /// </summary>
-        [HttpGet("GetRentalsByRenter/{renterId}")]
-        [Authorize]
-        public async Task<ActionResult<IEnumerable<Rental>>> GetRentalsByRenter(int renterId)
-        {
-            try
-            {
-                // Check permission (Renter can only see their own, staff/admin can see all)
-                var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-                var userId = User.FindFirst(UserClaimTypes.AccountID)?.Value;
-
-                if (permission == "1" && renterId.ToString() != userId)
-                {
-                    var res = new ResponseDTO
-                    {
-                        Message = "Không có quyền truy cập thông tin này!"
-                    };
-                    return Forbid();
-                }
-
-                var rentals = await _rentalService.GetRentalsByRenterAsync(renterId);
-                return Ok(rentals);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Get rentals by bike ID
-        /// </summary>
-        [HttpGet("GetRentalsByBike/{bikeId}")]
-        [Authorize]
-        public async Task<ActionResult<IEnumerable<Rental>>> GetRentalsByBike(int bikeId)
-        {
-            // Check user permission (Staff and Admin only)
-            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-            if (permission != "3" && permission != "2")
-            {
-                var res = new ResponseDTO
-                {
-                    Message = "Không có quyền truy c?p!"
-                };
-                return Unauthorized(res);
-            }
-
-            try
-            {
-                var rentals = await _rentalService.GetRentalsByBikeAsync(bikeId);
-                return Ok(rentals);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Get rentals by station ID
-        /// </summary>
-        [HttpGet("GetRentalsByStation/{stationId}")]
-        [Authorize]
-        public async Task<ActionResult<IEnumerable<Rental>>> GetRentalsByStation(int stationId)
-        {
-            // Check user permission (Staff and Admin only)
-            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-            if (permission != "3" && permission != "2")
-            {
-                var res = new ResponseDTO
-                {
-                    Message = "Không có quyền truy cập!"
-                };
-                return Unauthorized(res);
-            }
-
-            try
-            {
-                var rentals = await _rentalService.GetRentalsByStationAsync(stationId);
-                return Ok(rentals);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Get active rentals (currently being rented)
-        /// </summary>
-        [HttpGet("GetActiveRentals")]
-        [Authorize]
-        public async Task<ActionResult<IEnumerable<Rental>>> GetActiveRentals()
-        {
-            // Check user permission (Staff and Admin only)
-            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-            if (permission != "3" && permission != "2")
-            {
-                var res = new ResponseDTO
-                {
-                    Message = "Không có quyền truy cập!"
-                };
-                return Unauthorized(res);
-            }
-
-            try
-            {
-                var rentals = await _rentalService.GetActiveRentalsAsync();
-                return Ok(rentals);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Get pending rentals (future bookings)
-        /// </summary>
-        [HttpGet("GetPendingRentals")]
-        [Authorize]
-        public async Task<ActionResult<IEnumerable<Rental>>> GetPendingRentals()
-        {
-            // Check user permission (Staff and Admin only)
-            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-            if (permission != "3" && permission != "2")
-            {
-                var res = new ResponseDTO
-                {
-                    Message = "Không có quyền truy cập!"
-                };
-                return Unauthorized(res);
-            }
-
-            try
-            {
-                var rentals = await _rentalService.GetPendingRentalsAsync();
-                return Ok(rentals);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Get completed rentals
-        /// </summary>
-        [HttpGet("GetCompletedRentals")]
-        [Authorize]
-        public async Task<ActionResult<IEnumerable<Rental>>> GetCompletedRentals()
-        {
-            // Check user permission (Staff and Admin only)
-            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-            if (permission != "3" && permission != "2")
-            {
-                var res = new ResponseDTO
-                {
-                    Message = "Không có quyền truy cập!"
-                };
-                return Unauthorized(res);
-            }
-
-            try
-            {
-                var rentals = await _rentalService.GetCompletedRentalsAsync();
-                return Ok(rentals);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Search rentals with filters
-        /// </summary>
-        [HttpPost("SearchRentals")]
-        [Authorize]
-        public async Task<ActionResult<IEnumerable<Rental>>> SearchRentals([FromBody] RentalSearchDTO searchDto)
-        {
-            // Check user permission (Staff and Admin only)
-            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-            if (permission != "3" && permission != "2")
-            {
-                var res = new ResponseDTO
-                {
-                    Message = "Không có quyền truy cập!"
-                };
-                return Unauthorized(res);
-            }
-
-            try
-            {
-                var rentals = await _rentalService.GetAllAsync();
-
-                // Apply filters
-                if (searchDto.RenterID.HasValue)
-                {
-                    rentals = rentals.Where(r => r.RenterID == searchDto.RenterID.Value);
-                }
-
-                if (searchDto.BikeID.HasValue)
-                {
-                    rentals = rentals.Where(r => r.BikeID == searchDto.BikeID.Value);
-                }
-
-                if (searchDto.StationID.HasValue)
-                {
-                    rentals = rentals.Where(r => r.StationID == searchDto.StationID.Value);
-                }
-
-                if (searchDto.StartDate.HasValue)
-                {
-                    rentals = rentals.Where(r => r.RentalDate >= searchDto.StartDate.Value);
-                }
-
-                if (searchDto.EndDate.HasValue)
-                {
-                    rentals = rentals.Where(r => r.RentalDate <= searchDto.EndDate.Value);
-                }
-
-                if (!string.IsNullOrEmpty(searchDto.Status))
-                {
-                    var currentDate = DateTime.Now;
-                    switch (searchDto.Status.ToLower())
-                    {
-                        case "active":
-                            rentals = rentals.Where(r => r.RentalDate <= currentDate &&
-                                                        (!r.ReturnDate.HasValue || r.ReturnDate >= currentDate));
-                            break;
-
-                        case "pending":
-                            rentals = rentals.Where(r => r.RentalDate > currentDate);
-                            break;
-
-                        case "completed":
-                            rentals = rentals.Where(r => r.ReturnDate.HasValue && r.ReturnDate < currentDate);
-                            break;
-                    }
-                }
-
-                return Ok(rentals);
             }
             catch (Exception ex)
             {

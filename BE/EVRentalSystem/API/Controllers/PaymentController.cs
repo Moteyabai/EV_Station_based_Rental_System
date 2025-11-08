@@ -383,7 +383,6 @@ namespace API.Controllers
                 if (rental != null)
                 {
                     rental.Status = (int)RentalStatus.Reserved;
-                    rental.ReservedDate = DateTime.Now;
                     await _rentalService.UpdateAsync(rental);
                 }
 

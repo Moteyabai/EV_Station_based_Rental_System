@@ -8,13 +8,10 @@ namespace Repositories
 {
     public class EVBikeRepository : BaseRepository<EVBike>
     {
-
-
         // ✅ NEW: Constructor for Dependency Injection (RECOMMENDED)
         public EVBikeRepository(EVRenterDBContext context) : base(context)
         {
         }
-
 
         public async Task<IEnumerable<EVBike>> GetAvailableBikesAsync()
         {

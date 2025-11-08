@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Repositories.DBContext;
 
@@ -11,9 +12,11 @@ using Repositories.DBContext;
 namespace Repositories.Migrations
 {
     [DbContext(typeof(EVRenterDBContext))]
-    partial class EVRenterDBContextModelSnapshot : ModelSnapshot
+    [Migration("20251108060633_Remove_Rental_ReservedDate")]
+    partial class Remove_Rental_ReservedDate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -66,7 +69,7 @@ namespace Repositories.Migrations
 
                     b.HasIndex("RoleID");
 
-                    b.ToTable("Accounts", (string)null);
+                    b.ToTable("Accounts");
                 });
 
             modelBuilder.Entity("BusinessObject.Models.Brand", b =>
@@ -83,7 +86,7 @@ namespace Repositories.Migrations
 
                     b.HasKey("BrandID");
 
-                    b.ToTable("Brands", (string)null);
+                    b.ToTable("Brands");
                 });
 
             modelBuilder.Entity("BusinessObject.Models.EVBike", b =>
@@ -140,7 +143,7 @@ namespace Repositories.Migrations
 
                     b.HasIndex("BrandID");
 
-                    b.ToTable("EVBikes", (string)null);
+                    b.ToTable("EVBikes");
                 });
 
             modelBuilder.Entity("BusinessObject.Models.EVBike_Stocks", b =>
@@ -186,7 +189,7 @@ namespace Repositories.Migrations
 
                     b.HasIndex("StationID");
 
-                    b.ToTable("EVBike_Stocks", (string)null);
+                    b.ToTable("EVBike_Stocks");
                 });
 
             modelBuilder.Entity("BusinessObject.Models.Feedback", b =>
@@ -214,7 +217,7 @@ namespace Repositories.Migrations
 
                     b.HasIndex("RenterID");
 
-                    b.ToTable("Feedbacks", (string)null);
+                    b.ToTable("Feedbacks");
                 });
 
             modelBuilder.Entity("BusinessObject.Models.IDDocument", b =>
@@ -272,7 +275,7 @@ namespace Repositories.Migrations
 
                     b.HasIndex("VerifiedByStaffID");
 
-                    b.ToTable("IDDocuments", (string)null);
+                    b.ToTable("IDDocuments");
                 });
 
             modelBuilder.Entity("BusinessObject.Models.Notification", b =>
@@ -301,7 +304,7 @@ namespace Repositories.Migrations
 
                     b.HasIndex("AccountID");
 
-                    b.ToTable("Notifications", (string)null);
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("BusinessObject.Models.Payment", b =>
@@ -342,7 +345,7 @@ namespace Repositories.Migrations
 
                     b.HasIndex("RenterID");
 
-                    b.ToTable("Payments", (string)null);
+                    b.ToTable("Payments");
                 });
 
             modelBuilder.Entity("BusinessObject.Models.Refund", b =>
@@ -379,7 +382,7 @@ namespace Repositories.Migrations
                     b.HasIndex("PaymentID")
                         .IsUnique();
 
-                    b.ToTable("Refund", (string)null);
+                    b.ToTable("Refund");
                 });
 
             modelBuilder.Entity("BusinessObject.Models.Rental", b =>
@@ -452,7 +455,7 @@ namespace Repositories.Migrations
 
                     b.HasIndex("StationID");
 
-                    b.ToTable("Rentals", (string)null);
+                    b.ToTable("Rentals");
                 });
 
             modelBuilder.Entity("BusinessObject.Models.Renter", b =>
@@ -484,7 +487,7 @@ namespace Repositories.Migrations
                         .IsUnique()
                         .HasFilter("[DocumentID] IS NOT NULL");
 
-                    b.ToTable("Renters", (string)null);
+                    b.ToTable("Renters");
                 });
 
             modelBuilder.Entity("BusinessObject.Models.Role", b =>
@@ -501,7 +504,7 @@ namespace Repositories.Migrations
 
                     b.HasKey("RoleId");
 
-                    b.ToTable("Roles", (string)null);
+                    b.ToTable("Roles");
 
                     b.HasData(
                         new
@@ -580,7 +583,7 @@ namespace Repositories.Migrations
 
                     b.HasKey("StationID");
 
-                    b.ToTable("Stations", (string)null);
+                    b.ToTable("Stations");
                 });
 
             modelBuilder.Entity("BusinessObject.Models.StationStaff", b =>
@@ -610,7 +613,7 @@ namespace Repositories.Migrations
 
                     b.HasIndex("StationID");
 
-                    b.ToTable("StationStaffs", (string)null);
+                    b.ToTable("StationStaffs");
                 });
 
             modelBuilder.Entity("BusinessObject.Models.Account", b =>

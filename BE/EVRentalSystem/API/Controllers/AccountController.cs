@@ -251,7 +251,7 @@ namespace API.Controllers
         [Authorize]
         public async Task<ActionResult<StationStaff>> CreateStationStaff([FromForm] StaffCreateDTO accountRegisterDTO)
         {
-            if(!ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
                 var res = new ResponseDTO();
                 res.Message = "Dữ liệu không hợp lệ!";
