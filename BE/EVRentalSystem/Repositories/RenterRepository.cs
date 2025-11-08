@@ -28,8 +28,9 @@ namespace Repositories
             }
         }
 
-        public async Task<Renter> GetRenterByDocumentID(int documentID) { 
-          try
+        public async Task<Renter> GetRenterByDocumentID(int documentID)
+        {
+            try
             {
                 var renter = await _context.Renters
                     .Include(a => a.Account)

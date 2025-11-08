@@ -41,6 +41,28 @@ namespace BusinessObject.Models.DTOs
         public decimal? Fee { get; set; }
     }
 
+    public class RentalDisplayDTO
+    {
+        public int RentalID { get; set; }
+        public string BikeName { get; set; }
+        public string LicensePlate { get; set; }
+        public string RenterName { get; set; }
+        public string PhoneNumber { get; set; }
+        public string Email { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public DateTime? HandoverDate { get; set; }
+        public DateTime? ReturnDate { get; set; }
+        public int? AssignedStaff { get; set; }
+        public decimal InitialBattery { get; set; }
+        public decimal? FinalBattery { get; set; }
+        public string? InitBikeCondition { get; set; }
+        public string? FinalBikeCondition { get; set; }
+        public decimal Deposit { get; set; }
+        public decimal? Fee { get; set; }
+        public int Status { get; set; } // "Reserved", "OnGoing", "Cancelled", "Completed"
+    }
+
     public class RentalUpdateDTO
     {
         [Required(ErrorMessage = "Rental ID là b?t bu?c")]

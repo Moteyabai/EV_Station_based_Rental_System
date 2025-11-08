@@ -41,6 +41,7 @@ namespace BusinessObject.Models
 
         [ForeignKey("RentalID")]
         public virtual Rental Rental { get; set; }
+
         public virtual Refund Refund { get; set; }
     }
 }

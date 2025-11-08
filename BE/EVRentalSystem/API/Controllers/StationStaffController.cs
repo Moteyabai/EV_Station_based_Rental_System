@@ -129,8 +129,7 @@ namespace API.Controllers
         /// Create new station staff (Admin only)
         /// </summary>
         [HttpPost("CreateStaff")]
-        //[Authorize]
-        public async Task<ActionResult> CreateStaff( StationStaffCreateDTO staffDto)
+        public async Task<ActionResult> CreateStaff(StationStaffCreateDTO staffDto)
         {
             // Check user permission (Admin only)
             var res = new ResponseDTO();
@@ -792,54 +791,6 @@ namespace API.Controllers
                     Message = "Đã xác nhận thu hồi xe thành công! Trạng thái đơn thuê chuyển sang 'Hoàn thành'."
                 };
                 return Ok(successRes);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Get all rentals at a specific station (Staff or Admin)
-        /// </summary>
-        [HttpGet("GetStationRentals/{stationId}")]
-        [Authorize]
-        public async Task<ActionResult<IEnumerable<Rental>>> GetStationRentals(int stationId, [FromQuery] int? status = null)
-        {
-            // Check user permission (Staff or Admin)
-            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-
-            if (permission != "3" && permission != "2")
-            {
-                var res = new ResponseDTO
-                {
-                    Message = "Không có quyền truy cập!"
-                };
-                return Unauthorized(res);
-            }
-
-            try
-            {
-                // Verify station exists
-                var station = await _stationService.GetByIdAsync(stationId);
-                if (station == null)
-                {
-                    var res = new ResponseDTO
-                    {
-                        Message = "Không tìm thấy thông tin trạm!"
-                    };
-                    return NotFound(res);
-                }
-
-                var rentals = await _rentalService.GetRentalsByStationAsync(stationId);
-
-                // Filter by status if provided
-                if (status.HasValue)
-                {
-                    rentals = rentals.Where(r => r.Status == status.Value);
-                }
-
-                return Ok(rentals);
             }
             catch (Exception ex)
             {

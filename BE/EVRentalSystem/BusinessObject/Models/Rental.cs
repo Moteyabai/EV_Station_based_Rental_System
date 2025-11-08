@@ -44,14 +44,13 @@ namespace BusinessObject.Models
         public string? FinalBikeCondition { get; set; }
 
         [Required(ErrorMessage = "Ngày thuê là bắt buộc")]
-        public DateTime RentalDate { get; set; }
+        public DateTime? RentalDate { get; set; }
+
         [Required]
         public DateTime StartDate { get; set; }
+
         [Required]
         public DateTime EndDate { get; set; }
-
-        [DateGreaterThan("RentalDate", ErrorMessage = "Ngày đặt trước phải sau ngày thuê")]
-        public DateTime? ReservedDate { get; set; }
 
         [DateGreaterThan("RentalDate", ErrorMessage = "Ngày trả phải sau ngày thuê")]
         public DateTime? ReturnDate { get; set; }

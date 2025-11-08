@@ -17,8 +17,10 @@ namespace BusinessObject.Models.DTOs
 
         [Required]
         public int StationID { get; set; }
+
         [Required]
         public DateTime StartTime { get; set; }
+
         [Required]
         public DateTime EndTime { get; set; }
 
