@@ -163,6 +163,51 @@ export const getAllAccounts = async () => {
   }
 };
 
+// Delete staff by ID
+export const deleteStaff = async (staffId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/StationStaff/DeleteStaff/${staffId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`HTTP error! status: ${response.status} - ${text}`);
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error deleting staff:', error);
+    throw error;
+  }
+};
+
+// Update staff by ID (multipart/form-data expected)
+export const updateStaff = async (staffId, formData) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/StationStaff/UpdateStaff/${staffId}`, {
+      method: 'PUT',
+      headers: {
+        // Authorization header only; do NOT set Content-Type for FormData
+        Authorization: getAuthHeaders().Authorization,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`HTTP error! status: ${response.status} - ${text}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error updating staff:', error);
+    throw error;
+  }
+};
+
 // ==================== EV BIKE APIs ====================
 
 // Get all bikes
@@ -280,6 +325,8 @@ export default {
   
   // Accounts
   getAllAccounts,
+  deleteStaff,
+  updateStaff,
   
   // Bikes
   getAllBikes,
