@@ -1,16 +1,17 @@
 using BusinessObject.Models;
 using Repositories;
+using Repositories.DBContext;
 using Services.Interfaces;
 
 namespace Services
 {
     public class StationService : IBaseService<Station>
     {
-        private readonly StationRepository _stationRepository = new StationRepository();
+        private readonly StationRepository _stationRepository;
 
-        public StationService()
+        public StationService(EVRenterDBContext context)
         {
-            _stationRepository = StationRepository.Instance;
+            _stationRepository = new StationRepository(context);
         }
 
         public async Task AddAsync(Station entity) => await _stationRepository.AddAsync(entity);

@@ -8,35 +8,13 @@ namespace Repositories
 {
     public class EVBikeRepository : BaseRepository<EVBike>
     {
-        private static EVBikeRepository instance;
-        private static readonly object instancelock = new object();
 
-        // Default constructor for backward compatibility
-        public EVBikeRepository() : base()
-        {
-        }
 
         // ✅ NEW: Constructor for Dependency Injection (RECOMMENDED)
         public EVBikeRepository(EVRenterDBContext context) : base(context)
         {
         }
 
-        // ⚠️ DEPRECATED: Singleton pattern - Use DI instead
-        // This is kept for backward compatibility but should not be used
-        public static EVBikeRepository Instance
-        {
-            get
-            {
-                lock (instancelock)
-                {
-                    if (instance == null)
-                    {
-                        instance = new EVBikeRepository();
-                    }
-                    return instance;
-                }
-            }
-        }
 
         public async Task<IEnumerable<EVBike>> GetAvailableBikesAsync()
         {

@@ -1,31 +1,15 @@
 using BusinessObject.Models;
 using Microsoft.EntityFrameworkCore;
 using Repositories.BaseRepository;
+using Repositories.DBContext;
 
 namespace Repositories
 {
     public class NotificationRepository : BaseRepository<Notification>
     {
-        private static NotificationRepository? instance;
-        private static readonly object instancelock = new object();
-
-        public NotificationRepository() : base()
+        // ? NEW: Constructor for Dependency Injection (RECOMMENDED)
+        public NotificationRepository(EVRenterDBContext context) : base(context)
         {
-        }
-
-        public static NotificationRepository Instance
-        {
-            get
-            {
-                lock (instancelock)
-                {
-                    if (instance == null)
-                    {
-                        instance = new NotificationRepository();
-                    }
-                    return instance;
-                }
-            }
         }
 
         /// <summary>

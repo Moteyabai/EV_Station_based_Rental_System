@@ -1,5 +1,6 @@
 ﻿using BusinessObject.Models;
 using Repositories;
+using Repositories.DBContext;
 using Services.Interfaces;
 
 namespace Services
@@ -8,9 +9,10 @@ namespace Services
     {
         private readonly IDDocumentRepository _IDDocumentRepository;
 
-        public IDDocumentService()
+        // ✅ NEW: Constructor for Dependency Injection (RECOMMENDED)
+        public IDDocumentService(EVRenterDBContext context)
         {
-            _IDDocumentRepository = IDDocumentRepository.Instance;
+            _IDDocumentRepository = new IDDocumentRepository(context);
         }
 
         public async Task AddAsync(IDDocument entity) => await _IDDocumentRepository.AddAsync(entity);

@@ -1,31 +1,15 @@
 ﻿using BusinessObject.Models;
 using Microsoft.EntityFrameworkCore;
 using Repositories.BaseRepository;
+using Repositories.DBContext;
 
 namespace Repositories
 {
     public class StationStaffRepository : BaseRepository<StationStaff>
     {
-        private static StationStaffRepository instance;
-        private static readonly object instancelock = new object();
-
-        public StationStaffRepository()
+        // ✅ NEW: Constructor for Dependency Injection (RECOMMENDED)
+        public StationStaffRepository(EVRenterDBContext context) : base(context)
         {
-        }
-
-        public static StationStaffRepository Instance
-        {
-            get
-            {
-                lock (instancelock)
-                {
-                    if (instance == null)
-                    {
-                        instance = new StationStaffRepository();
-                    }
-                    return instance;
-                }
-            }
         }
 
         public async Task<StationStaff> GetStaffByAccountID(int accountID)

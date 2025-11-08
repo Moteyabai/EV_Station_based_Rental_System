@@ -15,41 +15,14 @@ namespace Repositories
 {
     public class AccountRepository : BaseRepository<Account>
     {
-        private static AccountRepository instance;
         private readonly JWTConfig _jwtConfig;
         private readonly IPasswordHasher<Account> _passwordHasher;
-        private static readonly object instancelock = new object();
 
-        public AccountRepository()
+        // ✅ NEW: Constructor for Dependency Injection (RECOMMENDED)
+        public AccountRepository(EVRenterDBContext context, IPasswordHasher<Account> passwordHasher, IConfiguration configuration) : base(context)
         {
-            _jwtConfig = GetJwtConfig();
-            _passwordHasher = new PasswordHasher<Account>();
-        }
-
-        public static AccountRepository Instance
-        {
-            get
-            {
-                lock (instancelock)
-                {
-                    if (instance == null)
-                    {
-                        instance = new AccountRepository();
-                    }
-                    return instance;
-                }
-            }
-        }
-
-        private static JWTConfig GetJwtConfig()
-        {
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
-            IConfigurationRoot configuration = builder.Build();
-
-            var jwtConfig = configuration.GetSection("JwtConfig").Get<JWTConfig>();
-            return jwtConfig;
+            _jwtConfig = configuration.GetSection("JwtConfig").Get<JWTConfig>();
+            _passwordHasher = passwordHasher;
         }
 
         public string GenerateToken(TokenModel model)
@@ -101,34 +74,31 @@ namespace Repositories
             }
             else
             {
-                using (var db = new EVRenterDBContext())
+                var account = await _context.Accounts
+                    .Include(x => x.Role) // Load Role từ DB
+                    .FirstOrDefaultAsync(x => x.Email == loginAccount.Email);
+
+                if (account == null)
                 {
-                    var account = await db.Accounts
-                        .Include(x => x.Role) // Load Role từ DB
-                        .FirstOrDefaultAsync(x => x.Email == loginAccount.Email);
+                    throw new KeyNotFoundException("Email hoặc mật khẩu sai!");
+                }
 
-                    if (account == null)
-                    {
-                        throw new KeyNotFoundException("Email hoặc mật khẩu sai!");
-                    }
+                var checkPassword = _passwordHasher.VerifyHashedPassword(account, account.Password, loginAccount.Password);
 
-                    var checkPassword = _passwordHasher.VerifyHashedPassword(account, account.Password, loginAccount.Password);
-
-                    if (checkPassword == PasswordVerificationResult.Success)
+                if (checkPassword == PasswordVerificationResult.Success)
+                {
+                    tokenizedData = new TokenModel
                     {
-                        tokenizedData = new TokenModel
-                        {
-                            AccountID = account.AccountId,
-                            FullName = account.FullName,
-                            Email = account.Email,
-                            RoleID = account.RoleID,
-                            RoleName = account.Role?.RoleName ?? "Unknown" // Kiểm tra null
-                        };
-                    }
-                    else
-                    {
-                        throw new Exception("Mật khẩu sai!");
-                    }
+                        AccountID = account.AccountId,
+                        FullName = account.FullName,
+                        Email = account.Email,
+                        RoleID = account.RoleID,
+                        RoleName = account.Role?.RoleName ?? "Unknown" // Kiểm tra null
+                    };
+                }
+                else
+                {
+                    throw new Exception("Mật khẩu sai!");
                 }
             }
             return tokenizedData;
@@ -152,15 +122,12 @@ namespace Repositories
 
         public async Task<bool> CheckEmail(string email)
         {
-            using (var db = new EVRenterDBContext())
+            var account = await _context.Accounts.FirstOrDefaultAsync(x => x.Email == email);
+            if (account != null)
             {
-                var account = await db.Accounts.FirstOrDefaultAsync(x => x.Email == email);
-                if (account != null)
-                {
-                    return true;
-                }
-                return false;
+                return true;
             }
+            return false;
         }
     }
 }

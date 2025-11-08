@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Net.payOS;
 using Net.payOS.Types;
 using Repositories;
+using Repositories.DBContext;
 using Services.Interfaces;
 
 namespace Services
@@ -16,9 +17,10 @@ namespace Services
         private readonly string _server;
         private readonly PayOS _payOS;
 
-        public PaymentService(IConfiguration configuration)
+        // ✅ NEW: Constructor for Dependency Injection (RECOMMENDED)
+        public PaymentService(EVRenterDBContext context, IConfiguration configuration)
         {
-            _paymentRepository = PaymentRepository.Instance;
+            _paymentRepository = new PaymentRepository(context);
             _configuration = configuration;
             PayOSSettings payOS = new PayOSSettings()
             {

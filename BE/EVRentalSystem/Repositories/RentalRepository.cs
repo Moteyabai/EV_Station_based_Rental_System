@@ -1,30 +1,14 @@
 using BusinessObject.Models;
 using Repositories.BaseRepository;
+using Repositories.DBContext;
 
 namespace Repositories
 {
     public class RentalRepository : BaseRepository<Rental>
     {
-        private static RentalRepository? instance;
-        private static readonly object instancelock = new object();
-
-        public RentalRepository() : base()
+        // ? NEW: Constructor for Dependency Injection (RECOMMENDED)
+        public RentalRepository(EVRenterDBContext context) : base(context)
         {
-        }
-
-        public static RentalRepository Instance
-        {
-            get
-            {
-                lock (instancelock)
-                {
-                    if (instance == null)
-                    {
-                        instance = new RentalRepository();
-                    }
-                    return instance;
-                }
-            }
         }
     }
 }

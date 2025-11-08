@@ -1,5 +1,6 @@
 using BusinessObject.Models;
 using Repositories;
+using Repositories.DBContext;
 using Services.Interfaces;
 
 namespace Services
@@ -8,9 +9,10 @@ namespace Services
     {
         private readonly NotificationRepository _notificationRepository;
 
-        public NotificationService()
+        // ? NEW: Constructor for Dependency Injection (RECOMMENDED)
+        public NotificationService(EVRenterDBContext context)
         {
-            _notificationRepository = NotificationRepository.Instance;
+            _notificationRepository = new NotificationRepository(context);
         }
 
         public async Task AddAsync(Notification entity) => await _notificationRepository.AddAsync(entity);

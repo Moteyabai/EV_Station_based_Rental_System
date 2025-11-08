@@ -1,21 +1,20 @@
 ﻿using BusinessObject.Models;
 using Repositories;
+using Repositories.DBContext;
 using Services.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Services
 {
     public class BrandService : IBaseService<Brand>
     {
         private readonly BrandRepository _brandRepository;
-        public BrandService()
+
+        // ✅ NEW: Constructor for Dependency Injection (RECOMMENDED)
+        public BrandService(EVRenterDBContext context)
         {
-            _brandRepository = BrandRepository.Instance;
+            _brandRepository = new BrandRepository(context);
         }
+
         public async Task AddAsync(Brand entity) => await _brandRepository.AddAsync(entity);
 
         public async Task DeleteAsync(int id) => await _brandRepository.DeleteAsync(id);
