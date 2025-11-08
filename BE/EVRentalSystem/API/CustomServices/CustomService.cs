@@ -16,28 +16,46 @@ namespace API.CustomServices
     {
         public static void AddCustomServices(this IServiceCollection services, IConfiguration configuration)
         {
-            // Register password hasher (optional - AccountRepository can create its own)
+            // ✅ Register DbContext FIRST with additional SQL Server configuration
+            services.AddDbContext<EVRenterDBContext>(options =>
+                options.UseSqlServer(
+                    configuration.GetConnectionString("DefaultConnection"),
+                    sqlOptions => sqlOptions.EnableRetryOnFailure(
+                        maxRetryCount: 1,
+                        maxRetryDelay: TimeSpan.FromSeconds(30),
+                        errorNumbersToAdd: null
+                    )
+                ));
+
+            // ✅ Register IConfiguration as singleton (needed for AccountRepository)
+            services.AddSingleton(configuration);
+
+            // Register password hasher
             services.AddScoped<IPasswordHasher<Account>, PasswordHasher<Account>>();
 
+            // Register all repositories with DI
             services.AddScoped<AccountRepository>();
-            services.AddScoped<AccountService>();
             services.AddScoped<IDDocumentRepository>();
-            services.AddScoped<IDDocumentService>();
             services.AddScoped<EVBikeRepository>();
-            services.AddScoped<EVBikeService>();
             services.AddScoped<RenterRepository>();
-            services.AddScoped<RenterService>();
             services.AddScoped<StationStaffRepository>();
-            services.AddScoped<StationStaffService>();
             services.AddScoped<RentalRepository>();
-            services.AddScoped<RentalService>();
             services.AddScoped<PaymentRepository>();
-            services.AddScoped<PaymentService>();
             services.AddScoped<StationRepository>();
-            services.AddScoped<StationService>();
             services.AddScoped<EVBike_StocksRepository>();
-            services.AddScoped<EVBike_StocksService>();
             services.AddScoped<BrandRepository>();
+            services.AddScoped<NotificationRepository>();
+
+            // Register all services with DI
+            services.AddScoped<AccountService>();
+            services.AddScoped<IDDocumentService>();
+            services.AddScoped<EVBikeService>();
+            services.AddScoped<RenterService>();
+            services.AddScoped<StationStaffService>();
+            services.AddScoped<RentalService>();
+            services.AddScoped<PaymentService>();
+            services.AddScoped<StationService>();
+            services.AddScoped<EVBike_StocksService>();
             services.AddScoped<BrandService>();
 
             services.AddAuthentication(options =>

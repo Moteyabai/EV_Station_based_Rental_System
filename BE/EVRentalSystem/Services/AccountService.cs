@@ -10,9 +10,10 @@ namespace Services
     {
         private readonly AccountRepository _accountRepository;
 
-        public AccountService()
+        // ✅ NEW: Constructor for Dependency Injection (RECOMMENDED)
+        public AccountService(AccountRepository accountRepository)
         {
-            _accountRepository = AccountRepository.Instance;
+            _accountRepository = accountRepository;
         }
 
         public async Task AddAsync(Account entity) => await _accountRepository.AddAsync(entity);

@@ -9,11 +9,6 @@ namespace Services
     {
         private readonly EVBike_StocksRepository _evBikeStocksRepository;
 
-        // Default constructor for backward compatibility
-        public EVBike_StocksService()
-        {
-            _evBikeStocksRepository = EVBike_StocksRepository.Instance;
-        }
 
         // ✅ NEW: Constructor for Dependency Injection (RECOMMENDED)
         public EVBike_StocksService(EVRenterDBContext context)

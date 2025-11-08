@@ -1,5 +1,6 @@
 ﻿using BusinessObject.Models;
 using Repositories;
+using Repositories.DBContext;
 using Services.Interfaces;
 
 namespace Services
@@ -8,9 +9,10 @@ namespace Services
     {
         private readonly RenterRepository _renterRepository;
 
-        public RenterService()
+        // ✅ NEW: Constructor for Dependency Injection (RECOMMENDED)
+        public RenterService(EVRenterDBContext context)
         {
-            _renterRepository = RenterRepository.Instance;
+            _renterRepository = new RenterRepository(context);
         }
 
         public async Task AddAsync(Renter entity) => await _renterRepository.AddAsync(entity);

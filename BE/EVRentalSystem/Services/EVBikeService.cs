@@ -9,11 +9,6 @@ namespace Services
     {
         private readonly EVBikeRepository _repository;
 
-        // Default constructor for backward compatibility
-        public EVBikeService()
-        {
-            _repository = EVBikeRepository.Instance;
-        }
 
         // ✅ NEW: Constructor for Dependency Injection (RECOMMENDED)
         public EVBikeService(EVRenterDBContext context)
