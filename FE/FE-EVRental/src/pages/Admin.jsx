@@ -206,6 +206,8 @@ const Admin = () => {
   const [staff, setStaff] = useState([]);
   const [staffLoading, setStaffLoading] = useState(false);
   const [staffError, setStaffError] = useState(null);
+  const [deletingStaffId, setDeletingStaffId] = useState(null);
+  const [editingStaffId, setEditingStaffId] = useState(null);
 
   // Add staff modal & form state
   const [showAddStaffModal, setShowAddStaffModal] = useState(false);
@@ -215,6 +217,8 @@ const Admin = () => {
     email: "",
     phone: "",
     password: "",
+    stationId: "", // Station assignment
+    role: "", // Staff role
     avatarFile: null, // Store File object instead of base64
     avatarPreview: null, // Store preview URL for display
   });
@@ -417,6 +421,102 @@ const Admin = () => {
     } catch (error) {
       console.error("Error deleting brand:", error);
       alert("❌ Không thể xóa hãng xe: " + error.message);
+    }
+  };
+
+  // Delete staff handler - call backend API and update local state
+  const handleDeleteStaff = async (staffId, staffName) => {
+    if (!window.confirm(`Bạn có chắc muốn xóa nhân viên ${staffName}?`)) return;
+
+    try {
+      setDeletingStaffId(staffId);
+      await adminService.deleteStaff(staffId);
+
+      // remove from local state
+      setStaff((prev) => prev.filter((s) => s.id !== staffId));
+      alert("✅ Đã xóa nhân viên!");
+    } catch (error) {
+      console.error("Error deleting staff:", error);
+      alert(error?.message || "Không thể xóa nhân viên. Vui lòng thử lại.");
+    } finally {
+      setDeletingStaffId(null);
+    }
+  };
+
+  // Open edit modal with staff data
+  const handleOpenEditStaff = (member) => {
+    setEditingStaffId(member.id);
+    setNewStaff({
+      fullName: member.name || "",
+      email: member.email || "",
+      phone: member.phone || "",
+      password: "", // leave empty unless admin wants to reset
+      stationId: member.stationId || "",
+      role: member.role || "",
+      avatarFile: null,
+      avatarPreview: member.avatar || null,
+    });
+    setApiErrors({});
+    setShowAddStaffModal(true);
+  };
+
+  // Update staff handler
+  const handleUpdateStaff = async () => {
+    if (!editingStaffId) return;
+
+    // basic validation (password optional on update)
+    const errors = {};
+    if (!newStaff.fullName || newStaff.fullName.trim().length === 0)
+      errors.fullName = "Vui lòng nhập họ tên";
+    if (!newStaff.email || newStaff.email.trim().length === 0)
+      errors.email = "Vui lòng nhập email";
+    const phoneRegex = /^(?:\+84|0)(?:3|5|7|8|9)\d{8}$/;
+    if (newStaff.phone && !phoneRegex.test(newStaff.phone))
+      errors.phone =
+        "Vui lòng nhập đúng định dạng số điện thoại Việt Nam (0xxxxxxxxx)";
+
+    if (Object.keys(errors).length > 0) {
+      setApiErrors(errors);
+      alert("⚠️ Vui lòng sửa lỗi trước khi lưu");
+      return;
+    }
+
+    try {
+      setCreatingStaff(true);
+      const formData = new FormData();
+      formData.append("FullName", newStaff.fullName);
+      formData.append("Email", newStaff.email);
+      if (newStaff.password) formData.append("Password", newStaff.password);
+      formData.append("Phone", newStaff.phone || "");
+      if (newStaff.stationId) formData.append("StationID", newStaff.stationId);
+      if (newStaff.role) formData.append("Role", newStaff.role);
+      if (newStaff.avatarFile)
+        formData.append("AvatarPicture", newStaff.avatarFile);
+
+      const result = await adminService.updateStaff(editingStaffId, formData);
+      console.log("✅ updateStaff result:", result);
+
+      // Refresh list and reset modal
+      await fetchStaff();
+      setShowAddStaffModal(false);
+      setEditingStaffId(null);
+      setNewStaff({
+        fullName: "",
+        email: "",
+        phone: "",
+        password: "",
+        stationId: "",
+        role: "",
+        avatarFile: null,
+        avatarPreview: null,
+      });
+      setApiErrors({});
+      alert("✅ Cập nhật nhân viên thành công!");
+    } catch (err) {
+      console.error("Error updating staff:", err);
+      alert(err?.message || "Không thể cập nhật nhân viên. Vui lòng thử lại.");
+    } finally {
+      setCreatingStaff(false);
     }
   };
 
@@ -796,6 +896,8 @@ const Admin = () => {
       email: "",
       phone: "",
       password: "",
+      stationId: stationId,
+      role: "",
       avatarFile: null,
       avatarPreview: null,
     });
@@ -849,6 +951,12 @@ const Admin = () => {
       formData.append("Email", newStaff.email);
       formData.append("Password", newStaff.password);
       formData.append("Phone", newStaff.phone);
+      if (newStaff.stationId) {
+        formData.append("StationID", newStaff.stationId);
+      }
+      if (newStaff.role) {
+        formData.append("Role", newStaff.role);
+      }
 
       // Add avatar file directly (already a File object)
       if (newStaff.avatarFile) {
@@ -934,6 +1042,8 @@ const Admin = () => {
         email: "",
         phone: "",
         password: "",
+        stationId: "",
+        role: "",
         avatarFile: null,
         avatarPreview: null,
       });
@@ -2398,36 +2508,41 @@ const Admin = () => {
                                       <td>
                                         <div className="table-actions">
                                           <button
-                                            className="btn-action btn-detail"
-                                            title="Chi tiết"
-                                          >
-                                            👁️
-                                          </button>
-                                          <button
                                             className="btn-action btn-edit"
                                             title="Chỉnh sửa"
+                                            onClick={() => {
+                                              setShowStationStaffModal(false);
+                                              handleOpenEditStaff(member);
+                                            }}
                                           >
                                             ✏️
                                           </button>
                                           <button
                                             className="btn-action btn-delete"
                                             title="Xóa"
-                                            onClick={() => {
-                                              if (
-                                                window.confirm(
-                                                  `Bạn có chắc muốn xóa nhân viên ${member.name}?`
-                                                )
-                                              ) {
-                                                setStaff(
-                                                  staff.filter(
-                                                    (s) => s.id !== member.id
-                                                  )
-                                                );
-                                                alert("✅ Đã xóa nhân viên!");
-                                              }
+                                            onClick={() =>
+                                              handleDeleteStaff(
+                                                member.id,
+                                                member.name
+                                              )
+                                            }
+                                            disabled={
+                                              deletingStaffId === member.id
+                                            }
+                                            style={{
+                                              opacity:
+                                                deletingStaffId === member.id
+                                                  ? 0.5
+                                                  : 1,
+                                              cursor:
+                                                deletingStaffId === member.id
+                                                  ? "not-allowed"
+                                                  : "pointer",
                                             }}
                                           >
-                                            🗑️
+                                            {deletingStaffId === member.id
+                                              ? "⏳"
+                                              : "🗑️"}
                                           </button>
                                         </div>
                                       </td>
@@ -3230,11 +3345,12 @@ const Admin = () => {
             <thead>
               <tr>
                 <th>ID</th>
+                <th>Avatar</th>
                 <th>Họ tên</th>
-                <th>Điểm làm việc</th>
+                <th>Email</th>
+                <th>Số điện thoại</th>
+                <th>Trạm làm việc</th>
                 <th>Vai trò</th>
-                <th>Hiệu suất</th>
-                <th>Số lượt giao/nhận</th>
                 <th>Hành động</th>
               </tr>
             </thead>
@@ -3242,54 +3358,60 @@ const Admin = () => {
               {filteredStaff.map((member) => (
                 <tr key={member.id}>
                   <td>#{member.id}</td>
-                  <td className="staff-name">
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                      }}
-                    >
-                      {member.avatar ? (
-                        <img
-                          src={member.avatar}
-                          alt={member.name}
-                          style={{
-                            width: 40,
-                            height: 40,
-                            borderRadius: "50%",
-                            objectFit: "cover",
-                            border: "2px solid #e2e8f0",
-                          }}
-                        />
-                      ) : (
-                        <div
-                          style={{
-                            width: 40,
-                            height: 40,
-                            borderRadius: "50%",
-                            background: "#0baf8c",
-                            color: "white",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontWeight: "bold",
-                          }}
-                        >
-                          {member.name.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                      <div>
-                        <div style={{ fontWeight: "500" }}>{member.name}</div>
-                        {member.email && (
-                          <div
-                            style={{ fontSize: "0.85rem", color: "#6b7280" }}
-                          >
-                            {member.email}
-                          </div>
-                        )}
+                  <td>
+                    {member.avatar ? (
+                      <img
+                        src={member.avatar}
+                        alt={member.name}
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: "50%",
+                          objectFit: "cover",
+                          border: "2px solid #e2e8f0",
+                        }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: "50%",
+                          background: "#0baf8c",
+                          color: "white",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: "bold",
+                          margin: "0 auto",
+                        }}
+                      >
+                        {member.name
+                          ? member.name.charAt(0).toUpperCase()
+                          : "?"}
                       </div>
-                    </div>
+                    )}
+                  </td>
+                  <td className="staff-name">
+                    {member.name || (
+                      <span style={{ color: "#6b7280", fontStyle: "italic" }}>
+                        Chưa có tên
+                      </span>
+                    )}
+                  </td>
+                  <td>
+                    {member.email || (
+                      <span style={{ color: "#6b7280", fontStyle: "italic" }}>
+                        Chưa có email
+                      </span>
+                    )}
+                  </td>
+                  <td>
+                    {member.phone || (
+                      <span style={{ color: "#6b7280", fontStyle: "italic" }}>
+                        Chưa có SĐT
+                      </span>
+                    )}
                   </td>
                   <td>
                     {member.station || (
@@ -3309,31 +3431,32 @@ const Admin = () => {
                         fontWeight: "500",
                       }}
                     >
-                      {member.role}
+                      {member.role || "N/A"}
                     </span>
                   </td>
                   <td>
-                    <div className="performance-bar">
-                      <div
-                        className="performance-fill"
-                        style={{
-                          width: `${member.performance}%`,
-                          backgroundColor:
-                            member.performance > 90
-                              ? "#4caf50"
-                              : member.performance > 70
-                              ? "#ff9800"
-                              : "#f44336",
-                        }}
-                      >
-                        {member.performance}%
-                      </div>
-                    </div>
-                  </td>
-                  <td>{member.totalDeliveries}</td>
-                  <td>
-                    <button className="btn-action">Chi tiết</button>
-                    <button className="btn-action">Đánh giá</button>
+                    <button
+                      className="btn-action"
+                      onClick={() => handleOpenEditStaff(member)}
+                      style={{ background: "#3b82f6" }}
+                    >
+                      ✏️ Sửa
+                    </button>
+                    <button
+                      className="btn-action"
+                      onClick={() => handleDeleteStaff(member.id, member.name)}
+                      disabled={deletingStaffId === member.id}
+                      style={{
+                        background: "#ef4444",
+                        opacity: deletingStaffId === member.id ? 0.5 : 1,
+                        cursor:
+                          deletingStaffId === member.id
+                            ? "not-allowed"
+                            : "pointer",
+                      }}
+                    >
+                      {deletingStaffId === member.id ? "⏳" : "🗑️"} Xóa
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -4714,10 +4837,17 @@ const Admin = () => {
           >
             <div className="modal-content">
               <div className="modal-header">
-                <h2>➕ Thêm nhân viên mới</h2>
+                <h2>
+                  {editingStaffId
+                    ? "✏️ Chỉnh sửa nhân viên"
+                    : "➕ Thêm nhân viên mới"}
+                </h2>
                 <button
                   className="btn-close"
-                  onClick={() => setShowAddStaffModal(false)}
+                  onClick={() => {
+                    setShowAddStaffModal(false);
+                    setEditingStaffId(null);
+                  }}
                 >
                   ✕
                 </button>
@@ -4812,7 +4942,49 @@ const Admin = () => {
                   )}
                 </div>
                 <div className="form-group">
-                  <label>Mật khẩu *</label>
+                  <label>Trạm làm việc</label>
+                  <select
+                    name="staff-station"
+                    value={newStaff.stationId}
+                    onChange={(e) =>
+                      setNewStaff((s) => ({ ...s, stationId: e.target.value }))
+                    }
+                  >
+                    <option value="">-- Chọn trạm --</option>
+                    {stations.map((station) => (
+                      <option key={station.id} value={station.id}>
+                        {station.name}
+                      </option>
+                    ))}
+                  </select>
+                  {getError(["stationId", "stationid", "station"]) && (
+                    <div className="input-error">
+                      {getError(["stationId", "stationid", "station"])}
+                    </div>
+                  )}
+                </div>
+                <div className="form-group">
+                  <label>Vai trò</label>
+                  <input
+                    type="text"
+                    name="staff-role"
+                    autoComplete="off"
+                    placeholder="VD: Nhân viên trạm, Quản lý trạm..."
+                    value={newStaff.role}
+                    onChange={(e) =>
+                      setNewStaff((s) => ({ ...s, role: e.target.value }))
+                    }
+                  />
+                  {getError(["role"]) && (
+                    <div className="input-error">{getError(["role"])}</div>
+                  )}
+                </div>
+                <div className="form-group">
+                  <label>
+                    {editingStaffId
+                      ? "Mật khẩu (để trống nếu không đổi)"
+                      : "Mật khẩu *"}
+                  </label>
                   <input
                     type="password"
                     name="staff-password"
@@ -4830,7 +5002,11 @@ const Admin = () => {
                   )}
                 </div>
                 <div className="form-group">
-                  <label>Ảnh đại diện *</label>
+                  <label>
+                    {editingStaffId
+                      ? "Ảnh đại diện (tùy chọn)"
+                      : "Ảnh đại diện *"}
+                  </label>
                   <input
                     type="file"
                     name="staff-avatar"
@@ -4872,21 +5048,30 @@ const Admin = () => {
               <div className="modal-footer">
                 <button
                   className="btn-cancel"
-                  onClick={() => setShowAddStaffModal(false)}
+                  onClick={() => {
+                    setShowAddStaffModal(false);
+                    setEditingStaffId(null);
+                  }}
                   disabled={creatingStaff}
                 >
                   Hủy
                 </button>
                 <button
                   className="btn-primary"
-                  onClick={handleCreateStaff}
+                  onClick={
+                    editingStaffId ? handleUpdateStaff : handleCreateStaff
+                  }
                   disabled={creatingStaff}
                   style={{
                     opacity: creatingStaff ? 0.7 : 1,
                     cursor: creatingStaff ? "not-allowed" : "pointer",
                   }}
                 >
-                  {creatingStaff ? "⏳ Đang lưu..." : "💾 Lưu nhân viên"}
+                  {creatingStaff
+                    ? "⏳ Đang lưu..."
+                    : editingStaffId
+                    ? "💾 Cập nhật"
+                    : "💾 Lưu nhân viên"}
                 </button>
               </div>
             </div>
