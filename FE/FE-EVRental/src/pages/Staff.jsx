@@ -875,19 +875,11 @@ function CustomerVerification() {
             </div>
 
             <div className="customer-actions">
-              {!customer.verified && (
-                <button
-                  className="btn-action btn-verify"
-                  onClick={() => handleVerify(customer)}
-                >
-                  ✅ Xác thực
-                </button>
-              )}
               <button
-                className="btn-action btn-view"
-                onClick={() => handleViewProfile(customer)}
+                className="btn-action btn-verify"
+                onClick={() => handleVerify(customer)}
               >
-                👁️ Xem hồ sơ
+                {customer.verified ? "✅ Xem hồ sơ" : "✅ Xác nhận hồ sơ"}
               </button>
               <button className="btn-action btn-photo">📸 Chụp giấy tờ</button>
             </div>
@@ -937,9 +929,6 @@ function CustomerVerification() {
 // Modal xác thực khách hàng
 function VerificationModal({ customer, onClose, onVerify }) {
   const [verification, setVerification] = useState({
-    idCardPhoto: false,
-    licensePhoto: false,
-    facePhoto: false,
     idCardMatch: false,
     licenseValid: false,
   });
@@ -952,8 +941,13 @@ function VerificationModal({ customer, onClose, onVerify }) {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [note, setNote] = useState("");
+  
+  // State để chọn mặt trước/sau
+  const [showIDFront, setShowIDFront] = useState(true);
+  const [showLicenseFront, setShowLicenseFront] = useState(true);
 
-  const allVerified = Object.values(verification).every((v) => v);
+  // Chỉ kiểm tra 2 checkbox quan trọng
+  const allVerified = verification.idCardMatch && verification.licenseValid;
 
   const handleInputChange = (field, value) => {
     setDocumentInfo((prev) => ({
@@ -1105,58 +1099,175 @@ function VerificationModal({ customer, onClose, onVerify }) {
         </div>
 
         <div className="modal-body">
-          <div className="customer-info-box">
-            <h3>{customer.userName}</h3>
-            <p>
-              Email: <strong>{customer.email}</strong>
-            </p>
-            <p>
-              Số điện thoại: <strong>{customer.phone}</strong>
-            </p>
+          <div className="customer-info-box" style={{
+            background: '#ffffff',
+            color: 'white',
+            padding: '20px',
+            borderRadius: '12px',
+            marginBottom: '20px',
+            boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)'
+          }}>
+            <h3 style={{ margin: '0 0 15px 0', fontSize: '24px', fontWeight: 'bold' }}>
+              👤 {customer.userName || customer.fullName || "N/A"}
+            </h3>
+            <div style={{ display: 'grid', gap: '10px', fontSize: '16px' }}>
+              <p style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ opacity: 0.9 }}>📧 Email:</span>
+                <strong>{customer.email || "N/A"}</strong>
+              </p>
+              <p style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ opacity: 0.9 }}>📱 Số điện thoại:</span>
+                <strong>{customer.phone || customer.phoneNumber || "N/A"}</strong>
+              </p>
+            </div>
+          </div>
+
+          {/* Hiển thị hình ảnh giấy tờ */}
+          <div className="document-images-section" style={{ marginBottom: '20px' }}>
+            <h3>📸 Hình ảnh giấy tờ</h3>
+            
+            {/* CMND/CCCD Images */}
+            <div className="image-group" style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <h4 style={{ margin: 0 }}>🆔 CMND/CCCD</h4>
+                <select
+                  value={showIDFront ? "front" : "back"}
+                  onChange={(e) => setShowIDFront(e.target.value === "front")}
+                  style={{
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid #ddd',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    outline: 'none'
+                  }}
+                >
+                  <option value="front">📄 Mặt trước</option>
+                  <option value="back">📄 Mặt sau</option>
+                </select>
+              </div>
+              <div className="image-container" style={{ 
+                border: '2px solid #e0e0e0', 
+                borderRadius: '8px', 
+                overflow: 'hidden',
+                aspectRatio: '16/10',
+                background: '#f5f5f5'
+              }}>
+                {showIDFront ? (
+                  customer.idCardFrontImage ? (
+                    <img
+                      src={customer.idCardFrontImage}
+                      alt="CCCD Mặt trước"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      height: '100%',
+                      color: '#999',
+                      fontSize: '16px'
+                    }}>
+                      📷 Chưa có ảnh mặt trước
+                    </div>
+                  )
+                ) : (
+                  customer.idCardBackImage ? (
+                    <img
+                      src={customer.idCardBackImage}
+                      alt="CCCD Mặt sau"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      height: '100%',
+                      color: '#999',
+                      fontSize: '16px'
+                    }}>
+                      📷 Chưa có ảnh mặt sau
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
+
+            {/* GPLX Images */}
+            <div className="image-group">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <h4 style={{ margin: 0 }}>🪪 Giấy phép lái xe</h4>
+                <select
+                  value={showLicenseFront ? "front" : "back"}
+                  onChange={(e) => setShowLicenseFront(e.target.value === "front")}
+                  style={{
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid #ddd',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    outline: 'none'
+                  }}
+                >
+                  <option value="front">📄 Mặt trước</option>
+                  <option value="back">📄 Mặt sau</option>
+                </select>
+              </div>
+              <div className="image-container" style={{ 
+                border: '2px solid #e0e0e0', 
+                borderRadius: '8px', 
+                overflow: 'hidden',
+                aspectRatio: '16/10',
+                background: '#f5f5f5'
+              }}>
+                {showLicenseFront ? (
+                  customer.licenseFrontImage ? (
+                    <img
+                      src={customer.licenseFrontImage}
+                      alt="GPLX Mặt trước"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      height: '100%',
+                      color: '#999',
+                      fontSize: '16px'
+                    }}>
+                      📷 Chưa có ảnh mặt trước
+                    </div>
+                  )
+                ) : (
+                  customer.licenseBackImage ? (
+                    <img
+                      src={customer.licenseBackImage}
+                      alt="GPLX Mặt sau"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      height: '100%',
+                      color: '#999',
+                      fontSize: '16px'
+                    }}>
+                      📷 Chưa có ảnh mặt sau
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
           </div>
 
           <div className="verification-section">
             <h3>📋 Checklist xác thực</h3>
             <div className="verification-items">
-              <label className="verification-item">
-                <input
-                  type="checkbox"
-                  checked={verification.idCardPhoto}
-                  onChange={() =>
-                    setVerification((prev) => ({
-                      ...prev,
-                      idCardPhoto: !prev.idCardPhoto,
-                    }))
-                  }
-                />
-                <span>📸 Đã chụp ảnh CMND/CCCD</span>
-              </label>
-              <label className="verification-item">
-                <input
-                  type="checkbox"
-                  checked={verification.licensePhoto}
-                  onChange={() =>
-                    setVerification((prev) => ({
-                      ...prev,
-                      licensePhoto: !prev.licensePhoto,
-                    }))
-                  }
-                />
-                <span>📸 Đã chụp ảnh GPLX</span>
-              </label>
-              <label className="verification-item">
-                <input
-                  type="checkbox"
-                  checked={verification.facePhoto}
-                  onChange={() =>
-                    setVerification((prev) => ({
-                      ...prev,
-                      facePhoto: !prev.facePhoto,
-                    }))
-                  }
-                />
-                <span>📸 Đã chụp ảnh khuôn mặt</span>
-              </label>
               <label className="verification-item">
                 <input
                   type="checkbox"
@@ -1168,7 +1279,7 @@ function VerificationModal({ customer, onClose, onVerify }) {
                     }))
                   }
                 />
-                <span>✅ Thông tin CMND khớp với hồ sơ</span>
+                <span>✅ Xác nhận CMND/CCCD</span>
               </label>
               <label className="verification-item">
                 <input
@@ -1181,22 +1292,8 @@ function VerificationModal({ customer, onClose, onVerify }) {
                     }))
                   }
                 />
-                <span>✅ GPLX còn hạn và hợp lệ</span>
+                <span>✅ Xác nhận Giấy phép lái xe</span>
               </label>
-            </div>
-          </div>
-
-          <div className="document-info">
-            <h3>📄 Thông tin giấy tờ</h3>
-            <div className="info-grid">
-              <div className="info-item">
-                <label>CMND/CCCD:</label>
-                <input type="text" value={customer.idCard} readOnly />
-              </div>
-              <div className="info-item">
-                <label>Giấy phép lái xe:</label>
-                <input type="text" value={customer.driverLicense} readOnly />
-              </div>
             </div>
           </div>
 
@@ -1399,6 +1496,10 @@ function PaymentManagement() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showRentalInfoModal, setShowRentalInfoModal] = useState(false);
   const [rentalInfo, setRentalInfo] = useState(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancellingPayment, setCancellingPayment] = useState(null);
+  const [paymentType, setPaymentType] = useState("cash"); // 'cash' (paymentMethod=2), 'online' (paymentMethod=1)
   const [paymentFilter, setPaymentFilter] = useState("pending"); // 'pending' (status=0), 'verified' (status=1), 'cancelled' (status=-1)
   const [loading, setLoading] = useState(false);
   const [loadingRental, setLoadingRental] = useState(false);
@@ -1463,15 +1564,14 @@ function PaymentManagement() {
     }
   };
 
-  const loadRentalInfo = async (rentalId, accountID) => {
+  const loadRentalInfo = async (rentalId) => {
     try {
       setLoadingRental(true);
       const token = getToken();
       
       console.log(`📋 [RENTAL INFO] Fetching rental ${rentalId}...`);
-      console.log(`🔍 [ACCOUNT ID] From payment: ${accountID}`);
       
-      // 1. Gọi API GetRentalById
+      // Chỉ gọi 1 API GetRentalById - đã trả về tất cả thông tin cần thiết
       const rentalResponse = await fetch(`http://localhost:5168/api/Rental/GetRentalById/${rentalId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -1484,103 +1584,17 @@ function PaymentManagement() {
       }
 
       const rentalData = await rentalResponse.json();
-      console.log("✅ [RENTAL INFO] Rental data:", rentalData);
-      console.log("✅ [RENTAL INFO] License plate from rental:", rentalData.licensePlate);
-      console.log("✅ [RENTAL INFO] Station fields:", {
-        stationID: rentalData.stationID,
-        pickupStationID: rentalData.pickupStationID,
-        returnStationID: rentalData.returnStationID
-      });
+      console.log("✅ [RENTAL INFO] Complete rental data from API:", rentalData);
       
-      // Lấy licensePlate từ rentalData
-      const licensePlate = rentalData.licensePlate || rentalData.LicensePlate || "N/A";
+      // GetRentalById đã trả về đầy đủ:
+      // - bikeName, licensePlate
+      // - renterName, phoneNumber, email
+      // - startDate, endDate, handoverDate
+      // - paymentMethod
       
-      // 2. Gọi API GetBikeByID để lấy tên loại xe
-      let bikeName = "N/A";
-      if (rentalData.bikeID) {
-        try {
-          console.log(`🏍️ [BIKE INFO] Fetching bike ${rentalData.bikeID}...`);
-          const bikeResponse = await fetch(`http://localhost:5168/api/EVBike/GetBikeByID/${rentalData.bikeID}`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          });
-          
-          if (bikeResponse.ok) {
-            const bikeData = await bikeResponse.json();
-            bikeName = bikeData.bikeName || bikeData.BikeName || bikeData.model || bikeData.Model || "N/A";
-            console.log("✅ [BIKE INFO] Bike name:", bikeName);
-          }
-        } catch (bikeErr) {
-          console.warn("⚠️ [BIKE INFO] Could not fetch bike details:", bikeErr);
-        }
-      }
-      
-      // 3. Gọi API GetAccountById để lấy thông tin khách hàng
-      let accountInfo = null;
-      console.log("🔍 [ACCOUNT CHECK] accountID from payment:", accountID, "exists?", !!accountID);
-      
-      if (accountID) {
-        try {
-          console.log(`👤 [ACCOUNT INFO] Fetching account ${accountID}...`);
-          const accountResponse = await fetch(`http://localhost:5168/api/Account/GetAccountById/${accountID}`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          });
-          
-          console.log("📡 [ACCOUNT INFO] Response status:", accountResponse.status);
-          
-          if (accountResponse.ok) {
-            const accountData = await accountResponse.json();
-            accountInfo = accountData;
-            console.log("✅ [ACCOUNT INFO] Account data:", accountInfo);
-          } else {
-            console.error("❌ [ACCOUNT INFO] Failed with status:", accountResponse.status);
-          }
-        } catch (accountErr) {
-          console.warn("⚠️ [ACCOUNT INFO] Could not fetch account details:", accountErr);
-        }
-      } else {
-        console.warn("⚠️ [ACCOUNT INFO] No accountID provided from payment!");
-      }
-      
-      // 4. Gọi API GetStationById cho stationID (dùng chung cho pickup và return)
-      let stationName = "N/A";
-      if (rentalData.stationID) {
-        try {
-          console.log(`🏢 [STATION INFO] Fetching station ${rentalData.stationID}...`);
-          const stationResponse = await fetch(`http://localhost:5168/api/Station/GetStationById/${rentalData.stationID}`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          });
-          
-          if (stationResponse.ok) {
-            const stationData = await stationResponse.json();
-            stationName = stationData.name || stationData.Name || stationData.stationName || stationData.StationName || "N/A";
-            console.log("✅ [STATION INFO] Station name:", stationName);
-          }
-        } catch (stationErr) {
-          console.warn("⚠️ [STATION INFO] Could not fetch station:", stationErr);
-        }
-      }
-      
-      // 6. Merge tất cả thông tin vào rentalData
-      const enrichedRentalInfo = {
-        ...rentalData,
-        bikeName: bikeName,
-        licensePlate: licensePlate,
-        accountInfo: accountInfo,
-        stationName: stationName,
-      };
-      
-      setRentalInfo(enrichedRentalInfo);
+      setRentalInfo(rentalData);
       setShowRentalInfoModal(true);
-      console.log("✅ [RENTAL INFO] Enriched data:", enrichedRentalInfo);
+      console.log("✅ [RENTAL INFO] Data loaded successfully");
     } catch (err) {
       console.error("❌ [RENTAL INFO] Error:", err);
       alert(`Không thể tải thông tin rental: ${err.message}`);
@@ -1589,10 +1603,97 @@ function PaymentManagement() {
     }
   };
 
-  // Filter payments based on selected filter
+  // Xác nhận thanh toán
+  const handleConfirmPayment = async (payment) => {
+    if (!window.confirm(`Xác nhận thanh toán #${payment.paymentID}?`)) {
+      return;
+    }
+
+    try {
+      const token = getToken();
+      
+      console.log("✅ [CONFIRM] Calling API success for payment:", payment.paymentID);
+      
+      const response = await fetch(`http://localhost:5168/api/Payment/success?paymentID=${payment.paymentID}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API Error: ${response.status} - ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log("✅ [CONFIRM] Success response:", result);
+      
+      alert("✅ Đã xác nhận thanh toán thành công!");
+      loadPayments(); // Reload danh sách
+    } catch (err) {
+      console.error("❌ [CONFIRM] Error:", err);
+      alert(`❌ Có lỗi xảy ra khi xác nhận: ${err.message}`);
+    }
+  };
+
+  // Mở modal hủy đơn
+  const handleOpenCancelModal = (payment) => {
+    setCancellingPayment(payment);
+    setCancelReason("");
+    setShowCancelModal(true);
+  };
+
+  // Xử lý hủy đơn
+  const handleCancelPayment = async () => {
+    if (!cancelReason.trim()) {
+      alert("⚠️ Vui lòng nhập lý do hủy đơn!");
+      return;
+    }
+
+    try {
+      const token = getToken();
+      
+      console.log("❌ [CANCEL] Calling API failed for payment:", cancellingPayment.paymentID);
+      console.log("📝 [CANCEL] Reason:", cancelReason);
+
+      const response = await fetch(`http://localhost:5168/api/Payment/failed?paymentID=${cancellingPayment.paymentID}&reason=${encodeURIComponent(cancelReason)}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API Error: ${response.status} - ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log("✅ [CANCEL] Success response:", result);
+      
+      alert("✅ Đã hủy đơn thanh toán thành công!");
+      setShowCancelModal(false);
+      setCancelReason("");
+      setCancellingPayment(null);
+      loadPayments(); // Reload danh sách
+    } catch (err) {
+      console.error("❌ [CANCEL] Error:", err);
+      alert(`❌ Có lỗi xảy ra khi hủy đơn: ${err.message}`);
+    }
+  };
+
+  // Filter payments based on payment type and status
   const filteredPayments = payments.filter((p) => {
+    // First filter by payment type
+    const matchesType = paymentType === "cash" ? p.paymentMethod === 2 : p.paymentMethod === 1;
+    
+    if (!matchesType) return false;
+    
+    // Then filter by status
     if (paymentFilter === "pending") {
-      // Show both status 0 (cash unpaid) and status 2 (PayOS paid)
       return p.status === 0 || p.status === 2;
     }
     if (paymentFilter === "verified") return p.status === 1;
@@ -1676,23 +1777,57 @@ function PaymentManagement() {
     <div className="management-section">
       <div className="section-header">
         <h2>💰 Quản Lý Thanh Toán</h2>
-        <div className="section-stats">
-          <div className="stat-card">
-            <span className="stat-number">
-              {payments.filter((p) => p.status === 0).length}
-            </span>
-            <span className="stat-label">💵 Cash - Chưa TT</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-number">
-              {payments.filter((p) => p.status === 2).length}
-            </span>
-            <span className="stat-label">✅ PayOS - Đã TT</span>
-          </div>
-        </div>
       </div>
 
-      {/* Filter Tabs */}
+      {/* Payment Type Tabs - Main Navigation */}
+      <div className="payment-type-tabs" style={{ 
+        display: 'flex', 
+        gap: '10px', 
+        marginBottom: '20px',
+        borderBottom: '2px solid #e0e0e0',
+        paddingBottom: '10px'
+      }}>
+        <button
+          className={`payment-type-tab ${paymentType === "cash" ? "active" : ""}`}
+          onClick={() => setPaymentType("cash")}
+          style={{
+            flex: 1,
+            padding: '12px 24px',
+            fontSize: '16px',
+            fontWeight: '600',
+            border: 'none',
+            borderRadius: '8px 8px 0 0',
+            cursor: 'pointer',
+            background: paymentType === "cash" ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#f5f5f5',
+            color: paymentType === "cash" ? 'white' : '#666',
+            transition: 'all 0.3s ease',
+            boxShadow: paymentType === "cash" ? '0 4px 15px rgba(102, 126, 234, 0.3)' : 'none'
+          }}
+        >
+          💵 Thanh toán trực tiếp ({payments.filter((p) => p.paymentMethod === 2).length})
+        </button>
+        <button
+          className={`payment-type-tab ${paymentType === "online" ? "active" : ""}`}
+          onClick={() => setPaymentType("online")}
+          style={{
+            flex: 1,
+            padding: '12px 24px',
+            fontSize: '16px',
+            fontWeight: '600',
+            border: 'none',
+            borderRadius: '8px 8px 0 0',
+            cursor: 'pointer',
+            background: paymentType === "online" ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#f5f5f5',
+            color: paymentType === "online" ? 'white' : '#666',
+            transition: 'all 0.3s ease',
+            boxShadow: paymentType === "online" ? '0 4px 15px rgba(102, 126, 234, 0.3)' : 'none'
+          }}
+        >
+          💳 Thanh toán online ({payments.filter((p) => p.paymentMethod === 1).length})
+        </button>
+      </div>
+
+      {/* Filter Tabs - Status Filters */}
       <div className="filter-tabs">
         <button
           className={`filter-tab ${
@@ -1740,11 +1875,8 @@ function PaymentManagement() {
             <div className="payment-header">
               <div className="payment-info">
                 <h3>🆔 Payment #{payment.paymentID}</h3>
-                <p className="vehicle-info">
-                  📦 Rental ID: {payment.rentalID}
-                </p>
                 <span className="payment-date">
-                  📅 {formatDate(payment.paymentDate)}
+                  🕐 Ngày tạo đơn: {formatDate(payment.createdAt)}
                 </span>
               </div>
               <div className="payment-badges">
@@ -1760,9 +1892,10 @@ function PaymentManagement() {
                 </span>
               </div>
               <div className="payment-method">
-                <span className="method-label">� Phương thức:</span>
+                <span className="method-label">💳 Phương thức:</span>
                 <span className="method-value">
-                  {payment.paymentMethod || "N/A"}
+                  {payment.paymentMethod === 2 ? "💵 Tiền mặt" : 
+                   payment.paymentMethod === 1 ? "💳 PayOS" : "N/A"}
                 </span>
               </div>
             </div>
@@ -1774,17 +1907,43 @@ function PaymentManagement() {
                   const freshPayments = await loadPayments();
                   const updatedPayment = freshPayments.find(p => p.paymentID === payment.paymentID);
                   
-                  const accountID = updatedPayment?.renter?.accountID || payment.renter?.accountID;
                   const rentalID = updatedPayment?.rentalID || payment.rentalID;
                   
-                  console.log("[BUTTON] AccountID from renter:", accountID);
+                  console.log("[BUTTON] Loading rental info for rentalID:", rentalID);
                   
-                  loadRentalInfo(rentalID, accountID);
+                  // Chỉ cần rentalID - API GetRentalById sẽ trả về tất cả thông tin
+                  loadRentalInfo(rentalID);
                 }}
                 disabled={loadingRental}
               >
                 {loadingRental ? "⏳ Đang tải..." : "👁️ Xem thông tin"}
               </button>
+              
+              {/* Chỉ hiển thị nút Xác nhận và Hủy cho đơn chưa xác nhận */}
+              {(payment.status === 0 || payment.status === 2) && (
+                <>
+                  <button
+                    className="btn-action btn-confirm"
+                    onClick={() => handleConfirmPayment(payment)}
+                    style={{
+                      background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+                      color: 'white'
+                    }}
+                  >
+                    ✅ Xác nhận
+                  </button>
+                  <button
+                    className="btn-action btn-cancel"
+                    onClick={() => handleOpenCancelModal(payment)}
+                    style={{
+                      background: 'linear-gradient(135deg, #ee0979 0%, #ff6a00 100%)',
+                      color: 'white'
+                    }}
+                  >
+                    ❌ Hủy đơn
+                  </button>
+                </>
+              )}
             </div>
           </div>
         ))}
@@ -1811,26 +1970,15 @@ function PaymentManagement() {
               </div>
               <div className="info-section">
                 <h3>👤 Thông Tin Khách Hàng</h3>
-                {rentalInfo.accountInfo ? (
-                  <>
-                    <p><strong>Tên:</strong> {rentalInfo.accountInfo.fullName || rentalInfo.accountInfo.FullName || "N/A"}</p>
-                    <p><strong>SĐT:</strong> {rentalInfo.accountInfo.phone || rentalInfo.accountInfo.Phone || "N/A"}</p>
-                    <p><strong>Email:</strong> {rentalInfo.accountInfo.email || rentalInfo.accountInfo.Email || "N/A"}</p>
-                    <p><strong>Địa chỉ:</strong> {rentalInfo.accountInfo.address || rentalInfo.accountInfo.Address || "N/A"}</p>
-                  </>
-                ) : (
-                  <>
-                    <p><strong>Tên:</strong> {rentalInfo.renter?.fullName || "N/A"}</p>
-                    <p><strong>SĐT:</strong> {rentalInfo.renter?.phoneNumber || rentalInfo.renter?.phone || "N/A"}</p>
-                    <p><strong>Email:</strong> {rentalInfo.renter?.account?.email || "N/A"}</p>
-                    <p><em>⚠️ Không tải được thông tin chi tiết khách hàng</em></p>
-                  </>
-                )}
+                <p><strong>Tên:</strong> {rentalInfo.renterName || "N/A"}</p>
+                <p><strong>SĐT:</strong> {rentalInfo.phoneNumber || "N/A"}</p>
+                <p><strong>Email:</strong> {rentalInfo.email || "N/A"}</p>
               </div>
               <div className="info-section">
-                <h3>📅 Thời Gian Thuê</h3>
-                <p><strong>Ngày giờ nhận xe:</strong> {formatDate(rentalInfo.startDate)}</p>
-                <p><strong>Ngày giờ trả xe:</strong> {formatDate(rentalInfo.endDate)}</p>
+                <h3>📅 Thời Gian</h3>
+                <p><strong>Ngày thanh toán:</strong> {formatDate(rentalInfo.startDate)}</p>
+                <p><strong>Ngày bàn giao xe:</strong> {formatDate(rentalInfo.handoverDate)}</p>
+                <p><strong>Ngày kết thúc đơn:</strong> {formatDate(rentalInfo.endDate)}</p>
                 <p><strong>Thời gian thuê:</strong> {
                   (() => {
                     if (!rentalInfo.startDate || !rentalInfo.endDate) return "N/A";
@@ -1842,12 +1990,11 @@ function PaymentManagement() {
                 }</p>
               </div>
               <div className="info-section">
-                <h3>🏢 Trạm Thuê & Trả</h3>
-                <p><strong>Trạm nhận xe:</strong> {rentalInfo.stationName || "N/A"}</p>
-                <p><strong>Trạm trả xe:</strong> {rentalInfo.stationName || "N/A"}</p>
-              </div>
-              <div className="info-section">
                 <h3>💵 Tài Chính</h3>
+                <p><strong>Phương thức thanh toán:</strong> {
+                  rentalInfo.paymentMethod === 2 ? "💵 Tiền mặt (Cash)" :
+                  rentalInfo.paymentMethod === 1 ? "💳 Chuyển khoản" : "N/A"
+                }</p>
                 <p><strong>Tiền cọc:</strong> {formatCurrency(rentalInfo.deposit)}</p>
                 <p><strong>Tổng tiền thuê:</strong> {formatCurrency(rentalInfo.totalAmount)}</p>
                 <p><strong>Trạng thái:</strong> {
@@ -1865,6 +2012,78 @@ function PaymentManagement() {
                 onClick={() => setShowRentalInfoModal(false)}
               >
                 Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel Payment Modal */}
+      {showCancelModal && cancellingPayment && (
+        <div className="modal-overlay" onClick={() => setShowCancelModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+            <div className="modal-header">
+              <h2>❌ Hủy Đơn Thanh Toán</h2>
+              <button
+                className="btn-close"
+                onClick={() => setShowCancelModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="modal-body">
+              <div style={{ marginBottom: '20px' }}>
+                <p><strong>Payment ID:</strong> #{cancellingPayment.paymentID}</p>
+                <p><strong>Số tiền:</strong> {formatCurrency(cancellingPayment.amount)}</p>
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="cancelReason" style={{ 
+                  display: 'block', 
+                  marginBottom: '8px', 
+                  fontWeight: '600',
+                  color: '#333'
+                }}>
+                  📝 Lý do hủy đơn: <span style={{ color: 'red' }}>*</span>
+                </label>
+                <textarea
+                  id="cancelReason"
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  placeholder="Nhập lý do hủy đơn (bắt buộc)..."
+                  rows="4"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '2px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    resize: 'vertical',
+                    fontFamily: 'inherit'
+                  }}
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button
+                className="btn-secondary"
+                onClick={() => {
+                  setShowCancelModal(false);
+                  setCancelReason("");
+                }}
+              >
+                Đóng
+              </button>
+              <button
+                className="btn-primary"
+                onClick={handleCancelPayment}
+                disabled={!cancelReason.trim()}
+                style={{
+                  background: !cancelReason.trim() ? '#ccc' : 'linear-gradient(135deg, #ee0979 0%, #ff6a00 100%)',
+                  cursor: !cancelReason.trim() ? 'not-allowed' : 'pointer'
+                }}
+              >
+                ❌ Xác nhận hủy
               </button>
             </div>
           </div>
