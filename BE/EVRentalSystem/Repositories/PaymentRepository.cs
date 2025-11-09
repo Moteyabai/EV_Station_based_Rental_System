@@ -26,5 +26,11 @@ namespace Repositories
                 .Where(payment => payment.Status == (int)PaymentStatus.Pending)
                 .ToListAsync();
         }
+
+        public async Task<Payment> GetDepositPaymentByRentalIDAsync(int rentalID)
+        {
+            return await _context.Payments
+                .FirstOrDefaultAsync(payment => payment.RentalID == rentalID && payment.PaymentType == (int)PaymentType.Deposit);
+        }
     }
 }

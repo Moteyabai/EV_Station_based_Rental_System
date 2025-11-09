@@ -158,6 +158,20 @@ namespace API.Controllers
                     return NotFound(res);
                 }
 
+                var renter = await _renterService.GetRenterByAccountIDAsync(paymentDto.AccountID);
+                if (renter == null)
+                {
+                    res.Message = "Không tìm thấy thông tin người thuê!";
+                    return NotFound(res);
+                }
+
+                if (!renter.IsVerified)
+                {
+                    res.Message = "Người thuê chưa được xác thực, không thể thực hiện thuê xe!";
+                    return BadRequest(res);
+                }
+
+
                 var bike = await _evbikeService.GetByIdAsync(paymentDto.BikeID);
                 if (bike == null)
                 {
@@ -172,21 +186,13 @@ namespace API.Controllers
                     return BadRequest(res);
                 }
 
-                var renter = await _renterService.GetRenterByAccountIDAsync(paymentDto.AccountID);
-                if (renter == null)
-                {
-                    res.Message = "Không tìm thấy thông tin người thuê!";
-                    return NotFound(res);
-                }
-
                 var rental = new Rental();
                 rental.BikeID = bike.BikeID;
                 rental.RenterID = renter.RenterID;
                 rental.StationID = paymentDto.StationID;
                 rental.InitialBattery = 100; // Default initial battery
-                rental.RentalDate = DateTime.Now;
                 rental.Deposit = paymentDto.Amount;
-                rental.Status = (int)RentalStatus.Pending; // Changed from Reserved to Pending (0)
+                rental.Status = paymentDto.PaymentMethod==(int)PaymentMethod.Cash ? (int)RentalStatus.Pending : (int)RentalStatus.Reserved;
                 rental.LicensePlate = availableStock.LicensePlate;
                 rental.StartDate = paymentDto.StartTime;
                 rental.EndDate = paymentDto.EndTime;

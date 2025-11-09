@@ -348,15 +348,30 @@ namespace API.Controllers
                 existingDocument.IDNumber = verifyIDDTO.IDNumber;
                 existingDocument.LicenseNumber = verifyIDDTO.LicenseNumber;
 
+                var renter = await _renterService.GetRenterByDocumentID(verifyIDDTO.DocumentID);
+                if (renter == null)
+                {
+                    var res = new ResponseDTO();
+                    res.Message = "Người thuê không tồn tại!";
+                    return NotFound(res);
+                }
+
                 if (verifyIDDTO.Status == (int)DocumentStatus.Approved)
                 {
                     existingDocument.Status = (int)DocumentStatus.Approved;
+                    renter.IsVerified = true;
+
                 }
                 else if (verifyIDDTO.Status == (int)DocumentStatus.Rejected)
                 {
                     existingDocument.Status = (int)DocumentStatus.Rejected;
                 }
+
                 await _IDDocumentService.UpdateAsync(existingDocument);
+
+                await _renterService.UpdateAsync(renter);
+
+
                 var response = new ResponseDTO
                 {
                     Message = verifyIDDTO.Status == (int)DocumentStatus.Approved ? "Tài liệu đã được phê duyệt." : "Tài liệu đã bị từ chối."

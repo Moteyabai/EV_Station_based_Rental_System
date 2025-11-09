@@ -55,6 +55,9 @@ namespace BusinessObject.Models
         [DateGreaterThan("RentalDate", ErrorMessage = "Ngày trả phải sau ngày thuê")]
         public DateTime? ReturnDate { get; set; }
 
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime UpdatedAt { get; set; } = DateTime.Now;
+
         [Required(ErrorMessage = "Tiền đặt cọc là bắt buộc")]
         [Range(0, 50000000, ErrorMessage = "Tiền đặt cọc phải từ 0 đến 50,000,000 VNĐ")]
         public decimal Deposit { get; set; }
