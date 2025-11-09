@@ -52,7 +52,7 @@ namespace API.Controllers
         /// </summary>
         [HttpGet("GetAllStaff")]
         [Authorize]
-        public async Task<ActionResult<IEnumerable<StationStaff>>> GetAllStaff()
+        public async Task<ActionResult<IEnumerable<StationStaffDisplayDTO>>> GetAllStaff()
         {
             // Check user permission (Admin only)
             var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
@@ -76,7 +76,32 @@ namespace API.Controllers
                     };
                     return NotFound(res);
                 }
-                return Ok(staff);
+
+                var staffDisplayList = new List<StationStaffDisplayDTO>();
+                foreach (var s in staff)
+                {
+                    var account = await _accountService.GetByIdAsync(s.AccountID);
+                    var stationName = string.Empty;
+                    if (s.StationID.HasValue)
+                    {
+                        var station = await _stationService.GetByIdAsync(s.StationID.Value);
+                        stationName = station?.Name;
+                    }
+                    var staffDisplay = new StationStaffDisplayDTO
+                    {
+                        StaffID = s.StaffID,
+                        FullName = account.FullName,
+                        Email = account.Email,
+                        Phone = account.Phone,
+                        AvatarUrl = account.Avatar,
+                        StationID = s.StationID,
+                        StationName = stationName,
+                        HandoverTimes = s.HandoverTimes,
+                        ReceiveTimes = s.ReceiveTimes
+                    };
+                    staffDisplayList.Add(staffDisplay);
+                }
+                return Ok(staffDisplayList);
             }
             catch (Exception ex)
             {
@@ -97,6 +122,7 @@ namespace API.Controllers
 
             try
             {
+
                 var staff = await _stationStaffService.GetByIdAsync(id);
                 if (staff == null)
                 {
@@ -117,7 +143,24 @@ namespace API.Controllers
                     return Unauthorized(res);
                 }
 
-                return Ok(staff);
+                var display = new StationStaffDisplayDTO();
+                var account = await _accountService.GetByIdAsync(staff.AccountID);
+                display.StaffID = staff.StaffID;
+                display.FullName = account.FullName;
+                display.Email = account.Email;
+                display.Phone = account.Phone;
+                display.AvatarUrl = account.Avatar;
+                display.StationID = staff.StationID;
+                display.HandoverTimes = staff.HandoverTimes;
+                display.ReceiveTimes = staff.ReceiveTimes;
+
+                if (staff.StationID.HasValue)
+                {
+                    var station = await _stationService.GetByIdAsync(staff.StationID.Value);
+                    display.StationName = station?.Name;
+                }
+
+                return Ok(display);
             }
             catch (Exception ex)
             {
@@ -129,16 +172,17 @@ namespace API.Controllers
         /// Create new station staff (Admin only)
         /// </summary>
         [HttpPost("CreateStaff")]
+        [Authorize]
         public async Task<ActionResult> CreateStaff(StationStaffCreateDTO staffDto)
         {
             // Check user permission (Admin only)
             var res = new ResponseDTO();
-            //var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-            //if (permission != "3")
-            //{
-            //    res.Message = "Không có quyền truy cập!";
-            //    return Unauthorized(res);
-            //}
+            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
+            if (permission != "3")
+            {
+                res.Message = "Không có quyền truy cập!";
+                return Unauthorized(res);
+            }
 
             if (!ModelState.IsValid)
             {

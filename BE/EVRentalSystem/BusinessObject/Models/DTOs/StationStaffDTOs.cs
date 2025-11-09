@@ -27,6 +27,19 @@ namespace BusinessObject.Models.DTOs
         public IFormFile AvatarPicture { get; set; }
     }
 
+    public class StationStaffDisplayDTO
+    {
+        public int StaffID { get; set; }
+        public string FullName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string? Phone { get; set; }
+        public string AvatarUrl { get; set; } = string.Empty;
+        public int? StationID { get; set; }
+        public string? StationName { get; set; }
+        public int HandoverTimes { get; set; }
+        public int ReceiveTimes { get; set; }
+    }
+
     public class StationStaffUpdateDTO
     {
         [Required(ErrorMessage = "Staff ID là bắt buộc")]
