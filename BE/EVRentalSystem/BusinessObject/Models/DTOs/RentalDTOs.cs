@@ -44,6 +44,10 @@ namespace BusinessObject.Models.DTOs
     public class RentalDisplayDTO
     {
         public int RentalID { get; set; }
+        public int BikeID { get; set; }
+        public int StationID { get; set; }
+        public string StationName { get; set; }
+        public string BikeImage { get; set; }
         public string BikeName { get; set; }
         public string LicensePlate { get; set; }
         public string RenterName { get; set; }
@@ -60,6 +64,9 @@ namespace BusinessObject.Models.DTOs
         public string? FinalBikeCondition { get; set; }
         public decimal Deposit { get; set; }
         public decimal? Fee { get; set; }
+        public int PaymentMethod { get; set; } // 2: Cash, 1: PayOS
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
         public int Status { get; set; } // "Reserved", "OnGoing", "Cancelled", "Completed"
     }
 

@@ -87,5 +87,7 @@ namespace Services
         }
 
         public async Task<IEnumerable<Payment>> GetPendingPayment() => await _paymentRepository.GetPendingPayment();
+
+        public async Task<Payment> GetDepositPaymentByRentalIDAsync(int rentalID) => await _paymentRepository.GetDepositPaymentByRentalIDAsync(rentalID);
     }
 }

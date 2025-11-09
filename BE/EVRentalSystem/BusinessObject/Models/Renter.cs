@@ -19,6 +19,8 @@ namespace BusinessObject.Models
         [Required]
         public decimal TotalSpent { get; set; } = 0;
 
+        public bool IsVerified { get; set; } = false;
+
         public virtual Account Account { get; set; }
 
         [ForeignKey("DocumentID")]

@@ -139,3 +139,73 @@ export async function getCompletedRentals(token) {
     throw error;
   }
 }
+
+/**
+ * Get rentals by account ID
+ * @param {number} accountID - Account ID
+ * @param {string} token - JWT authentication token
+ * @returns {Promise<Array>} List of rentals for the account
+ */
+export async function getRentalsByAccountID(accountID, token) {
+  try {
+    console.log('📋 [RENTAL] Fetching rentals for account:', accountID);
+    
+    const response = await fetch(`${API_BASE_URL}/api/Rental/GetRentalsByAccountID/${accountID}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    console.log('📥 [RENTAL] Response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ [RENTAL] Error response:', errorText);
+      throw new Error('Không thể tải lịch sử thuê xe');
+    }
+
+    const rentals = await response.json();
+    console.log('✅ [RENTAL] User rentals:', rentals);
+    return rentals;
+  } catch (error) {
+    console.error('💥 [RENTAL] Error:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get renter information by account ID
+ * @param {number} accountID - Account ID
+ * @param {string} token - JWT authentication token
+ * @returns {Promise<Object>} Renter information including total rentals and total spent
+ */
+export async function getRenterByAccountID(accountID, token) {
+  try {
+    console.log('👤 [RENTAL] Fetching renter info for account:', accountID);
+    
+    const response = await fetch(`${API_BASE_URL}/api/Renter/GetRenterByAccountID/${accountID}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    console.log('📥 [RENTAL] Renter response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ [RENTAL] Renter error response:', errorText);
+      throw new Error('Không thể tải thông tin người thuê');
+    }
+
+    const renterInfo = await response.json();
+    console.log('✅ [RENTAL] Renter info:', renterInfo);
+    return renterInfo;
+  } catch (error) {
+    console.error('💥 [RENTAL] Renter error:', error);
+    throw error;
+  }
+}

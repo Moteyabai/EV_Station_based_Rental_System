@@ -18,9 +18,12 @@ namespace API.Controllers
         private readonly AccountService _accountService;
         private readonly EVBikeService _evBikeService;
         private readonly EVBike_StocksService _evBikeStocksService;
+        private readonly StationService _stationService;
+        private readonly PaymentService _paymentService;
 
         public RentalController(RentalService rentalService, StationStaffService stationStaffService
-            , RenterService renterService, AccountService accountService, EVBikeService eVBikeService, EVBike_StocksService eVBikeStocksService)
+            , RenterService renterService, AccountService accountService, EVBikeService eVBikeService
+            , EVBike_StocksService eVBikeStocksService, StationService stationService, PaymentService paymentService)
         {
             _rentalService = rentalService;
             _stationStaffService = stationStaffService;
@@ -28,6 +31,8 @@ namespace API.Controllers
             _accountService = accountService;
             _evBikeService = eVBikeService;
             _evBikeStocksService = eVBikeStocksService;
+            _stationService = stationService;
+            _paymentService = paymentService;
         }
 
         /// <summary>
@@ -72,7 +77,7 @@ namespace API.Controllers
         /// </summary>
         [HttpGet("GetRentalById/{id}")]
         [Authorize]
-        public async Task<ActionResult<Rental>> GetRentalById(int id)
+        public async Task<ActionResult<RentalDisplayDTO>> GetRentalById(int id)
         {
             var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
             var userId = User.FindFirst(UserClaimTypes.AccountID)?.Value;
@@ -109,9 +114,27 @@ namespace API.Controllers
                     return NotFound(res);
                 }
 
+                var station = await _stationService.GetByIdAsync(rental.StationID);
+                if (station == null)
+                {
+                    res.Message = "Không tìm thấy thông tin trạm!";
+                    return NotFound(res);
+                }
+
+                var payment = await _paymentService.GetDepositPaymentByRentalIDAsync(rental.RentalID);
+                if (payment == null)
+                {
+                    res.Message = "Không tìm thấy thông tin thanh toán!";
+                    return NotFound(res);
+                }
+
                 var displayDto = new RentalDisplayDTO
                 {
                     RentalID = rental.RentalID,
+                    BikeID = rental.BikeID,
+                    StationID = rental.StationID,
+                    StationName = station.Name,
+                    BikeImage = bike.FrontImg,
                     BikeName = bike.BikeName,
                     LicensePlate = rental.LicensePlate,
                     RenterName = acc.FullName,
@@ -126,8 +149,11 @@ namespace API.Controllers
                     FinalBattery = rental.FinalBattery,
                     InitBikeCondition = rental.InitBikeCondition,
                     FinalBikeCondition = rental.FinalBikeCondition,
+                    CreatedAt = rental.CreatedAt,
+                    UpdatedAt = rental.UpdatedAt,
                     Deposit = rental.Deposit,
                     Fee = rental.Fee,
+                    PaymentMethod = payment.PaymentMethod,
                     Status = rental.Status,
                 };
 
@@ -176,9 +202,36 @@ namespace API.Controllers
                 foreach (var rental in rentals)
                 {
                     var bike = await _evBikeService.GetByIdAsync(rental.BikeID);
+                    if (bike == null)
+                    {
+                        res.Message = "Không tìm thấy thông tin xe!";
+                        return NotFound(res);
+                    }
                     var acc = await _accountService.GetByIdAsync(renter.AccountID);
+                    if (acc == null)
+                    {
+                        res.Message = "Không tìm thấy thông tin tài khoản!";
+                        return NotFound(res);
+                    }
+                    var station = await _stationService.GetByIdAsync(rental.StationID);
+                    if (station == null)
+                    {
+                        res.Message = "Không tìm thấy thông tin trạm!";
+                        return NotFound(res);
+                    }
+
+                    var payment = await _paymentService.GetDepositPaymentByRentalIDAsync(rental.RentalID);
+                    if (payment == null)
+                    {
+                        res.Message = "Không tìm thấy thông tin thanh toán!";
+                        return NotFound(res);
+                    }
                     var displayDto = new RentalDisplayDTO();
                     displayDto.RentalID = rental.RentalID;
+                    displayDto.BikeID = rental.BikeID;
+                    displayDto.StationID = rental.StationID;
+                    displayDto.StationName = station.Name;
+                    displayDto.BikeImage = bike.FrontImg;
                     displayDto.BikeName = bike.BikeName;
                     displayDto.LicensePlate = rental.LicensePlate;
                     displayDto.RenterName = acc.FullName;
@@ -191,6 +244,12 @@ namespace API.Controllers
                     displayDto.AssignedStaff = rental.AssignedStaff;
                     displayDto.InitialBattery = rental.InitialBattery;
                     displayDto.FinalBattery = rental.FinalBattery;
+                    displayDto.Deposit = rental.Deposit;
+                    displayDto.Status = rental.Status;
+                    displayDto.Fee = rental.Fee;
+                    displayDto.CreatedAt = rental.CreatedAt;
+                    displayDto.UpdatedAt = rental.UpdatedAt;
+                    displayDto.PaymentMethod = payment.PaymentMethod;
 
                     displayDtos.Add(displayDto);
                 }
@@ -408,7 +467,7 @@ namespace API.Controllers
                 // Update return information
                 rental.FinalBattery = returnDto.FinalBattery;
                 rental.FinalBikeCondition = returnDto.FinalBikeCondition;
-                rental.ReturnDate = returnDto.ReturnDate;
+                rental.ReturnDate = DateTime.Now;
                 rental.Note = returnDto.Note;
                 rental.Status = (int)RentalStatus.Completed;
                 if (returnDto.Fee.HasValue)
@@ -469,6 +528,7 @@ namespace API.Controllers
                 }
                 // Update handover status
                 rental.AssignedStaff = staff.StaffID;
+                rental.RentalDate = DateTime.Now;
                 rental.Status = (int)RentalStatus.OnGoing;
 
                 await _rentalService.UpdateAsync(rental);
