@@ -43,7 +43,6 @@ namespace BusinessObject.Models
 
         public string? FinalBikeCondition { get; set; }
 
-        [Required(ErrorMessage = "Ngày thuê là bắt buộc")]
         public DateTime? RentalDate { get; set; }
 
         [Required]
