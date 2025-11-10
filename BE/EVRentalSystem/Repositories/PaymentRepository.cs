@@ -24,7 +24,7 @@ namespace Repositories
         {
             return await _context.Payments
                 .Include(payment => payment.Renter)
-                .Where(payment => payment.Status == (int)PaymentStatus.Pending)
+                .Where(payment => payment.Status == (int)PaymentStatus.Pending && payment.PaymentMethod==(int)PaymentMethod.Cash)
                 .ToListAsync();
         }
 
