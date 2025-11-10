@@ -342,7 +342,6 @@ namespace API.Controllers
         }
 
         [HttpPut("success")]
-        [Authorize]
         public async Task<ActionResult> RenterPaymentSuccess([FromQuery] int orderID)
         {
             if (!ModelState.IsValid)
@@ -405,7 +404,6 @@ namespace API.Controllers
         }
 
         [HttpPut("fee-success")]
-        [Authorize]
         public async Task<ActionResult> StaffFeePaymentSuccess([FromQuery] int orderID)
         {
             var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
@@ -452,7 +450,6 @@ namespace API.Controllers
         }
 
         [HttpPut("fee-failed")]
-        [Authorize]
         public async Task<ActionResult> StaffFeePaymentFailed([FromQuery] int orderID)
         {
             var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
@@ -499,7 +496,6 @@ namespace API.Controllers
         }
 
         [HttpPut("failed")]
-        [Authorize]
         public async Task<ActionResult> RenterPaymentFailed([FromQuery] int orderID)
         {
             if (!ModelState.IsValid)
