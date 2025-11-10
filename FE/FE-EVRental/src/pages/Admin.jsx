@@ -212,6 +212,13 @@ const Admin = () => {
   // Add staff modal & form state
   const [showAddStaffModal, setShowAddStaffModal] = useState(false);
   const [creatingStaff, setCreatingStaff] = useState(false);
+
+  // Assign station modal state
+  const [showAssignStationModal, setShowAssignStationModal] = useState(false);
+  const [assigningStaff, setAssigningStaff] = useState(null);
+  const [selectedStationForAssign, setSelectedStationForAssign] = useState("");
+  const [assigningStation, setAssigningStation] = useState(false);
+
   const [newStaff, setNewStaff] = useState({
     fullName: "",
     email: "",
@@ -247,6 +254,7 @@ const Admin = () => {
     setStationsError(null);
 
     try {
+      // 🔴 API: GET /api/Station/GetAllStations - Lấy danh sách tất cả các trạm
       const data = await adminService.getAllStations();
       console.log("Stations loaded from API:", data);
 
@@ -291,6 +299,7 @@ const Admin = () => {
         description: newBrand.description || "",
       };
 
+      // 🔴 API: POST /api/Brand/CreateBrand - Tạo hãng xe mới
       const response = await fetch(
         "http://localhost:5168/api/Brand/CreateBrand",
         {
@@ -347,6 +356,7 @@ const Admin = () => {
         description: selectedBrand.description || "",
       };
 
+      // 🔴 API: PUT /api/Brand/UpdateBrand - Cập nhật thông tin hãng xe
       const response = await fetch(
         "http://localhost:5168/api/Brand/UpdateBrand",
         {
@@ -397,6 +407,7 @@ const Admin = () => {
         return;
       }
 
+      // 🔴 API: DELETE /api/Brand/DeleteBrand/{brandId} - Xóa hãng xe
       const response = await fetch(
         `http://localhost:5168/api/Brand/DeleteBrand/${brandId}`,
         {
@@ -440,6 +451,79 @@ const Admin = () => {
       alert(error?.message || "Không thể xóa nhân viên. Vui lòng thử lại.");
     } finally {
       setDeletingStaffId(null);
+    }
+  };
+
+  // Open assign station modal
+  const handleOpenAssignStation = (member) => {
+    setAssigningStaff(member);
+    setSelectedStationForAssign(member.stationId || "");
+    setShowAssignStationModal(true);
+  };
+
+  // Assign station to staff
+  const handleAssignStation = async () => {
+    if (!selectedStationForAssign) {
+      alert("⚠️ Vui lòng chọn trạm");
+      return;
+    }
+
+    try {
+      setAssigningStation(true);
+      const token = getToken();
+
+      if (!token) {
+        alert("❌ Vui lòng đăng nhập lại");
+        setAssigningStation(false);
+        return;
+      }
+
+      console.log(
+        "🏢 Assigning staff",
+        assigningStaff.id,
+        "to station",
+        selectedStationForAssign
+      );
+
+      const requestBody = {
+        staffID: assigningStaff.id,
+        stationID: parseInt(selectedStationForAssign, 10),
+      };
+
+      // 🔴 API: PUT /api/StationStaff/AssignToStation - Phân nhân viên vào trạm
+      const response = await fetch(
+        "http://localhost:5168/api/StationStaff/AssignToStation",
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log("✅ Station assigned:", result);
+
+      // Refresh staff list
+      await fetchStaff();
+
+      setShowAssignStationModal(false);
+      setAssigningStaff(null);
+      setSelectedStationForAssign("");
+      alert("✅ Đã phân trạm cho nhân viên thành công!");
+    } catch (error) {
+      console.error("Error assigning station:", error);
+      alert(error?.message || "Không thể phân trạm. Vui lòng thử lại.");
+    } finally {
+      setAssigningStation(false);
     }
   };
 
@@ -488,7 +572,16 @@ const Admin = () => {
       formData.append("Email", newStaff.email);
       if (newStaff.password) formData.append("Password", newStaff.password);
       formData.append("Phone", newStaff.phone || "");
-      if (newStaff.stationId) formData.append("StationID", newStaff.stationId);
+
+      if (newStaff.stationId) {
+        const stationVal = newStaff.stationId.toString();
+        console.log("✅ [UPDATE] Adding StationID to FormData:", stationVal);
+
+        // Send only most common variants
+        formData.append("StationID", stationVal); // PascalCase (ASP.NET standard)
+        formData.append("stationId", stationVal); // camelCase (JSON standard)
+      }
+
       if (newStaff.role) formData.append("Role", newStaff.role);
       if (newStaff.avatarFile)
         formData.append("AvatarPicture", newStaff.avatarFile);
@@ -515,7 +608,12 @@ const Admin = () => {
     } catch (err) {
       console.error("Error updating staff:", err);
       alert(err?.message || "Không thể cập nhật nhân viên. Vui lòng thử lại.");
-    } finally {
+      if (newStaff.stationId) {
+        // send both common variants to be tolerant to backend naming
+        const stationVal = newStaff.stationId.toString();
+        formData.append("StationID", stationVal);
+        formData.append("StationId", stationVal);
+      }
       setCreatingStaff(false);
     }
   };
@@ -526,8 +624,22 @@ const Admin = () => {
   };
 
   const handleAddBikeType = async () => {
-    if (!newBikeType.name || !newBikeType.brandId || !newBikeType.pricePerDay) {
+    // Validate required fields (allow 0 for numeric fields)
+    if (
+      !newBikeType.name ||
+      !newBikeType.brandId ||
+      newBikeType.pricePerDay === undefined ||
+      newBikeType.pricePerDay === null ||
+      newBikeType.pricePerDay === ""
+    ) {
       alert("Vui lòng điền đầy đủ thông tin bắt buộc (tên, hãng, giá/ngày)");
+      return;
+    }
+
+    // Check if price is a valid positive number
+    const price = parseFloat(newBikeType.pricePerDay);
+    if (isNaN(price) || price <= 0) {
+      alert("Giá thuê/ngày phải là số dương lớn hơn 0");
       return;
     }
 
@@ -557,6 +669,7 @@ const Admin = () => {
 
       console.log("Sending bike data as FormData");
 
+      // 🔴 API: POST /api/EVBike/AddBike - Thêm loại xe mới
       const response = await fetch("http://localhost:5168/api/EVBike/AddBike", {
         method: "POST",
         headers: {
@@ -667,6 +780,7 @@ const Admin = () => {
 
       console.log("Sending bike instance data:", requestBody);
 
+      // 🔴 API: POST /api/EVBike_Stocks/AddEVBikeStock - Thêm xe vào kho
       const response = await fetch(
         "http://localhost:5168/api/EVBike_Stocks/AddEVBikeStock",
         {
@@ -820,6 +934,7 @@ const Admin = () => {
       console.log("📤 Fetching staff from API...");
       console.log("🔑 Using token:", token.substring(0, 20) + "...");
 
+      // 🔴 API: GET /api/StationStaff/GetAllStaff - Lấy danh sách tất cả nhân viên
       const url = "http://localhost:5168/api/StationStaff/GetAllStaff";
       console.log("🌐 Calling URL:", url);
 
@@ -861,18 +976,82 @@ const Admin = () => {
 
       // Map API response to existing staff shape (fall back to sensible defaults)
       const mapped = Array.isArray(data)
-        ? data.map((s) => ({
-            id: s.staffID || s.id || s.accountID || s.accountId || 0,
-            name: s.fullName || s.fullname || s.name || s.userName || "",
-            stationId: s.stationID || s.stationId || s.station || "",
-            station: s.stationName || s.station || "",
-            role: s.roleName || s.role || (s.roleID ? `Role ${s.roleID}` : ""),
-            performance: s.performance || 0,
-            totalDeliveries: s.totalDeliveries || 0,
-            phone: s.phone || s.phoneNumber || s.mobile || "",
-            email: s.email || s.userEmail || s.emailAddress || "",
-            avatar: s.avatarPicture || s.avatar || s.profilePicture || null,
-          }))
+        ? data.map((s) => {
+            // Try to get account info from nested account object or top level
+            const account = s.account || {};
+            const station = s.station || {};
+
+            const staffObj = {
+              id: s.staffID || s.id || s.accountID || s.accountId || 0,
+              // Try multiple sources for name: direct field, account object, or fallback
+              name:
+                s.fullName ||
+                s.fullname ||
+                s.name ||
+                account.fullName ||
+                account.userName ||
+                account.name ||
+                `Staff #${s.staffID || s.accountID || "?"}`,
+              // Station info
+              stationId: s.stationID || s.stationId || station.stationID || "",
+              station:
+                s.stationName ||
+                station.name ||
+                station.stationName ||
+                (s.stationID ? `Trạm #${s.stationID}` : "Chưa phân trạm"),
+              // Role
+              role:
+                s.roleName ||
+                s.role ||
+                account.roleName ||
+                account.role ||
+                (s.roleID ? `Role ${s.roleID}` : "N/A"),
+              // Contact info
+              phone:
+                s.phone ||
+                s.phoneNumber ||
+                s.mobile ||
+                account.phone ||
+                account.phoneNumber ||
+                account.mobile ||
+                "",
+              email:
+                s.email ||
+                s.userEmail ||
+                s.emailAddress ||
+                account.email ||
+                account.userEmail ||
+                account.emailAddress ||
+                "",
+              // Avatar
+              avatar:
+                s.avatarPicture ||
+                s.avatar ||
+                s.profilePicture ||
+                account.avatar ||
+                account.avatarPicture ||
+                null,
+              // Performance (keep for backward compatibility)
+              performance: s.performance || 0,
+              totalDeliveries: s.totalDeliveries || 0,
+            };
+
+            // Debug log if critical fields are missing
+            if (!staffObj.name || staffObj.name.startsWith("Staff #")) {
+              console.warn(
+                `⚠️ Staff ${staffObj.id}: Missing name. Raw data:`,
+                s
+              );
+            }
+            if (!staffObj.email) {
+              console.warn(
+                `⚠️ Staff ${staffObj.id}: Missing email. Raw data:`,
+                s
+              );
+            }
+
+            return staffObj;
+          })
         : [];
 
       console.log("✅ Mapped staff:", mapped);
@@ -891,6 +1070,10 @@ const Admin = () => {
 
   // Open add-staff modal
   const handleOpenAddStaff = (stationId = "") => {
+    console.log("📝 Opening Add Staff modal");
+    console.log("📋 Available stations:", stations.length, stations);
+    console.log("🆔 Pre-selected stationId:", stationId);
+
     setNewStaff({
       fullName: "",
       email: "",
@@ -951,9 +1134,26 @@ const Admin = () => {
       formData.append("Email", newStaff.email);
       formData.append("Password", newStaff.password);
       formData.append("Phone", newStaff.phone);
-      if (newStaff.stationId) {
-        formData.append("StationID", newStaff.stationId);
+
+      // Debug: log stationId before checking
+      console.log(
+        "🔍 newStaff.stationId value:",
+        newStaff.stationId,
+        "Type:",
+        typeof newStaff.stationId
+      );
+
+      if (newStaff.stationId && newStaff.stationId !== "") {
+        const stationVal = newStaff.stationId.toString();
+        console.log("✅ Adding StationID to FormData:", stationVal);
+
+        // Send only most common variants
+        formData.append("StationID", stationVal); // PascalCase (ASP.NET standard)
+        formData.append("stationId", stationVal); // camelCase (JSON standard)
+      } else {
+        console.warn("⚠️ stationId is empty or falsy, NOT adding to FormData");
       }
+
       if (newStaff.role) {
         formData.append("Role", newStaff.role);
       }
@@ -976,6 +1176,7 @@ const Admin = () => {
         }
       }
 
+      // 🔴 API: POST /api/StationStaff/CreateStaff - Tạo nhân viên mới
       const resp = await fetch(
         "http://localhost:5168/api/StationStaff/CreateStaff",
         {
@@ -1035,6 +1236,24 @@ const Admin = () => {
       // success: refresh staff list
       console.log("🔄 Refreshing staff list...");
       await fetchStaff();
+
+      // Check if stationID was saved (backend validation)
+      if (
+        newStaff.stationId &&
+        result &&
+        !result.stationID &&
+        !result.stationId
+      ) {
+        console.warn(
+          "⚠️ WARNING: StationID was sent but backend returned null!"
+        );
+        console.warn(
+          "⚠️ Backend may not be saving StationID. Please check backend code."
+        );
+        alert(
+          "⚠️ Nhân viên đã được tạo nhưng Trạm làm việc KHÔNG được lưu!\n\nVui lòng thông báo cho Backend Developer kiểm tra API CreateStaff."
+        );
+      }
 
       // Reset form
       setNewStaff({
@@ -1157,6 +1376,7 @@ const Admin = () => {
         throw new Error("Vui lòng đăng nhập lại");
       }
 
+      // 🔴 API: GET /api/Brand/GetAllBrands - Lấy danh sách tất cả hãng xe
       const response = await fetch(
         "http://localhost:5168/api/Brand/GetAllBrands",
         {
@@ -1207,6 +1427,7 @@ const Admin = () => {
         throw new Error("Vui lòng đăng nhập lại");
       }
 
+      // 🔴 API: GET /api/EVBike/GetBikesByBrandID/{brandId} - Lấy danh sách xe theo hãng
       const response = await fetch(
         `http://localhost:5168/api/EVBike/GetBikesByBrandID/${brandId}`,
         {
@@ -1271,6 +1492,7 @@ const Admin = () => {
         throw new Error("Vui lòng đăng nhập lại");
       }
 
+      // 🔴 API: GET /api/EVBike_Stocks/GetStocksByBikeID/{bikeId} - Lấy danh sách xe trong kho theo loại
       const response = await fetch(
         `http://localhost:5168/api/EVBike_Stocks/GetStocksByBikeID/${bikeId}`,
         {
@@ -3225,27 +3447,30 @@ const Admin = () => {
     }
 
     // Filter staff based on search and filters
+    // Defensive filtering: handle missing/null fields from API gracefully
     const filteredStaff = staff.filter((member) => {
-      // Filter by station
+      const name = (member?.name || "").toString();
+      const station = (member?.station || "").toString();
+      const role = (member?.role || "").toString();
+      const stationId = member?.stationId ?? "";
+
+      // Filter by station (compare as string to allow number/string mismatches)
       if (
         staffStationFilter !== "all" &&
-        member.stationId !== staffStationFilter
-      ) {
+        stationId.toString() !== staffStationFilter
+      )
         return false;
-      }
 
       // Filter by role
-      if (staffRoleFilter !== "all" && member.role !== staffRoleFilter) {
-        return false;
-      }
+      if (staffRoleFilter !== "all" && role !== staffRoleFilter) return false;
 
-      // Filter by search term
+      // Filter by search term (safe lowercase)
       if (staffSearchTerm) {
         const searchLower = staffSearchTerm.toLowerCase();
         return (
-          member.name.toLowerCase().includes(searchLower) ||
-          member.station.toLowerCase().includes(searchLower) ||
-          member.role.toLowerCase().includes(searchLower)
+          name.toLowerCase().includes(searchLower) ||
+          station.toLowerCase().includes(searchLower) ||
+          role.toLowerCase().includes(searchLower)
         );
       }
 
@@ -3253,10 +3478,19 @@ const Admin = () => {
     });
 
     // Get unique stations and roles for dropdowns
-    const uniqueStations = [
-      ...new Set(staff.map((s) => ({ id: s.stationId, name: s.station }))),
-    ];
-    const uniqueRoles = [...new Set(staff.map((s) => s.role))];
+    // Build dropdown options but filter out empty/null entries
+    const uniqueStations = Array.from(
+      new Map(
+        staff
+          .map((s) => ({ id: s.stationId, name: s.station }))
+          .filter((x) => x && x.id !== undefined && x.id !== null && x.name)
+          .map((x) => [x.id?.toString(), x])
+      ).values()
+    );
+
+    const uniqueRoles = Array.from(
+      new Set(staff.map((s) => s.role).filter(Boolean))
+    );
 
     return (
       <div className="management-content">
@@ -3288,6 +3522,24 @@ const Admin = () => {
             >
               🧪 Test Filters
             </button>
+
+            {/* Debug: show raw staff JSON in console/alert so we can inspect missing fields */}
+            <button
+              className="btn-secondary"
+              onClick={() => {
+                console.log("DEBUG - staff raw:", staff);
+                try {
+                  // show first 2000 chars to avoid huge alerts
+                  alert(JSON.stringify(staff, null, 2).slice(0, 2000));
+                } catch (e) {
+                  alert("Cannot stringify staff - see console for details");
+                }
+              }}
+              title="Hiện dữ liệu thô của staff (console/alert)"
+            >
+              🐞 Debug staff
+            </button>
+
             <button
               className="btn-primary"
               onClick={() => handleOpenAddStaff()}
@@ -3441,6 +3693,14 @@ const Admin = () => {
                       style={{ background: "#3b82f6" }}
                     >
                       ✏️ Sửa
+                    </button>
+                    <button
+                      className="btn-action"
+                      onClick={() => handleOpenAssignStation(member)}
+                      style={{ background: "#10b981" }}
+                      title="Phân trạm cho nhân viên"
+                    >
+                      🏢 Phân trạm
                     </button>
                     <button
                       className="btn-action"
@@ -4942,28 +5202,6 @@ const Admin = () => {
                   )}
                 </div>
                 <div className="form-group">
-                  <label>Trạm làm việc</label>
-                  <select
-                    name="staff-station"
-                    value={newStaff.stationId}
-                    onChange={(e) =>
-                      setNewStaff((s) => ({ ...s, stationId: e.target.value }))
-                    }
-                  >
-                    <option value="">-- Chọn trạm --</option>
-                    {stations.map((station) => (
-                      <option key={station.id} value={station.id}>
-                        {station.name}
-                      </option>
-                    ))}
-                  </select>
-                  {getError(["stationId", "stationid", "station"]) && (
-                    <div className="input-error">
-                      {getError(["stationId", "stationid", "station"])}
-                    </div>
-                  )}
-                </div>
-                <div className="form-group">
                   <label>Vai trò</label>
                   <input
                     type="text"
@@ -5072,6 +5310,133 @@ const Admin = () => {
                     : editingStaffId
                     ? "💾 Cập nhật"
                     : "💾 Lưu nhân viên"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Assign Station Modal */}
+        {showAssignStationModal && assigningStaff && (
+          <div
+            className="modal-overlay"
+            onMouseDown={(e) => {
+              if (e.target.classList.contains("modal-overlay")) {
+                setShowAssignStationModal(false);
+              }
+            }}
+          >
+            <div className="modal-content" style={{ maxWidth: "500px" }}>
+              <div className="modal-header">
+                <h2>🏢 Phân Trạm Cho Nhân Viên</h2>
+                <button
+                  className="btn-close"
+                  onClick={() => {
+                    setShowAssignStationModal(false);
+                    setAssigningStaff(null);
+                    setSelectedStationForAssign("");
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="modal-body">
+                <div
+                  style={{
+                    marginBottom: "1.5rem",
+                    padding: "1rem",
+                    background: "#f3f4f6",
+                    borderRadius: "8px",
+                  }}
+                >
+                  <div style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>
+                    Nhân viên:
+                  </div>
+                  <div style={{ fontSize: "1.1rem", color: "#1f2937" }}>
+                    {assigningStaff.name}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "0.9rem",
+                      color: "#6b7280",
+                      marginTop: "0.25rem",
+                    }}
+                  >
+                    {assigningStaff.email}
+                  </div>
+                  {assigningStaff.station && (
+                    <div
+                      style={{
+                        fontSize: "0.9rem",
+                        color: "#6b7280",
+                        marginTop: "0.25rem",
+                      }}
+                    >
+                      Trạm hiện tại: <strong>{assigningStaff.station}</strong>
+                    </div>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label
+                    style={{
+                      fontWeight: "600",
+                      marginBottom: "0.5rem",
+                      display: "block",
+                    }}
+                  >
+                    Chọn trạm mới *
+                  </label>
+                  <select
+                    name="assign-station"
+                    value={selectedStationForAssign}
+                    onChange={(e) =>
+                      setSelectedStationForAssign(e.target.value)
+                    }
+                    style={{
+                      width: "100%",
+                      padding: "0.75rem",
+                      borderRadius: "6px",
+                      border: "1px solid #d1d5db",
+                    }}
+                  >
+                    <option value="">-- Chọn trạm --</option>
+                    {stations.map((station) => (
+                      <option key={station.id} value={station.id}>
+                        {station.name} - {station.address}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="btn-cancel"
+                  onClick={() => {
+                    setShowAssignStationModal(false);
+                    setAssigningStaff(null);
+                    setSelectedStationForAssign("");
+                  }}
+                  disabled={assigningStation}
+                >
+                  Hủy
+                </button>
+                <button
+                  className="btn-primary"
+                  onClick={handleAssignStation}
+                  disabled={assigningStation || !selectedStationForAssign}
+                  style={{
+                    opacity:
+                      assigningStation || !selectedStationForAssign ? 0.5 : 1,
+                    cursor:
+                      assigningStation || !selectedStationForAssign
+                        ? "not-allowed"
+                        : "pointer",
+                  }}
+                >
+                  {assigningStation
+                    ? "⏳ Đang xử lý..."
+                    : "✅ Xác nhận phân trạm"}
                 </button>
               </div>
             </div>
