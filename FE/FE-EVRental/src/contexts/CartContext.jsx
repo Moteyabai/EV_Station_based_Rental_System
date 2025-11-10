@@ -53,8 +53,14 @@ export function CartProvider({ children }) {
   // Save cart to localStorage whenever it changes
   useEffect(() => {
     const cartKey = getCartStorageKey();
-    localStorage.setItem(cartKey, JSON.stringify(cartItems));
-    console.log(`💾 Saving cart to: ${cartKey}`, cartItems);
+    if (cartItems.length === 0) {
+      // If cart is empty, remove from localStorage instead of saving empty array
+      localStorage.removeItem(cartKey);
+      console.log(`🗑️ [CART] Removed empty cart from: ${cartKey}`);
+    } else {
+      localStorage.setItem(cartKey, JSON.stringify(cartItems));
+      console.log(`💾 [CART] Saved cart to: ${cartKey}`, cartItems);
+    }
   }, [cartItems]);
 
   // Clear cart when user changes (logout/login)
@@ -139,7 +145,17 @@ export function CartProvider({ children }) {
 
   // Clear entire cart
   const clearCart = () => {
+    console.log('🗑️ [CART] Clearing cart...');
     setCartItems([]);
+    
+    // Also explicitly clear from localStorage
+    try {
+      const cartKey = getCartStorageKey();
+      localStorage.removeItem(cartKey);
+      console.log(`✅ [CART] Removed cart from localStorage: ${cartKey}`);
+    } catch (error) {
+      console.error('❌ [CART] Error clearing cart from localStorage:', error);
+    }
   };
 
   // Calculate price for a single item

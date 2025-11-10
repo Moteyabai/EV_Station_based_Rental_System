@@ -1467,6 +1467,14 @@ function PaymentManagement() {
     loadPayments();
   }, []);
 
+  // Auto-switch to "verified" filter when switching to online payment
+  useEffect(() => {
+    if (paymentType === "online" && paymentFilter === "pending") {
+      console.log("🔄 [PAYMENTS] Switching to 'verified' filter for online payments");
+      setPaymentFilter("verified");
+    }
+  }, [paymentType, paymentFilter]);
+
   const loadPayments = async () => {
     try {
       setLoading(true);
@@ -1785,14 +1793,17 @@ function PaymentManagement() {
 
       {/* Filter Tabs - Status Filters */}
       <div className="filter-tabs">
-        <button
-          className={`filter-tab ${
-            paymentFilter === "pending" ? "active" : ""
-          }`}
-          onClick={() => setPaymentFilter("pending")}
-        >
-          ⏳ Chưa xác nhận ({payments.filter((p) => p.status === 0 || p.status === 2).length})
-        </button>
+        {/* Chỉ hiển thị tab "Chưa xác nhận" cho thanh toán cash */}
+        {paymentType === "cash" && (
+          <button
+            className={`filter-tab ${
+              paymentFilter === "pending" ? "active" : ""
+            }`}
+            onClick={() => setPaymentFilter("pending")}
+          >
+            ⏳ Chưa xác nhận ({payments.filter((p) => p.status === 0 || p.status === 2).length})
+          </button>
+        )}
         <button
           className={`filter-tab ${
             paymentFilter === "verified" ? "active" : ""

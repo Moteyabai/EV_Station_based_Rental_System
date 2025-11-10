@@ -538,7 +538,9 @@ export default function Checkout() {
         }
 
         // Clear cart after successful payment
+        console.log('🛒 [CASH] Clearing cart after successful payment...');
         clearCart();
+        console.log('✅ [CASH] Cart cleared successfully');
         
         // Redirect to booking success page
         console.log('✅ [CASH] Redirecting to booking success with orderId:', orderCode);

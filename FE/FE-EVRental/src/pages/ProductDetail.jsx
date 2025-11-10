@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "antd";
 import { StarOutlined } from "@ant-design/icons";
 import { useCart } from "../contexts/CartContext";
+import { useAuth } from "../contexts/AuthContext";
 import { getBikeById, getAvailableBikes } from "../api/bikes";
 import BookingForm from "../components/BookingForm";
 import ReviewList from "../components/ReviewList";
@@ -13,6 +14,7 @@ import "../styles/ProductDetail.css";
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { getItemCount } = useCart();
   const [vehicle, setVehicle] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -23,6 +25,21 @@ export default function ProductDetail() {
   const [availableBikesCount, setAvailableBikesCount] = useState(0);
   const [loadingBikes, setLoadingBikes] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // Check role access - Block Staff and Admin
+  useEffect(() => {
+    if (user) {
+      const userRoleId = user?.roleID || user?.RoleID;
+      if (userRoleId === 2 || userRoleId === 3) {
+        console.log("ProductDetail: Access denied for Staff/Admin, redirecting...");
+        if (userRoleId === 2) {
+          navigate("/staff");
+        } else {
+          navigate("/admin");
+        }
+      }
+    }
+  }, [user, navigate]);
 
   // Fetch vehicle details from API
   useEffect(() => {

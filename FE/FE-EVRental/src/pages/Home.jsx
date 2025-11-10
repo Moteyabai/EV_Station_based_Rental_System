@@ -1,9 +1,10 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "../styles/Home.css";
 import "../styles/media.css";
 import { fetchActiveStations } from "../api/stations";
 import { getAvailableBikes } from "../api/bikes";
+import { useAuth } from "../contexts/AuthContext";
 
 // Default placeholder images
 const defaultBikeImg =
@@ -12,6 +13,8 @@ const stationImg =
   "https://images.unsplash.com/photo-1599593752325-ffa41031056e?auto=format&fit=crop&w=1200&q=80";
 
 export default function Home() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [currentBgIndex, setCurrentBgIndex] = React.useState(0);
   const [currentStationIndex, setCurrentStationIndex] = React.useState(0);
   const [stations, setStations] = React.useState([]);
@@ -19,6 +22,22 @@ export default function Home() {
   const [loadingStations, setLoadingStations] = React.useState(true);
   const [loadingVehicles, setLoadingVehicles] = React.useState(true);
   const [vehiclesError, setVehiclesError] = React.useState(null);
+
+  // Check if user is Staff or Admin
+  const userRoleId = user?.roleID || user?.RoleID;
+  const isStaffOrAdmin = userRoleId === 2 || userRoleId === 3;
+
+  // Auto-redirect Staff/Admin to their management pages
+  React.useEffect(() => {
+    if (user && isStaffOrAdmin) {
+      console.log("Home: Staff/Admin detected, auto-redirecting to management page...");
+      if (userRoleId === 2) {
+        navigate("/staff", { replace: true });
+      } else if (userRoleId === 3) {
+        navigate("/admin", { replace: true });
+      }
+    }
+  }, [user, isStaffOrAdmin, userRoleId, navigate]);
 
   // Background images array with cache busting
   // Background images (keep static paths so browser can cache them)
@@ -284,14 +303,26 @@ export default function Home() {
               Nhanh chóng tìm điểm thuê gần bạn, đặt xe và di chuyển — thân
               thiện với môi trường, giá cả phải chăng và thuận tiện.
             </p>
-            <div className="hero-ctas">
-              <Link className="btn primary" to="/stations">
-                Tìm điểm thuê
-              </Link>
-              <Link className="btn secondary" to="/vehicles">
-                Xem xe máy điện
-              </Link>
-            </div>
+            {!isStaffOrAdmin && (
+              <div className="hero-ctas">
+                <Link className="btn primary" to="/stations">
+                  Tìm điểm thuê
+                </Link>
+                <Link className="btn secondary" to="/vehicles">
+                  Xem xe máy điện
+                </Link>
+              </div>
+            )}
+            {isStaffOrAdmin && (
+              <div className="hero-ctas">
+                <Link 
+                  className="btn primary" 
+                  to={userRoleId === 2 ? "/staff" : "/admin"}
+                >
+                  Đi đến trang quản lý
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -346,37 +377,63 @@ export default function Home() {
           ) : (
             <div className="image-gallery">
               {featuredVehicles.map((vehicle, index) => (
-                <Link
-                  to={`/vehicles/${vehicle.id}`}
-                  key={vehicle.id}
-                  className="gallery-item"
-                  style={{ textDecoration: "none", color: "inherit" }}
-                >
-                  <img
-                    src={vehicle.image}
-                    alt={vehicle.name}
-                    loading="lazy"
-                    onError={(e) => {
-                      console.log("❌ Image failed to load:", vehicle.image);
-                      e.target.src =
-                        "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60";
-                    }}
-                  />
-                  <div className="gradient-overlay"></div>
-                  <div className="gallery-content">
-                    <h3>{vehicle.name}</h3>
-                    <p>{vehicle.short}</p>
+                isStaffOrAdmin ? (
+                  <div
+                    key={vehicle.id}
+                    className="gallery-item"
+                    style={{ cursor: "not-allowed", opacity: 0.7 }}
+                  >
+                    <img
+                      src={vehicle.image}
+                      alt={vehicle.name}
+                      loading="lazy"
+                      onError={(e) => {
+                        console.log("❌ Image failed to load:", vehicle.image);
+                        e.target.src =
+                          "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60";
+                      }}
+                    />
+                    <div className="gradient-overlay"></div>
+                    <div className="gallery-content">
+                      <h3>{vehicle.name}</h3>
+                      <p>{vehicle.short}</p>
+                    </div>
                   </div>
-                </Link>
+                ) : (
+                  <Link
+                    to={`/vehicles/${vehicle.id}`}
+                    key={vehicle.id}
+                    className="gallery-item"
+                    style={{ textDecoration: "none", color: "inherit" }}
+                  >
+                    <img
+                      src={vehicle.image}
+                      alt={vehicle.name}
+                      loading="lazy"
+                      onError={(e) => {
+                        console.log("❌ Image failed to load:", vehicle.image);
+                        e.target.src =
+                          "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60";
+                      }}
+                    />
+                    <div className="gradient-overlay"></div>
+                    <div className="gallery-content">
+                      <h3>{vehicle.name}</h3>
+                      <p>{vehicle.short}</p>
+                    </div>
+                  </Link>
+                )
               ))}
             </div>
           )}
 
-          <div className="text-center mt-4">
-            <Link to="/vehicles" className="btn primary">
-              Xem tất cả xe máy điện
-            </Link>
-          </div>
+          {!isStaffOrAdmin && (
+            <div className="text-center mt-4">
+              <Link to="/vehicles" className="btn primary">
+                Xem tất cả xe máy điện
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 
@@ -498,12 +555,22 @@ export default function Home() {
                             {station.availableVehicles} xe có sẵn
                           </span>
                         </div>
-                        <Link
-                          to={`/stations/${station.id}`}
-                          className="btn primary sm"
-                        >
-                          Xem chi tiết
-                        </Link>
+                        {!isStaffOrAdmin ? (
+                          <Link
+                            to={`/stations/${station.id}`}
+                            className="btn primary sm"
+                          >
+                            Xem chi tiết
+                          </Link>
+                        ) : (
+                          <button
+                            className="btn primary sm"
+                            disabled
+                            style={{ opacity: 0.5, cursor: "not-allowed" }}
+                          >
+                            Chỉ dành cho khách hàng
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -537,11 +604,13 @@ export default function Home() {
             </div>
           )}
 
-          <div className="text-center mt-4">
-            <Link to="/stations" className="btn primary">
-              Xem tất cả điểm thuê
-            </Link>
-          </div>
+          {!isStaffOrAdmin && (
+            <div className="text-center mt-4">
+              <Link to="/stations" className="btn primary">
+                Xem tất cả điểm thuê
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 
@@ -577,25 +646,27 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="cta" className="template-section cta-section">
-        <div className="ev-container">
-          <div className="cta-container scroll-reveal fade-up">
-            <h2>Sẵn sàng cho hành trình xanh?</h2>
-            <p>
-              Đăng ký ngay hôm nay để nhận ưu đãi đặc biệt dành cho thành viên
-              mới.
-            </p>
-            <div className="cta-buttons">
-              <Link to="/register" className="btn primary large">
-                Đăng ký ngay
-              </Link>
-              <Link to="/stations" className="btn outline large">
-                Tìm điểm thuê
-              </Link>
+      {!isStaffOrAdmin && (
+        <section id="cta" className="template-section cta-section">
+          <div className="ev-container">
+            <div className="cta-container scroll-reveal fade-up">
+              <h2>Sẵn sàng cho hành trình xanh?</h2>
+              <p>
+                Đăng ký ngay hôm nay để nhận ưu đãi đặc biệt dành cho thành viên
+                mới.
+              </p>
+              <div className="cta-buttons">
+                <Link to="/register" className="btn primary large">
+                  Đăng ký ngay
+                </Link>
+                <Link to="/stations" className="btn outline large">
+                  Tìm điểm thuê
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   );
 }

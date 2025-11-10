@@ -35,6 +35,21 @@ export default function StationDetail() {
   const [activeImage, setActiveImage] = useState("main");
   const [showReviewForm, setShowReviewForm] = useState(false);
 
+  // Role-based access control: Block Staff and Admin
+  useEffect(() => {
+    if (user) {
+      const userRoleId = user?.roleID || user?.RoleID;
+      if (userRoleId === 2 || userRoleId === 3) {
+        console.log("StationDetail: Access denied for Staff/Admin, redirecting...");
+        if (userRoleId === 2) {
+          navigate("/staff");
+        } else {
+          navigate("/admin");
+        }
+      }
+    }
+  }, [user, navigate]);
+
   // Fetch station data from API
   useEffect(() => {
     const loadStationData = async () => {
