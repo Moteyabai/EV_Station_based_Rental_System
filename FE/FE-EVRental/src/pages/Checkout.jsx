@@ -329,6 +329,11 @@ export default function Checkout() {
 
           // Redirect to first payment URL (for now, handle single item)
           if (paymentUrls.length > 0) {
+            // Clear cart before redirecting to PayOS (to ensure cart is cleared even if user doesn't return)
+            console.log('🛒 [PAYOS] Clearing cart before redirect to PayOS');
+            clearCart();
+            
+            // Redirect to PayOS payment page
             window.location.href = paymentUrls[0];
             return;
           } else {

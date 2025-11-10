@@ -176,6 +176,40 @@ export async function getRentalsByAccountID(accountID, token) {
 }
 
 /**
+ * Get all rentals (all statuses)
+ * @param {string} token - JWT authentication token
+ * @returns {Promise<Array>} List of all rentals
+ */
+export async function getAllRentals(token) {
+  try {
+    console.log('📋 [RENTAL] Fetching all rentals...');
+    
+    const response = await fetch(`${API_BASE_URL}/api/Rental/GetAllRentals`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    console.log('📥 [RENTAL] Response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ [RENTAL] Error response:', errorText);
+      throw new Error('Không thể tải danh sách đơn thuê');
+    }
+
+    const rentals = await response.json();
+    console.log('✅ [RENTAL] All rentals:', rentals);
+    return rentals;
+  } catch (error) {
+    console.error('💥 [RENTAL] Error:', error);
+    throw error;
+  }
+}
+
+/**
  * Get renter information by account ID
  * @param {number} accountID - Account ID
  * @param {string} token - JWT authentication token

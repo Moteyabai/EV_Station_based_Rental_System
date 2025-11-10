@@ -3,12 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { getToken } from "../utils/auth";
 import {
-  getAllBookings,
   updateBookingStatus,
   verifyPayment,
   rejectPayment,
 } from "../utils/bookingStorage";
-import { getPendingRentals } from "../api/rentals";
+import { getPendingRentals, getAllRentals } from "../api/rentals";
 import "../styles/Staff.css";
 
 export default function Staff() {
@@ -139,133 +138,90 @@ function VehicleHandover() {
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [showHandoverModal, setShowHandoverModal] = useState(false);
 
-  // Load bookings from localStorage on mount and set up refresh
+  // Load rentals from API on mount and set up auto-refresh
   useEffect(() => {
     loadBookings();
 
-    // Refresh bookings every 5 seconds to catch new bookings
+    // Refresh rentals every 5 seconds for real-time updates
     const interval = setInterval(loadBookings, 5000);
     return () => clearInterval(interval);
   }, []);
 
-  // Fetch user phone from backend API
-  const fetchUserPhone = async (userId) => {
+  const loadBookings = async () => {
     try {
       const token = getToken();
-      if (!token || !userId) return null;
-
-      // Nếu userId là email hoặc không phải số, skip
-      if (
-        typeof userId === "string" &&
-        (userId.includes("@") || isNaN(userId))
-      ) {
-        console.log("⚠️ UserId không phải accountId (số):", userId);
-        return null;
+      if (!token) {
+        console.warn('⚠️ [HANDOVER] No token found');
+        setVehicles([]);
+        return;
       }
 
-      const accountId = parseInt(userId);
-      if (isNaN(accountId)) {
-        console.log("⚠️ Không thể parse userId thành số:", userId);
-        return null;
-      }
-
-      const response = await fetch(
-        `http://localhost:5168/api/Account/GetAccountById/${accountId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
+      console.log('🔄 [HANDOVER] Loading rentals from API...');
+      
+      // Gọi API để lấy tất cả rentals
+      const allRentals = await getAllRentals(token);
+      
+      console.log('📋 [HANDOVER] All rentals:', allRentals);
+      
+      // Lọc chỉ lấy status = 1 (Đã xác nhận), status = 2 (Đang cho thuê), status = 4 (Đã thu hồi)
+      const filteredRentals = allRentals.filter(
+        (rental) => rental.status === 1 || rental.status === 2 || rental.status === 4
       );
+      
+      console.log('✅ [HANDOVER] Filtered rentals (status 1, 2 & 4):', filteredRentals);
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          console.error("❌ Token hết hạn hoặc không hợp lệ");
-        } else {
-          console.error("❌ Lỗi fetch user phone:", response.status);
-        }
-        return null;
-      }
-
-      const userData = await response.json();
-      console.log(
-        "✅ Fetched user phone for accountId",
-        accountId,
-        ":",
-        userData.phone
-      );
-      return userData.phone || userData.Phone || null;
-    } catch (error) {
-      console.error("❌ Error fetching user phone:", error);
-      return null;
-    }
-  };
-
-  const loadBookings = async () => {
-    const allBookings = getAllBookings();
-
-    // CHỈ LẤY BOOKINGS ĐÃ XÁC THỰC THANH TOÁN (status !== 'pending_payment')
-    const verifiedBookings = allBookings.filter(
-      (booking) =>
-        booking.status !== "pending_payment" && booking.status !== "cancelled"
-    );
-
-    // Transform bookings to vehicle format for display
-    const transformedVehicles = await Promise.all(
-      verifiedBookings.map(async (booking) => {
-        // Kiểm tra xe đã quá hạn chưa
-        const returnDateTime = new Date(
-          `${booking.returnDate} ${booking.returnTime}`
-        );
+      // Transform rentals to vehicle format for display
+      const transformedVehicles = filteredRentals.map((rental) => {
+        const returnDateTime = new Date(rental.endDate);
         const now = new Date();
-        const isOverdue = booking.status === "renting" && returnDateTime < now;
+        const isOverdue = rental.status === 2 && returnDateTime < now;
 
-        // Fetch phone from backend if not available or is placeholder
-        let userPhone = booking.userPhone;
-
-        if (
-          !userPhone ||
-          userPhone === "Chưa cập nhật" ||
-          userPhone === "N/A"
-        ) {
-          const fetchedPhone = await fetchUserPhone(booking.userId);
-          if (fetchedPhone) {
-            userPhone = fetchedPhone;
-          }
+        // Map status number to text for filter tabs
+        let statusText = "booked";
+        if (rental.status === 1) {
+          statusText = "booked";
+        } else if (rental.status === 2) {
+          statusText = "renting";
+        } else if (rental.status === 3 || rental.status === 4) {
+          statusText = "completed";
         }
 
         return {
-          id: booking.id,
-          vehicleName: booking.vehicleName,
-          licensePlate: booking.licensePlate,
-          customerName: booking.userName,
-          userId: booking.userId,
-          userPhone: userPhone,
-          userEmail: booking.userEmail,
-          bookingId: booking.bookingId || booking.id,
-          status: booking.status,
-          pickupDate: `${booking.pickupDate} ${booking.pickupTime}`,
-          returnDate: `${booking.returnDate} ${booking.returnTime}`,
-          pickupStation: booking.pickupStation || "Chưa xác định",
-          returnStation: booking.returnStation || "Chưa xác định",
-          battery: booking.battery,
-          lastCheck: booking.lastCheck,
-          completedDate: booking.completedDate,
-          days: booking.days,
-          totalPrice: booking.totalPrice,
-          vehicleImage: booking.vehicleImage,
-          paymentVerified: booking.paymentVerified,
-          paymentVerifiedAt: booking.paymentVerifiedAt,
-          isOverdue: isOverdue, // Flag để đánh dấu xe quá hạn
+          id: rental.rentalID,
+          rentalID: rental.rentalID,
+          vehicleName: rental.bikeName || "N/A",
+          licensePlate: rental.licensePlate || "N/A",
+          customerName: rental.renterName || "N/A",
+          userId: rental.accountID,
+          userPhone: rental.phoneNumber || "Chưa cập nhật",
+          userEmail: rental.email || "N/A",
+          bookingId: rental.rentalID,
+          status: statusText,
+          pickupDate: rental.startDate ? new Date(rental.startDate).toLocaleString('vi-VN') : "N/A",
+          returnDate: rental.endDate ? new Date(rental.endDate).toLocaleString('vi-VN') : "N/A",
+          pickupStation: "Điểm nhận xe",
+          returnStation: "Điểm trả xe",
+          battery: "100%",
+          lastCheck: new Date().toLocaleString('vi-VN'),
+          completedDate: rental.handoverDate ? new Date(rental.handoverDate).toLocaleString('vi-VN') : null,
+          days: Math.ceil((new Date(rental.endDate) - new Date(rental.startDate)) / (1000 * 60 * 60 * 24)),
+          totalPrice: rental.totalAmount || 0,
+          vehicleImage: null,
+          paymentVerified: rental.status >= 1,
+          paymentVerifiedAt: rental.startDate,
+          isOverdue: isOverdue,
           overdueHours: isOverdue
             ? Math.floor((now - returnDateTime) / (1000 * 60 * 60))
             : 0,
         };
-      })
-    );
+      });
 
-    setVehicles(transformedVehicles);
+      setVehicles(transformedVehicles);
+      console.log('✅ [HANDOVER] Vehicles loaded:', transformedVehicles.length);
+    } catch (error) {
+      console.error('❌ [HANDOVER] Error loading rentals:', error);
+      setVehicles([]);
+    }
   };
 
   const filteredVehicles = vehicles.filter((v) => {
@@ -1615,7 +1571,7 @@ function PaymentManagement() {
       console.log("✅ [CONFIRM] Calling API success for payment:", payment.paymentID);
       
       const response = await fetch(`http://localhost:5168/api/Payment/success?paymentID=${payment.paymentID}`, {
-        method: 'POST',
+        method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -1659,7 +1615,7 @@ function PaymentManagement() {
       console.log("📝 [CANCEL] Reason:", cancelReason);
 
       const response = await fetch(`http://localhost:5168/api/Payment/failed?paymentID=${cancellingPayment.paymentID}&reason=${encodeURIComponent(cancelReason)}`, {
-        method: 'POST',
+        method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -1854,13 +1810,7 @@ function PaymentManagement() {
           ❌ Đã hủy ({payments.filter((p) => p.status === -1).length})
         </button>
       </div>
-
-      {error && (
-        <div className="error-message">
-          <p>❌ {error}</p>
-        </div>
-      )}
-
+      
       <div className="payment-list">
         {filteredPayments.length === 0 && (
           <div className="empty-state">
