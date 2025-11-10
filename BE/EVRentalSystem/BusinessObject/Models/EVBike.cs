@@ -32,6 +32,10 @@ namespace BusinessObject.Models
         [Range(0, int.MaxValue, ErrorMessage = "Quãng đường tối đa không được âm")]
         public int MaxDistance { get; set; } = 0;
 
+        [Required(ErrorMessage = "Dung lượng pin là bắt buộc")]
+        [Range(0, 999.9, ErrorMessage = "Dung lượng pin phải từ 0 đến 999.9 kWh")]
+        public decimal BatteryCapacity { get; set; } = 0;
+
         [Required(ErrorMessage = "Số lần thuê là bắt buộc")]
         [Range(0, int.MaxValue, ErrorMessage = "Số lần thuê không được âm")]
         public int TimeRented { get; set; } = 0;

@@ -134,6 +134,7 @@ namespace API.Controllers
                     BikeID = rental.BikeID,
                     StationID = rental.StationID,
                     StationName = station.Name,
+                    StationAddress = station.Address,
                     BikeImage = bike.FrontImg,
                     BikeName = bike.BikeName,
                     LicensePlate = rental.LicensePlate,
@@ -329,6 +330,7 @@ namespace API.Controllers
                     displayDto.RentalID = rental.RentalID;
                     displayDto.BikeID = rental.BikeID;
                     displayDto.StationID = rental.StationID;
+                    displayDto.StationAddress = station.Address;
                     displayDto.StationName = station.Name;
                     displayDto.BikeImage = bike.FrontImg;
                     displayDto.BikeName = bike.BikeName;

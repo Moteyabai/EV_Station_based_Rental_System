@@ -99,7 +99,8 @@ namespace API.Controllers
                         TimeRented = bike.TimeRented,
                         Quantity = quantity,
                         Description = bike.Description,
-                        PricePerDay = bike.PricePerDay
+                        PricePerDay = bike.PricePerDay,
+                        BatteryCapacity = bike.BatteryCapacity
                     };
                     display.Add(bikeDTO);
                 }
@@ -182,6 +183,7 @@ namespace API.Controllers
                 bike.PricePerDay = eVBikeCreateDTO.PricePerDay;
                 bike.MaxSpeed = eVBikeCreateDTO.MaxSpeed;
                 bike.MaxDistance = eVBikeCreateDTO.MaxDistance;
+                bike.BatteryCapacity = eVBikeCreateDTO.BatteryCapacity;
 
                 await _evBikeService.AddAsync(bike);
 
@@ -225,7 +227,8 @@ namespace API.Controllers
                     TimeRented = bike.TimeRented,
                     Quantity = quantity,
                     Description = bike.Description,
-                    PricePerDay = bike.PricePerDay
+                    PricePerDay = bike.PricePerDay,
+                    BatteryCapacity = bike.BatteryCapacity
                 };
 
                 return Ok(bikeDTO);

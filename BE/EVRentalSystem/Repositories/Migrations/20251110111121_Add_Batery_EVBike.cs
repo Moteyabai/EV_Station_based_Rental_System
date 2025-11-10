@@ -5,25 +5,25 @@
 namespace Repositories.Migrations
 {
     /// <inheritdoc />
-    public partial class Add_IsVerified_Account : Migration
+    public partial class Add_Batery_EVBike : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<bool>(
-                name: "IsVerified",
-                table: "Accounts",
-                type: "bit",
+            migrationBuilder.AddColumn<decimal>(
+                name: "BatteryCapacity",
+                table: "EVBikes",
+                type: "decimal(18,2)",
                 nullable: false,
-                defaultValue: false);
+                defaultValue: 0m);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "IsVerified",
-                table: "Accounts");
+                name: "BatteryCapacity",
+                table: "EVBikes");
         }
     }
 }
