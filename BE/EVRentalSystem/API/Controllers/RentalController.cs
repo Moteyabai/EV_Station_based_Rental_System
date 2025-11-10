@@ -165,9 +165,9 @@ namespace API.Controllers
             }
         }
 
-        [HttpGet("GetRentalsAtStation/{stationID}")]
+        [HttpGet("GetRentalsAtStation/{staffID}")]
         [Authorize]
-        public async Task<ActionResult<IEnumerable<Rental>>> GetRentalsAtStation(int stationID)
+        public async Task<ActionResult<IEnumerable<Rental>>> GetRentalsAtStation(int accountID)
         {
             // Check user permission
             var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
@@ -182,7 +182,22 @@ namespace API.Controllers
             try
             {
                 var res = new ResponseDTO();
-                var rentals = await _rentalService.GetRentalsAtStaion(stationID);
+
+                var staff = await _stationStaffService.GetStaffByAccountID(accountID);
+                if (staff == null)
+                {
+                    res.Message = "Không tìm thấy thông tin nhân viên!";
+                    return NotFound(res);
+                }
+
+                if(staff.StationID == null)
+                {
+                    res.Message = "Nhân viên chưa được phân công trạm!";
+                    return NotFound(res);
+                }
+
+
+                var rentals = await _rentalService.GetRentalsAtStaion(staff.StationID.Value);
                 if (rentals == null || !rentals.Any())
                 {
                     res.Message = "Không tìm thấy thông tin thuê xe!";
