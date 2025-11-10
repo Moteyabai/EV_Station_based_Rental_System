@@ -27,6 +27,10 @@ namespace BusinessObject.Models.DTOs
         [Range(0, int.MaxValue, ErrorMessage = "Quãng đường tối đa không được âm")]
         public int MaxDistance { get; set; }
 
+        [Required(ErrorMessage = "Dung lượng pin là bắt buộc")]
+        [Range(0, 999.9, ErrorMessage = "Dung lượng pin phải từ 0 đến 999.9 kWh")]
+        public decimal BatteryCapacity { get; set; }
+
         [Required(ErrorMessage = "Mô tả là bắt buộc")]
         [StringLength(500, ErrorMessage = "Mô tả không được quá 500 ký tự")]
         public string Description { get; set; }

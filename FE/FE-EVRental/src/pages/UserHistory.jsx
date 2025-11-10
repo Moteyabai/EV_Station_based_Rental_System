@@ -157,6 +157,7 @@ export default function UserHistory() {
           returnDate: rental.returnDate || rental.ReturnDate || "Chưa trả xe",
           pickupStation: rental.stationName,
           returnStation: rental.stationName,
+          stationAddress: rental.stationAddress || rental.StationAddress || '',
           status: status,
           totalPrice: rental.deposit || 0,
           createdAt: rental.createdAt || rental.CreatedAt,
@@ -236,8 +237,6 @@ export default function UserHistory() {
                     className="btn primary"
                     onClick={fetchUserRentals}
                     style={{
-                      backgroundColor: "#4db6ac",
-                      borderColor: "#4db6ac",
                       padding: "8px 24px",
                       borderRadius: "6px",
                       cursor: "pointer",
@@ -487,6 +486,40 @@ export default function UserHistory() {
                             "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=300&q=60";
                         }}
                       />
+                      {/* Biển số xe */}
+                      {rental.licensePlate && (
+                        <div
+                          style={{
+                            marginTop: "8px",
+                            padding: "6px 12px",
+                            background: "linear-gradient(135deg, #4db6ac, #26a69a)",
+                            borderRadius: "6px",
+                            textAlign: "center",
+                            boxShadow: "0 2px 6px rgba(77, 182, 172, 0.3)",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: "11px",
+                              color: "rgba(255, 255, 255, 0.9)",
+                              fontWeight: 600,
+                              marginBottom: "2px",
+                            }}
+                          >
+                            Biển số
+                          </div>
+                          <div
+                            style={{
+                              fontSize: "14px",
+                              color: "white",
+                              fontWeight: 700,
+                              letterSpacing: "1px",
+                            }}
+                          >
+                            {rental.licensePlate}
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Thông tin chi tiết */}
@@ -630,6 +663,18 @@ export default function UserHistory() {
                           >
                             {rental.pickupStation || "Chưa xác định"}
                           </div>
+                          {rental.stationAddress && (
+                            <div
+                              style={{
+                                fontSize: "12px",
+                                color: "#666",
+                                marginTop: "6px",
+                                lineHeight: "1.4",
+                              }}
+                            >
+                              📍 {rental.stationAddress}
+                            </div>
+                          )}
                         </div>
 
                         {/* Thời gian thuê */}

@@ -16,6 +16,8 @@
 
         public int MaxDistance { get; set; } = 0;
 
+        public decimal BatteryCapacity { get; set; } = 0;
+
         public int TimeRented { get; set; } = 0;
 
         public int Quantity { get; set; } = 0;

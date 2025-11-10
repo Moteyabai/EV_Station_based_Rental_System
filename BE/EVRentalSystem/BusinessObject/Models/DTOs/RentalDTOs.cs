@@ -47,6 +47,7 @@ namespace BusinessObject.Models.DTOs
         public int BikeID { get; set; }
         public int StationID { get; set; }
         public string StationName { get; set; }
+        public string StationAddress { get; set; }
         public string BikeImage { get; set; }
         public string BikeName { get; set; }
         public string LicensePlate { get; set; }
