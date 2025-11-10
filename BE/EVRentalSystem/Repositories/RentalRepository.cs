@@ -26,5 +26,14 @@ namespace Repositories
                 .Where(rental => rental.RenterID == renterID)
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<Rental>> GetRentalsAtStaion(int stationID)
+        {
+            return await _context.Rentals
+                .Include(r => r.Renter)
+                .Include(s => s.Station)
+                .Where(rental => rental.StationID == stationID)
+                .ToListAsync();
+        }
     }
 }

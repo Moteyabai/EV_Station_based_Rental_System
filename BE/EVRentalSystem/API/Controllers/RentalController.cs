@@ -165,6 +165,90 @@ namespace API.Controllers
             }
         }
 
+        [HttpGet("GetRentalsAtStation/{stationID}")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<Rental>>> GetRentalsAtStation(int stationID)
+        {
+            // Check user permission
+            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
+            if (permission != "3" && permission !="2")
+            {
+                var res = new ResponseDTO
+                {
+                    Message = "Không có quyền truy cập!"
+                };
+                return Unauthorized(res);
+            }
+            try
+            {
+                var res = new ResponseDTO();
+                var rentals = await _rentalService.GetRentalsAtStaion(stationID);
+                if (rentals == null || !rentals.Any())
+                {
+                    res.Message = "Không tìm thấy thông tin thuê xe!";
+                    return NotFound(res);
+                }
+
+                var displayDtos = new List<RentalDisplayDTO>();
+                foreach (var rental in rentals)
+                {
+                    var bike = await _evBikeService.GetByIdAsync(rental.BikeID);
+                    if (bike == null)
+                    {
+                        res.Message = "Không tìm thấy thông tin xe!";
+                        return NotFound(res);
+                    }
+                    var renter = await _renterService.GetByIdAsync(rental.RenterID);
+                    if (renter == null)
+                    {
+                        res.Message = "Không tìm thấy thông tin người thuê!";
+                        return NotFound(res);
+                    }
+                    var acc = await _accountService.GetByIdAsync(renter.AccountID);
+                    if (acc == null)
+                    {
+                        res.Message = "Không tìm thấy thông tin tài khoản!";
+                        return NotFound(res);
+                    }
+                    var payment = await _paymentService.GetDepositPaymentByRentalIDAsync(rental.RentalID);
+                    if (payment == null)
+                    {
+                        res.Message = "Không tìm thấy thông tin thanh toán!";
+                        return NotFound(res);
+                    }
+                    var displayDto = new RentalDisplayDTO();
+                    displayDto.RentalID = rental.RentalID;
+                    displayDto.BikeID = rental.BikeID;
+                    displayDto.StationID = rental.StationID;
+                    displayDto.BikeImage = bike.FrontImg;
+                    displayDto.BikeName = bike.BikeName;
+                    displayDto.LicensePlate = rental.LicensePlate;
+                    displayDto.RenterName = acc.FullName;
+                    displayDto.PhoneNumber = acc.Phone;
+                    displayDto.Email = acc.Email;
+                    displayDto.StartDate = rental.StartDate;
+                    displayDto.EndDate = rental.EndDate;
+                    displayDto.HandoverDate = rental.RentalDate;
+                    displayDto.ReturnDate = rental.ReturnDate;
+                    displayDto.AssignedStaff = rental.AssignedStaff;
+                    displayDto.InitialBattery = rental.InitialBattery;
+                    displayDto.FinalBattery = rental.FinalBattery;
+                    displayDto.Deposit = rental.Deposit;
+                    displayDto.Status = rental.Status;
+                    displayDto.Fee = rental.Fee;
+                    displayDto.CreatedAt = rental.CreatedAt;
+                    displayDto.UpdatedAt = rental.UpdatedAt;
+                    displayDto.PaymentMethod = payment.PaymentMethod;
+                    displayDtos.Add(displayDto);
+                }
+                return Ok(displayDtos);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
         [HttpGet("GetRentalsByAccountID/{accountID}")]
         [Authorize]
         public async Task<ActionResult<IEnumerable<RentalDisplayDTO>>> GetRentalsByAccountID(int accountID)
