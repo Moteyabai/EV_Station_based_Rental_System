@@ -1,12 +1,30 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../contexts/CartContext";
+import { useAuth } from "../contexts/AuthContext";
 import { formatPrice, formatDate } from "../utils/helpers";
 import "../styles/Cart.css";
 
 export default function Cart() {
   const { cartItems, removeFromCart, getTotalPrice, getItemCount, clearCart } =
     useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  // Role-based access control: Block Staff and Admin
+  React.useEffect(() => {
+    if (user) {
+      const userRoleId = user?.roleID || user?.RoleID;
+      if (userRoleId === 2 || userRoleId === 3) {
+        console.log("Cart: Access denied for Staff/Admin, redirecting...");
+        if (userRoleId === 2) {
+          navigate("/staff");
+        } else {
+          navigate("/admin");
+        }
+      }
+    }
+  }, [user, navigate]);
 
   // Debug: Log cart items to see station data structure
   React.useEffect(() => {

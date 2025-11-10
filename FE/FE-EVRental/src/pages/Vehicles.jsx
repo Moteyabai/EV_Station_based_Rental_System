@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { getAvailableBikes } from "../api/bikes";
 import "../styles/Vehicles.css";
 import { useCart } from "../contexts/CartContext";
+import { useAuth } from "../contexts/AuthContext";
 import BookingForm from "../components/BookingForm";
 
 export default function Vehicles() {
@@ -14,9 +15,25 @@ export default function Vehicles() {
   const [searchTerm, setSearchTerm] = useState("");
   const [brandFilter, setBrandFilter] = useState("all");
   const { addToCart } = useCart();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
+
+  // Check role access - Block Staff and Admin
+  useEffect(() => {
+    if (user) {
+      const userRoleId = user?.roleID || user?.RoleID;
+      if (userRoleId === 2 || userRoleId === 3) {
+        console.log("Vehicles: Access denied for Staff/Admin, redirecting...");
+        if (userRoleId === 2) {
+          navigate("/staff");
+        } else {
+          navigate("/admin");
+        }
+      }
+    }
+  }, [user, navigate]);
 
   // Load vehicles from API
   useEffect(() => {

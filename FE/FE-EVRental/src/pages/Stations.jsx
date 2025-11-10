@@ -6,9 +6,11 @@ import { calculateDistance } from "../utils/helpers";
 import "../styles/Stations.css";
 import { useNavigate } from "react-router-dom";
 import { FaMapMarkerAlt, FaClock, FaMotorcycle } from "react-icons/fa";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function Stations() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [viewMode, setViewMode] = useState("map"); // 'map' or 'list'
   const [stations, setStations] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
@@ -18,6 +20,21 @@ export default function Stations() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Role-based access control: Block Staff and Admin
+  useEffect(() => {
+    if (user) {
+      const userRoleId = user?.roleID || user?.RoleID;
+      if (userRoleId === 2 || userRoleId === 3) {
+        console.log("Stations: Access denied for Staff/Admin, redirecting...");
+        if (userRoleId === 2) {
+          navigate("/staff");
+        } else {
+          navigate("/admin");
+        }
+      }
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     let isMounted = true;

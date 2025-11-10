@@ -1,14 +1,32 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { formatPrice, formatDate } from "../utils/helpers";
 import { getBookingById } from "../utils/bookingStorage";
 import { useCart } from "../contexts/CartContext";
+import { useAuth } from "../contexts/AuthContext";
 import "../styles/BookingSuccess.css";
 
 export default function BookingSuccess() {
   const { bookingId } = useParams();
   const [booking, setBooking] = useState(null);
   const { clearCart } = useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  // Role-based access control: Block Staff and Admin
+  useEffect(() => {
+    if (user) {
+      const userRoleId = user?.roleID || user?.RoleID;
+      if (userRoleId === 2 || userRoleId === 3) {
+        console.log("BookingSuccess: Access denied for Staff/Admin, redirecting...");
+        if (userRoleId === 2) {
+          navigate("/staff");
+        } else {
+          navigate("/admin");
+        }
+      }
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     console.log('🔍 Looking for booking with ID:', bookingId);
