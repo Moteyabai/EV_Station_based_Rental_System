@@ -27,5 +27,6 @@ namespace Services
         public async Task<Rental?> GetRentalByIDAsync(int rentID) => await _rentalRepository.GetRentalByIDAsync(rentID);
 
         public async Task<IEnumerable<Rental>> GetRentalsByRenterIDAsync(int renterID) => await _rentalRepository.GetRentalsByRenterIDAsync(renterID);
+        public async Task<IEnumerable<Rental>> GetRentalsAtStaion(int stationID) => await _rentalRepository.GetRentalsAtStaion(stationID);
     }
 }
