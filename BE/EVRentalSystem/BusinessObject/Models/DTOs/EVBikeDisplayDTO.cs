@@ -23,5 +23,6 @@
         public int Quantity { get; set; } = 0;
         public string? Description { get; set; }
         public decimal PricePerDay { get; set; }
+        public int Status { get; set; }
     }
 }

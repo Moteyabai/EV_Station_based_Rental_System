@@ -228,7 +228,8 @@ namespace API.Controllers
                     Quantity = quantity,
                     Description = bike.Description,
                     PricePerDay = bike.PricePerDay,
-                    BatteryCapacity = bike.BatteryCapacity
+                    BatteryCapacity = bike.BatteryCapacity,
+                    Status = bike.Status
                 };
 
                 return Ok(bikeDTO);
@@ -272,7 +273,9 @@ namespace API.Controllers
                         TimeRented = bike.TimeRented,
                         Quantity = quantity,
                         Description = bike.Description,
-                        PricePerDay = bike.PricePerDay
+                        PricePerDay = bike.PricePerDay,
+                        Status = bike.Status,
+                        BatteryCapacity = bike.BatteryCapacity
                     };
                     display.Add(bikeDTO);
                 }
