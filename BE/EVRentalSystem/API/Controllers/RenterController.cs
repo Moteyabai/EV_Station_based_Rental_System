@@ -57,22 +57,30 @@ namespace API.Controllers
                 foreach (var renter in renters)
                 {
                     var account = await _accountService.GetByIdAsync(renter.AccountID);
-                    if (account == null) continue;
-
-                    string documentStatus = "Chưa xác minh";
-                    if (renter.DocumentID.HasValue)
+                    if (account == null)
                     {
-                        var document = await _idDocumentService.GetByIdAsync(renter.DocumentID.Value);
-                        if (document != null)
+                        var res = new ResponseDTO
                         {
-                            documentStatus = document.Status switch
-                            {
-                                0 => "Đang chờ",
-                                1 => "Đã xác minh",
-                                2 => "Từ chối",
-                                _ => "Không xác định"
-                            };
-                        }
+                            Message = "Không tìm thấy thông tin tài khoản!"
+                        };
+                        return NotFound(res);
+                    }
+
+                    if (!renter.DocumentID.HasValue)
+                    {
+                        var res = new ResponseDTO
+                        {
+                            Message = "Chưa xác minh giấy tờ!"
+                        };
+                        return NotFound(res);
+                    }
+                    var document = await _idDocumentService.GetByIdAsync(renter.DocumentID.Value);
+                    if (document == null) { 
+                        var res = new ResponseDTO
+                        {
+                            Message = "Giấy tờ không tồn tại!"
+                        };
+                        return NotFound(res);
                     }
 
                     displayDtos.Add(new RenterDisplayDTO
@@ -84,7 +92,7 @@ namespace API.Controllers
                         Phone = account.Phone,
                         Avatar = account.Avatar,
                         DocumentID = renter.DocumentID,
-                        DocumentStatus = documentStatus,
+                        DocumentStatus = document.Status,
                         TotalRental = renter.TotalRental,
                         TotalSpent = renter.TotalSpent,
                         AccountCreatedAt = account.CreatedAt,
@@ -142,20 +150,23 @@ namespace API.Controllers
                     return NotFound(res);
                 }
 
-                string documentStatus = "Chưa xác minh";
-                if (renter.DocumentID.HasValue)
+                if(!renter.DocumentID.HasValue)
                 {
-                    var document = await _idDocumentService.GetByIdAsync(renter.DocumentID.Value);
-                    if (document != null)
+                    var res = new ResponseDTO
                     {
-                        documentStatus = document.Status switch
-                        {
-                            0 => "Đang chờ",
-                            1 => "Đã xác minh",
-                            2 => "Từ chối",
-                            _ => "Không xác định"
-                        };
-                    }
+                        Message = "Chưa xác minh giấy tờ!"
+                    };
+                    return NotFound(res);
+                }
+
+                var document = await _idDocumentService.GetByIdAsync(renter.DocumentID.Value);
+                if (document == null)
+                {
+                    var res = new ResponseDTO
+                    {
+                        Message = "Giấy tờ không tồn tại!"
+                    };
+                    return NotFound(res);
                 }
 
                 var displayDto = new RenterDisplayDTO
@@ -167,7 +178,7 @@ namespace API.Controllers
                     Phone = account.Phone,
                     Avatar = account.Avatar,
                     DocumentID = renter.DocumentID,
-                    DocumentStatus = documentStatus,
+                    DocumentStatus = document.Status,
                     TotalRental = renter.TotalRental,
                     TotalSpent = renter.TotalSpent,
                     AccountCreatedAt = account.CreatedAt,
