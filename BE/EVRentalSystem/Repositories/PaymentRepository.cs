@@ -34,17 +34,19 @@ namespace Repositories
                 .FirstOrDefaultAsync(payment => payment.RentalID == rentalID && payment.PaymentType == (int)PaymentType.Deposit);
         }
 
-        public async Task<Payment?> GetPayOSPaymentAtStationAsync(int stationID)
+        public async Task<IEnumerable<Payment?>> GetPayOSPaymentAtStationAsync(int stationID)
         {
             return await _context.Payments
                 .Include(payment => payment.Rental)
-                .FirstOrDefaultAsync(payment => payment.Rental.StationID == stationID && payment.PaymentMethod == (int)PaymentMethod.PayOS);
+                .Where(payment => payment.Rental.StationID == stationID && payment.PaymentMethod == (int)PaymentMethod.PayOS)
+                .ToListAsync();
         }
-        public async Task<Payment?> GetCashPaymentAtStationAsync(int stationID)
+        public async Task<IEnumerable<Payment?>> GetCashPaymentAtStationAsync(int stationID)
         {
             return await _context.Payments
                 .Include(payment => payment.Rental)
-                .FirstOrDefaultAsync(payment => payment.Rental.StationID == stationID && payment.PaymentMethod == (int)PaymentMethod.Cash);
+                .Where(payment => payment.Rental.StationID == stationID && payment.PaymentMethod == (int)PaymentMethod.Cash)
+                .ToListAsync();
         }
     }
 }

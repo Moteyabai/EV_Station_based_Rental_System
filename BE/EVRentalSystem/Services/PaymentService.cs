@@ -89,7 +89,7 @@ namespace Services
         public async Task<IEnumerable<Payment>> GetPendingPayment() => await _paymentRepository.GetPendingPayment();
 
         public async Task<Payment> GetDepositPaymentByRentalIDAsync(int rentalID) => await _paymentRepository.GetDepositPaymentByRentalIDAsync(rentalID);
-        public async Task<Payment?> GetPayOSPaymentAtStationAsync(int stationID) => await _paymentRepository.GetPayOSPaymentAtStationAsync(stationID);
-        public async Task<Payment?> GetCashPaymentAtStationAsync(int stationID) => await _paymentRepository.GetCashPaymentAtStationAsync(stationID);
+        public async Task<IEnumerable<Payment?>> GetPayOSPaymentAtStationAsync(int stationID) => await _paymentRepository.GetPayOSPaymentAtStationAsync(stationID);
+        public async Task<IEnumerable<Payment?>> GetCashPaymentAtStationAsync(int stationID) => await _paymentRepository.GetCashPaymentAtStationAsync(stationID);
     }
 }
