@@ -33,9 +33,11 @@ namespace BusinessObject.Models.DTOs
         public string FullName { get; set; }
         public string Email { get; set; }
         public string Phone { get; set; }
+        public string IDNumber { get; set; }
+        public string LicenseNumber { get; set; }
         public string Avatar { get; set; }
         public int? DocumentID { get; set; }
-        public string? DocumentStatus { get; set; }
+        public int? DocumentStatus { get; set; }
         public int TotalRental { get; set; }
         public decimal TotalSpent { get; set; }
         public DateTime AccountCreatedAt { get; set; }

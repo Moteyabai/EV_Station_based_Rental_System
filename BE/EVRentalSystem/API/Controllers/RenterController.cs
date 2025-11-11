@@ -25,47 +25,8 @@ namespace API.Controllers
             _idDocumentService = idDocumentService;
         }
 
-        /// <summary>
-        /// Get all renters (Admin only)
-        /// </summary>
+       
         [HttpGet("GetAllRenters")]
-        [Authorize]
-        public async Task<ActionResult<IEnumerable<Renter>>> GetAllRenters()
-        {
-            // Check user permission
-            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-            if (permission != "3")
-            {
-                var res = new ResponseDTO
-                {
-                    Message = "Không có quyền truy cập!"
-                };
-                return Unauthorized(res);
-            }
-
-            try
-            {
-                var renters = await _renterService.GetAllAsync();
-                if (renters == null || !renters.Any())
-                {
-                    var res = new ResponseDTO
-                    {
-                        Message = "Danh sách người thuê trống"
-                    };
-                    return NotFound(res);
-                }
-                return Ok(renters);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Get all renters with detailed information (Admin and Staff)
-        /// </summary>
-        [HttpGet("GetAllRentersDetailed")]
         [Authorize]
         public async Task<ActionResult<IEnumerable<RenterDisplayDTO>>> GetAllRentersDetailed()
         {
@@ -263,20 +224,23 @@ namespace API.Controllers
                     return NotFound(res);
                 }
 
-                string documentStatus = "Chưa xác minh";
                 if (renter.DocumentID.HasValue)
                 {
-                    var document = await _idDocumentService.GetByIdAsync(renter.DocumentID.Value);
-                    if (document != null)
+                   var res = new ResponseDTO
                     {
-                        documentStatus = document.Status switch
-                        {
-                            0 => "Đang chờ",
-                            1 => "Đã xác minh",
-                            2 => "Từ chối",
-                            _ => "Không xác định"
-                        };
-                    }
+                        Message = "Chưa xác minh giấy tờ!"
+                    };
+                    return NotFound(res);
+                }
+
+                var document = await _idDocumentService.GetByIdAsync(renter.DocumentID.Value);
+                if (document == null)
+                {
+                    var res = new ResponseDTO
+                    {
+                        Message = "Giấy tờ không tồn tại!"
+                    };
+                    return NotFound(res);
                 }
 
                 var displayDto = new RenterDisplayDTO
@@ -288,7 +252,9 @@ namespace API.Controllers
                     Phone = account.Phone,
                     Avatar = account.Avatar,
                     DocumentID = renter.DocumentID,
-                    DocumentStatus = documentStatus,
+                    IDNumber = document.IDNumber,
+                    LicenseNumber = document.LicenseNumber,
+                    DocumentStatus = document.Status,
                     TotalRental = renter.TotalRental,
                     TotalSpent = renter.TotalSpent,
                     AccountCreatedAt = account.CreatedAt,
