@@ -33,5 +33,18 @@ namespace Repositories
             return await _context.Payments
                 .FirstOrDefaultAsync(payment => payment.RentalID == rentalID && payment.PaymentType == (int)PaymentType.Deposit);
         }
+
+        public async Task<Payment?> GetPayOSPaymentAtStationAsync(int stationID)
+        {
+            return await _context.Payments
+                .Include(payment => payment.Rental)
+                .FirstOrDefaultAsync(payment => payment.Rental.StationID == stationID && payment.PaymentMethod == (int)PaymentMethod.PayOS);
+        }
+        public async Task<Payment?> GetCashPaymentAtStationAsync(int stationID)
+        {
+            return await _context.Payments
+                .Include(payment => payment.Rental)
+                .FirstOrDefaultAsync(payment => payment.Rental.StationID == stationID && payment.PaymentMethod == (int)PaymentMethod.Cash);
+        }
     }
 }

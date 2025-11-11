@@ -97,6 +97,72 @@ namespace API.Controllers
             }
         }
 
+        [HttpGet("GetPayOSPaymentsAtStation/{stationID}")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<Payment>>> GetPayOSPaymentsAtStation(int stationID)
+        {
+            // Check user permission
+            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
+            if (permission != "3" && permission != "2")
+            {
+                var res = new ResponseDTO
+                {
+                    Message = "Không có quyền truy cập!"
+                };
+                return Unauthorized(res);
+            }
+            try
+            {
+                var payment = await _paymentService.GetPayOSPaymentAtStationAsync(stationID);
+                if (payment == null)
+                {
+                    var res = new ResponseDTO
+                    {
+                        Message = "Không tìm thấy thanh toán PayOS tại trạm này!"
+                    };
+                    return NotFound(res);
+                }
+                return Ok(payment);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpGet("GetCashPaymentsAtStation/{stationID}")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<Payment>>> GetCashPaymentsAtStation(int stationID)
+        {
+            // Check user permission
+            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
+            if (permission != "3" && permission != "2")
+            {
+                var res = new ResponseDTO
+                {
+                    Message = "Không có quyền truy cập!"
+                };
+                return Unauthorized(res);
+            }
+            try
+            {
+                var payment = await _paymentService.GetCashPaymentAtStationAsync(stationID);
+                if (payment == null)
+                {
+                    var res = new ResponseDTO
+                    {
+                        Message = "Không tìm thấy thanh toán tiền mặt tại trạm này!"
+                    };
+                    return NotFound(res);
+                }
+                return Ok(payment);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
         [HttpGet("GetPaymentById/{id}")]
         [Authorize]
         public async Task<ActionResult<Payment>> GetPaymentById(int id)
