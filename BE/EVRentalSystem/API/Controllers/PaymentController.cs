@@ -18,9 +18,11 @@ namespace API.Controllers
         private readonly AccountService _accountService;
         private readonly EVBikeService _evbikeService;
         private readonly EVBike_StocksService _evbike_StocksService;
+        private readonly StationStaffService _stationStaffService;
 
         public PaymentController(PaymentService paymentService, RenterService renterService, RentalService rentalService
-            , AccountService accountService, EVBikeService evbikeService, EVBike_StocksService evbike_StocksService)
+            , AccountService accountService, EVBikeService evbikeService, EVBike_StocksService evbike_StocksService,
+            StationStaffService stationStaffService)
         {
             _paymentService = paymentService;
             _renterService = renterService;
@@ -28,6 +30,7 @@ namespace API.Controllers
             _accountService = accountService;
             _evbikeService = evbikeService;
             _evbike_StocksService = evbike_StocksService;
+            _stationStaffService = stationStaffService;
         }
 
         [HttpGet("GetAllPayments")]
@@ -97,9 +100,9 @@ namespace API.Controllers
             }
         }
 
-        [HttpGet("GetPayOSPaymentsAtStation/{stationID}")]
+        [HttpGet("GetPayOSPaymentsAtStation/{accountID}")]
         [Authorize]
-        public async Task<ActionResult<IEnumerable<Payment>>> GetPayOSPaymentsAtStation(int stationID)
+        public async Task<ActionResult<IEnumerable<Payment>>> GetPayOSPaymentsAtStation(int accountID)
         {
             // Check user permission
             var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
@@ -113,7 +116,25 @@ namespace API.Controllers
             }
             try
             {
-                var payment = await _paymentService.GetPayOSPaymentAtStationAsync(stationID);
+                var staff = await _stationStaffService.GetStaffByAccountID(accountID);
+                if (staff == null)
+                {
+                    var res = new ResponseDTO
+                    {
+                        Message = "Không tìm thấy thông tin nhân viên trạm!"
+                    };
+                    return NotFound(res);
+                }
+
+                if(staff.StationID==null)
+                {
+                    var res = new ResponseDTO
+                    {
+                        Message = "Nhân viên chưa được phân công trạm!"
+                    };
+                    return NotFound(res);
+                }
+                var payment = await _paymentService.GetPayOSPaymentAtStationAsync(staff.StationID.Value);
                 if (payment == null)
                 {
                     var res = new ResponseDTO
@@ -130,9 +151,9 @@ namespace API.Controllers
             }
         }
 
-        [HttpGet("GetCashPaymentsAtStation/{stationID}")]
+        [HttpGet("GetCashPaymentsAtStation/{accountID}")]
         [Authorize]
-        public async Task<ActionResult<IEnumerable<Payment>>> GetCashPaymentsAtStation(int stationID)
+        public async Task<ActionResult<IEnumerable<Payment>>> GetCashPaymentsAtStation(int accountID)
         {
             // Check user permission
             var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
@@ -146,7 +167,26 @@ namespace API.Controllers
             }
             try
             {
-                var payment = await _paymentService.GetCashPaymentAtStationAsync(stationID);
+                var staff = await _stationStaffService.GetStaffByAccountID(accountID);
+                if (staff == null)
+                {
+                    var res = new ResponseDTO
+                    {
+                        Message = "Không tìm thấy thông tin nhân viên trạm!"
+                    };
+                    return NotFound(res);
+                }
+
+                if (staff.StationID == null)
+                {
+                    var res = new ResponseDTO
+                    {
+                        Message = "Nhân viên chưa được phân công trạm!"
+                    };
+                    return NotFound(res);
+                }
+
+                var payment = await _paymentService.GetCashPaymentAtStationAsync(staff.StationID.Value);
                 if (payment == null)
                 {
                     var res = new ResponseDTO
