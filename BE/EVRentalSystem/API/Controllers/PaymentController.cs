@@ -134,8 +134,8 @@ namespace API.Controllers
                     };
                     return NotFound(res);
                 }
-                var payment = await _paymentService.GetPayOSPaymentAtStationAsync(staff.StationID.Value);
-                if (payment == null)
+                var payments = await _paymentService.GetPayOSPaymentAtStationAsync(staff.StationID.Value);
+                if (payments == null || !payments.Any())
                 {
                     var res = new ResponseDTO
                     {
@@ -143,7 +143,7 @@ namespace API.Controllers
                     };
                     return NotFound(res);
                 }
-                return Ok(payment);
+                return Ok(payments);
             }
             catch (Exception ex)
             {
@@ -186,8 +186,8 @@ namespace API.Controllers
                     return NotFound(res);
                 }
 
-                var payment = await _paymentService.GetCashPaymentAtStationAsync(staff.StationID.Value);
-                if (payment == null)
+                var payments = await _paymentService.GetCashPaymentAtStationAsync(staff.StationID.Value);
+                if (payments == null || !payments.Any())
                 {
                     var res = new ResponseDTO
                     {
@@ -195,7 +195,7 @@ namespace API.Controllers
                     };
                     return NotFound(res);
                 }
-                return Ok(payment);
+                return Ok(payments);
             }
             catch (Exception ex)
             {
