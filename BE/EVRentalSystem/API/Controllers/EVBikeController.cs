@@ -100,7 +100,8 @@ namespace API.Controllers
                         Quantity = quantity,
                         Description = bike.Description,
                         PricePerDay = bike.PricePerDay,
-                        BatteryCapacity = bike.BatteryCapacity
+                        BatteryCapacity = bike.BatteryCapacity,
+                        Status = bike.Status
                     };
                     display.Add(bikeDTO);
                 }
