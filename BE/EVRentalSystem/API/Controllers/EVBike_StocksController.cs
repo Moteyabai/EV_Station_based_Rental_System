@@ -1,5 +1,6 @@
 ﻿using BusinessObject.Models;
 using BusinessObject.Models.DTOs;
+using BusinessObject.Models.Enum;
 using BusinessObject.Models.JWT;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -187,6 +188,84 @@ namespace API.Controllers
             catch (Exception ex)
             {
                 res.Message = $"Lỗi khi thêm xe: {ex.Message}";
+                return StatusCode(StatusCodes.Status500InternalServerError, res);
+            }
+        }
+
+        [HttpPut("UpdateEVBikeStock/{stockID}")]
+        [Authorize]
+        public async Task<IActionResult> UpdateEVBikeStock(int stockID, [FromBody] EVBike_StocksUpdateDTO updatedStock)
+        {
+            var res = new ResponseDTO();
+            // Check user permission (Admin only)
+            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
+            if (permission != "3")
+            {
+                res.Message = "Không có quyền truy cập!";
+                return Unauthorized(res);
+            }
+            try
+            {
+                var existingStock = await _evBikeStocksService.GetByIdAsync(stockID);
+                if (existingStock == null)
+                {
+                    res.Message = $"Không tìm thấy xe với StockID: {stockID}";
+                    return NotFound(res);
+                }
+
+                if (existingStock.Status == (int)BikeStatus.Unavailable)
+                {
+                    res.Message = "Xe đang được thuê không thể sửa!";
+                    return BadRequest(res);
+                }
+                // Update stock details
+                existingStock.LicensePlate = updatedStock.LicensePlate ?? existingStock.LicensePlate;
+                existingStock.BatteryCapacity = updatedStock.BatteryCapacity ?? existingStock.BatteryCapacity;
+                existingStock.Color = updatedStock.Color.Value;
+                existingStock.Status = updatedStock.Status.Value;
+                await _evBikeStocksService.UpdateAsync(existingStock);
+                res.Message = "Cập nhật xe thành công.";
+                return Ok(res);
+            }
+            catch (Exception ex)
+            {
+                res.Message = $"Lỗi khi cập nhật xe: {ex.Message}";
+                return StatusCode(StatusCodes.Status500InternalServerError, res);
+            }
+        }
+
+        [HttpDelete("DeleteEVBikeStock/{stockID}")]
+        [Authorize]
+        public async Task<IActionResult> DeleteEVBikeStock(int stockID)
+        {
+            var res = new ResponseDTO();
+            // Check user permission (Admin only)
+            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
+            if (permission != "3")
+            {
+                res.Message = "Không có quyền truy cập!";
+                return Unauthorized(res);
+            }
+            try
+            {
+                var existingStock = await _evBikeStocksService.GetByIdAsync(stockID);
+                if (existingStock == null)
+                {
+                    res.Message = $"Không tìm thấy xe với StockID: {stockID}";
+                    return NotFound(res);
+                }
+                if (existingStock.Status == (int)BikeStatus.Unavailable)
+                {
+                    res.Message = "Xe đang được thuê không thể xóa!";
+                    return BadRequest(res);
+                }
+                await _evBikeStocksService.DeleteAsync(stockID);
+                res.Message = "Xóa xe thành công.";
+                return Ok(res);
+            }
+            catch (Exception ex)
+            {
+                res.Message = $"Lỗi khi xóa xe: {ex.Message}";
                 return StatusCode(StatusCodes.Status500InternalServerError, res);
             }
         }

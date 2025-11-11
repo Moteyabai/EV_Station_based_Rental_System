@@ -172,7 +172,7 @@ namespace API.Controllers
         {
             // Check user permission
             var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
-            if (permission != "3" && permission !="2")
+            if (permission != "3" && permission != "2")
             {
                 var res = new ResponseDTO
                 {
@@ -191,12 +191,11 @@ namespace API.Controllers
                     return NotFound(res);
                 }
 
-                if(staff.StationID == null)
+                if (staff.StationID == null)
                 {
                     res.Message = "Nhân viên chưa được phân công trạm!";
                     return NotFound(res);
                 }
-
 
                 var rentals = await _rentalService.GetRentalsAtStaion(staff.StationID.Value);
                 if (rentals == null || !rentals.Any())
@@ -353,6 +352,98 @@ namespace API.Controllers
                     displayDto.PaymentMethod = payment.PaymentMethod;
 
                     displayDtos.Add(displayDto);
+                }
+
+                return Ok(displayDtos);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpGet("GetCompletedAndOngoingRentals")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<RentalDisplayDTO>>> GetCompletedAndOngoingRentals()
+        {
+            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
+            var userId = User.FindFirst(UserClaimTypes.AccountID)?.Value;
+
+            if (permission != "3")
+            {
+                var res = new ResponseDTO
+                {
+                    Message = "Không có quyền truy cập thông tin này!"
+                };
+                return Unauthorized(res);
+            }
+            try
+            {
+                var rentals = await _rentalService.GetCompletedAndOngoingRentalAsync();
+                if (rentals == null || !rentals.Any())
+                {
+                    var res = new ResponseDTO
+                    {
+                        Message = "Không tìm thấy thông tin thuê xe!"
+                    };
+                    return NotFound(res);
+                }
+                var displayDtos = new List<RentalDisplayDTO>();
+                foreach (var rental in rentals)
+                {
+                    var bike = await _evBikeService.GetByIdAsync(rental.BikeID);
+                    if (bike == null)
+                    {
+                        var res = new ResponseDTO
+                        {
+                            Message = "Không tìm thấy thông tin xe!"
+                        };
+                        return NotFound(res);
+                    }
+                    var renter = await _renterService.GetByIdAsync(rental.RenterID);
+                    if (renter == null)
+                    {
+                        var res = new ResponseDTO
+                        {
+                            Message = "Không tìm thấy thông tin người thuê!"
+                        };
+                        return NotFound(res);
+                    }
+                    var acc = await _accountService.GetByIdAsync(renter.AccountID);
+                    if (acc == null)
+                    {
+                        var res = new ResponseDTO
+                        {
+                            Message = "Không tìm thấy thông tin tài khoản!"
+                        };
+                        return NotFound(res);
+                    }
+                    var payment = await _paymentService.GetDepositPaymentByRentalIDAsync(rental.RentalID);
+                    if (payment == null)
+                    {
+                        var res = new ResponseDTO
+                        {
+                            Message = "Không tìm thấy thông tin thanh toán!"
+                        };
+                        return NotFound(res);
+                    }
+                    var displayDto = new RentalDisplayDTO();
+                    displayDto.RentalID = rental.RentalID;
+                    displayDto.BikeID = rental.BikeID;
+                    displayDto.StationID = rental.StationID;
+                    displayDto.BikeImage = bike.FrontImg;
+                    displayDto.BikeName = bike.BikeName;
+                    displayDto.LicensePlate = rental.LicensePlate;
+                    displayDto.RenterName = acc.FullName;
+                    displayDto.PhoneNumber = acc.Phone;
+                    displayDto.Email = acc.Email;
+                    displayDto.StartDate = rental.StartDate;
+                    displayDto.EndDate = rental.EndDate;
+                    displayDto.HandoverDate = rental.RentalDate;
+                    displayDto.ReturnDate = rental.ReturnDate;
+                    displayDto.AssignedStaff = rental.AssignedStaff;
+                    displayDto.InitialBattery = rental.InitialBattery;
+                    displayDto.Status = rental.Status;
                 }
 
                 return Ok(displayDtos);

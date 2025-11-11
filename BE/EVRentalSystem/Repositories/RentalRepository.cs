@@ -1,4 +1,5 @@
 ﻿using BusinessObject.Models;
+using BusinessObject.Models.Enum;
 using Microsoft.EntityFrameworkCore;
 using Repositories.BaseRepository;
 using Repositories.DBContext;
@@ -33,6 +34,14 @@ namespace Repositories
                 .Include(r => r.Renter)
                 .Include(s => s.Station)
                 .Where(rental => rental.StationID == stationID)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Rental>> GetCompletedAndOngoingRentalAsync()
+        {
+            return await _context.Rentals
+                .Include(r => r.Renter)
+                .Where(rental => rental.Status == (int)RentalStatus.Completed || rental.Status == (int)RentalStatus.OnGoing)
                 .ToListAsync();
         }
     }
