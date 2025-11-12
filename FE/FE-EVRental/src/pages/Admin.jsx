@@ -55,8 +55,13 @@ const Admin = () => {
   const [newStation, setNewStation] = useState({
     name: "",
     address: "",
-    totalVehicles: 0,
-    chargingStations: 0,
+    description: "",
+    bikeCapacity: 0,
+    openingHours: "",
+    contactNumber: "",
+    imageUrl: null,
+    exteriorImageUrl: null,
+    thumbnailImageUrl: null,
   });
 
   const [newVehicle, setNewVehicle] = useState({
@@ -252,6 +257,19 @@ const Admin = () => {
     fetchStations();
   }, []);
 
+  // Helper function to get full image URL
+  const getStationImageUrl = (filename) => {
+    if (!filename) return null;
+    // If already a full URL, return as-is
+    if (filename.startsWith("http://") || filename.startsWith("https://")) {
+      return filename;
+    }
+    // Convert filename to full URL
+    return `http://localhost:5168/api/Station/images/${encodeURIComponent(
+      filename
+    )}`;
+  };
+
   const fetchStations = async () => {
     setStationsLoading(true);
     setStationsError(null);
@@ -266,10 +284,18 @@ const Admin = () => {
         id: station.stationID,
         name: station.name,
         address: station.address,
+        description: station.description,
+        bikeCapacity: station.bikeCapacity,
+        openingHours: station.openingHours,
+        contactNumber: station.contactNumber,
         availableVehicles: station.bikeCapacity || 0, // This should come from bike count API
         totalVehicles: station.bikeCapacity || 0,
         chargingStations: 0, // Not in API, keep as 0 or add to API
         status: station.isActive ? "active" : "maintenance",
+        // Convert image filenames to full URLs
+        imageUrl: getStationImageUrl(station.imageUrl),
+        exteriorImageUrl: getStationImageUrl(station.exteriorImageUrl),
+        thumbnailImageUrl: getStationImageUrl(station.thumbnailImageUrl),
       }));
 
       setStations(transformedStations);
@@ -1766,31 +1792,81 @@ const Admin = () => {
   });
 
   // Station management functions
-  const handleAddStation = () => {
+  const handleAddStation = async () => {
     if (!newStation.name || !newStation.address) {
-      alert("Vui lòng điền đầy đủ thông tin trạm");
+      alert("Vui lòng điền đầy đủ thông tin trạm (tên, địa chỉ)");
       return;
     }
 
-    const station = {
-      id: `s${stations.length + 1}`,
-      name: newStation.name,
-      address: newStation.address,
-      availableVehicles: 0,
-      totalVehicles: parseInt(newStation.totalVehicles) || 0,
-      chargingStations: parseInt(newStation.chargingStations) || 0,
-      status: "active",
-    };
+    try {
+      const token = getToken();
 
-    setStations([...stations, station]);
-    setShowAddStationModal(false);
-    setNewStation({
-      name: "",
-      address: "",
-      totalVehicles: 0,
-      chargingStations: 0,
-    });
-    alert("✅ Đã thêm trạm mới thành công!");
+      if (!token) {
+        alert("❌ Vui lòng đăng nhập lại");
+        return;
+      }
+
+      // Create FormData for multipart/form-data
+      const formData = new FormData();
+      formData.append("name", newStation.name);
+      formData.append("address", newStation.address);
+      formData.append("description", newStation.description || "");
+      formData.append("bikeCapacity", parseInt(newStation.bikeCapacity) || 0);
+      formData.append("openingHours", newStation.openingHours || "");
+      formData.append("contactNumber", newStation.contactNumber || "");
+
+      if (newStation.imageUrl) formData.append("imageUrl", newStation.imageUrl);
+      if (newStation.exteriorImageUrl)
+        formData.append("exteriorImageUrl", newStation.exteriorImageUrl);
+      if (newStation.thumbnailImageUrl)
+        formData.append("thumbnailImageUrl", newStation.thumbnailImageUrl);
+
+      formData.append("isActive", true);
+
+      console.log("Creating station with FormData");
+
+      // 🔴 API: POST /api/Station/CreateStation - Tạo trạm mới
+      const response = await fetch(
+        "http://localhost:5168/api/Station/CreateStation",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            // Don't set Content-Type - browser will set multipart/form-data with boundary
+          },
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
+        throw new Error(errorText || "Không thể tạo trạm");
+      }
+
+      const result = await response.json();
+      console.log("Station created:", result);
+
+      // Refresh stations list
+      await fetchStations();
+
+      setShowAddStationModal(false);
+      setNewStation({
+        name: "",
+        address: "",
+        description: "",
+        bikeCapacity: 0,
+        openingHours: "",
+        contactNumber: "",
+        imageUrl: null,
+        exteriorImageUrl: null,
+        thumbnailImageUrl: null,
+      });
+      alert("✅ Đã thêm trạm mới thành công!");
+    } catch (error) {
+      console.error("Error adding station:", error);
+      alert("❌ Không thể thêm trạm: " + error.message);
+    }
   };
 
   const handleViewStationDetail = (station) => {
@@ -1803,43 +1879,113 @@ const Admin = () => {
     console.log("Edit station:", station);
     setSelectedStation(station);
     setNewStation({
-      name: station.name,
-      address: station.address,
-      totalVehicles: station.totalVehicles,
-      chargingStations: station.chargingStations,
+      name: station.name || "",
+      address: station.address || "",
+      description: station.description || "",
+      bikeCapacity: station.bikeCapacity || 0,
+      openingHours: station.openingHours || "",
+      contactNumber: station.contactNumber || "",
+      imageUrl: station.imageUrl || null,
+      exteriorImageUrl: station.exteriorImageUrl || null,
+      thumbnailImageUrl: station.thumbnailImageUrl || null,
     });
     setShowEditStationModal(true);
   };
 
-  const handleUpdateStation = () => {
+  const handleUpdateStation = async () => {
+    console.log("🔵 handleUpdateStation called - Start");
+
     if (!newStation.name || !newStation.address) {
-      alert("Vui lòng điền đầy đủ thông tin trạm");
+      alert("Vui lòng điền đầy đủ thông tin trạm (tên, địa chỉ)");
       return;
     }
 
-    setStations(
-      stations.map((s) =>
-        s.id === selectedStation.id
-          ? {
-              ...s,
-              name: newStation.name,
-              address: newStation.address,
-              totalVehicles: parseInt(newStation.totalVehicles),
-              chargingStations: parseInt(newStation.chargingStations),
-            }
-          : s
-      )
-    );
+    if (!selectedStation || !selectedStation.id) {
+      alert("❌ Không tìm thấy thông tin trạm cần cập nhật");
+      return;
+    }
 
-    setShowEditStationModal(false);
-    setSelectedStation(null);
-    setNewStation({
-      name: "",
-      address: "",
-      totalVehicles: 0,
-      chargingStations: 0,
-    });
-    alert("✅ Đã cập nhật thông tin trạm!");
+    try {
+      const token = getToken();
+
+      if (!token) {
+        alert("❌ Vui lòng đăng nhập lại");
+        return;
+      }
+
+      // Create FormData for multipart/form-data
+      const formData = new FormData();
+      formData.append("stationID", selectedStation.id);
+      formData.append("name", newStation.name);
+      formData.append("address", newStation.address);
+      formData.append("description", newStation.description || "");
+      formData.append("bikeCapacity", parseInt(newStation.bikeCapacity) || 0);
+      formData.append("openingHours", newStation.openingHours || "");
+      formData.append("contactNumber", newStation.contactNumber || "");
+
+      // Only send image files if user selected new ones
+      if (newStation.imageUrl instanceof File) {
+        formData.append("imageUrl", newStation.imageUrl);
+      }
+      if (newStation.exteriorImageUrl instanceof File) {
+        formData.append("exteriorImageUrl", newStation.exteriorImageUrl);
+      }
+      if (newStation.thumbnailImageUrl instanceof File) {
+        formData.append("thumbnailImageUrl", newStation.thumbnailImageUrl);
+      }
+
+      formData.append("isActive", true);
+
+      console.log(
+        "🔵 Sending PUT request to UpdateStation, ID:",
+        selectedStation.id
+      );
+
+      // 🔴 API: PUT /api/Station/UpdateStation - Cập nhật trạm
+      const response = await fetch(
+        "http://localhost:5168/api/Station/UpdateStation",
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            // Don't set Content-Type - browser will set multipart/form-data with boundary
+          },
+          body: formData,
+        }
+      );
+
+      console.log("🔵 Response received:", response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
+        throw new Error(errorText || "Không thể cập nhật trạm");
+      }
+
+      const result = await response.json();
+      console.log("Station updated:", result);
+
+      // Refresh stations list
+      await fetchStations();
+
+      setShowEditStationModal(false);
+      setSelectedStation(null);
+      setNewStation({
+        name: "",
+        address: "",
+        description: "",
+        bikeCapacity: 0,
+        openingHours: "",
+        contactNumber: "",
+        imageUrl: null,
+        exteriorImageUrl: null,
+        thumbnailImageUrl: null,
+      });
+      alert("✅ Đã cập nhật thông tin trạm!");
+    } catch (error) {
+      console.error("Error updating station:", error);
+      alert("❌ Không thể cập nhật trạm: " + error.message);
+    }
   };
 
   const handleManageStationVehicles = (station) => {
@@ -2334,25 +2480,140 @@ const Admin = () => {
                   />
                 </div>
 
+                <div className="form-group">
+                  <label>Mô tả</label>
+                  <textarea
+                    name="description"
+                    value={newStation.description}
+                    onChange={handleInputChange}
+                    placeholder="Mô tả về trạm"
+                    className="form-textarea"
+                    rows="3"
+                  />
+                </div>
+
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Số lượng xe</label>
+                    <label>Sức chứa xe</label>
                     <input
                       type="number"
-                      name="totalVehicles"
-                      value={newStation.totalVehicles}
+                      name="bikeCapacity"
+                      value={newStation.bikeCapacity}
                       onChange={handleInputChange}
                       placeholder="0"
                       className="form-input"
                       min="0"
                     />
                   </div>
+
+                  <div className="form-group">
+                    <label>Số điện thoại</label>
+                    <input
+                      type="tel"
+                      name="contactNumber"
+                      value={newStation.contactNumber}
+                      onChange={handleInputChange}
+                      placeholder="0912345678"
+                      className="form-input"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Giờ mở cửa</label>
+                  <input
+                    type="text"
+                    name="openingHours"
+                    value={newStation.openingHours}
+                    onChange={handleInputChange}
+                    placeholder="Ví dụ: 06:00 - 22:00"
+                    className="form-input"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Hình ảnh chính</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) =>
+                      setNewStation({
+                        ...newStation,
+                        imageUrl: e.target.files[0],
+                      })
+                    }
+                    className="form-input"
+                  />
+                  {newStation.imageUrl && (
+                    <p
+                      style={{
+                        fontSize: "0.85rem",
+                        color: "#64748b",
+                        marginTop: "0.5rem",
+                      }}
+                    >
+                      ✅ {newStation.imageUrl.name}
+                    </p>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label>Hình ảnh bên ngoài</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) =>
+                      setNewStation({
+                        ...newStation,
+                        exteriorImageUrl: e.target.files[0],
+                      })
+                    }
+                    className="form-input"
+                  />
+                  {newStation.exteriorImageUrl && (
+                    <p
+                      style={{
+                        fontSize: "0.85rem",
+                        color: "#64748b",
+                        marginTop: "0.5rem",
+                      }}
+                    >
+                      ✅ {newStation.exteriorImageUrl.name}
+                    </p>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label>Hình thumbnail</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) =>
+                      setNewStation({
+                        ...newStation,
+                        thumbnailImageUrl: e.target.files[0],
+                      })
+                    }
+                    className="form-input"
+                  />
+                  {newStation.thumbnailImageUrl && (
+                    <p
+                      style={{
+                        fontSize: "0.85rem",
+                        color: "#64748b",
+                        marginTop: "0.5rem",
+                      }}
+                    >
+                      ✅ {newStation.thumbnailImageUrl.name}
+                    </p>
+                  )}
                 </div>
 
                 <div className="info-note">
                   <span className="note-icon">💡</span>
                   <p>
-                    Thông tin về số lượng xe có thể cập nhật sau khi tạo trạm.
+                    Các field có dấu * là bắt buộc. Hình ảnh giúp trạm của bạn
+                    nổi bật hơn!
                   </p>
                 </div>
               </div>
@@ -2423,19 +2684,142 @@ const Admin = () => {
                   />
                 </div>
 
+                <div className="form-group">
+                  <label>Mô tả</label>
+                  <textarea
+                    name="description"
+                    value={newStation.description}
+                    onChange={handleInputChange}
+                    placeholder="Mô tả về trạm"
+                    className="form-textarea"
+                    rows="3"
+                  />
+                </div>
+
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Số lượng xe</label>
+                    <label>Sức chứa xe</label>
                     <input
                       type="number"
-                      name="totalVehicles"
-                      value={newStation.totalVehicles}
+                      name="bikeCapacity"
+                      value={newStation.bikeCapacity}
                       onChange={handleInputChange}
                       placeholder="0"
                       className="form-input"
                       min="0"
                     />
                   </div>
+
+                  <div className="form-group">
+                    <label>Số điện thoại</label>
+                    <input
+                      type="tel"
+                      name="contactNumber"
+                      value={newStation.contactNumber}
+                      onChange={handleInputChange}
+                      placeholder="0912345678"
+                      className="form-input"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Giờ mở cửa</label>
+                  <input
+                    type="text"
+                    name="openingHours"
+                    value={newStation.openingHours}
+                    onChange={handleInputChange}
+                    placeholder="Ví dụ: 06:00 - 22:00"
+                    className="form-input"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>
+                    Hình ảnh chính (để trống nếu không muốn thay đổi)
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) =>
+                      setNewStation({
+                        ...newStation,
+                        imageUrl: e.target.files[0],
+                      })
+                    }
+                    className="form-input"
+                  />
+                  {newStation.imageUrl &&
+                    newStation.imageUrl instanceof File && (
+                      <p
+                        style={{
+                          fontSize: "0.85rem",
+                          color: "#64748b",
+                          marginTop: "0.5rem",
+                        }}
+                      >
+                        ✅ {newStation.imageUrl.name}
+                      </p>
+                    )}
+                </div>
+
+                <div className="form-group">
+                  <label>
+                    Hình ảnh bên ngoài (để trống nếu không muốn thay đổi)
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) =>
+                      setNewStation({
+                        ...newStation,
+                        exteriorImageUrl: e.target.files[0],
+                      })
+                    }
+                    className="form-input"
+                  />
+                  {newStation.exteriorImageUrl &&
+                    newStation.exteriorImageUrl instanceof File && (
+                      <p
+                        style={{
+                          fontSize: "0.85rem",
+                          color: "#64748b",
+                          marginTop: "0.5rem",
+                        }}
+                      >
+                        ✅ {newStation.exteriorImageUrl.name}
+                      </p>
+                    )}
+                </div>
+
+                <div className="form-group">
+                  <label>
+                    Hình thumbnail (để trống nếu không muốn thay đổi)
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) =>
+                      setNewStation({
+                        ...newStation,
+                        thumbnailImageUrl: e.target.files[0],
+                      })
+                    }
+                    className="form-input"
+                  />
+                  {newStation.thumbnailImageUrl &&
+                    newStation.thumbnailImageUrl instanceof File && (
+                      <p
+                        style={{
+                          fontSize: "0.85rem",
+                          color: "#64748b",
+                          marginTop: "0.5rem",
+                        }}
+                      >
+                        ✅ {newStation.thumbnailImageUrl.name}
+                      </p>
+                    )}
                 </div>
               </div>
 
@@ -2483,16 +2867,141 @@ const Admin = () => {
               <div className="modal-body">
                 <div className="station-detail-info">
                   <h3>⚡ {selectedStation.name}</h3>
+
+                  {/* Station Images */}
+                  {(selectedStation.imageUrl ||
+                    selectedStation.exteriorImageUrl ||
+                    selectedStation.thumbnailImageUrl) && (
+                    <div style={{ marginBottom: "1.5rem" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "1rem",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        {selectedStation.imageUrl && (
+                          <div style={{ flex: "1 1 200px" }}>
+                            <p
+                              style={{
+                                fontSize: "0.85rem",
+                                color: "#64748b",
+                                marginBottom: "0.5rem",
+                              }}
+                            >
+                              Hình ảnh chính:
+                            </p>
+                            <img
+                              src={selectedStation.imageUrl}
+                              alt="Station main"
+                              style={{
+                                width: "100%",
+                                height: "150px",
+                                objectFit: "cover",
+                                borderRadius: "8px",
+                              }}
+                              onError={(e) => {
+                                e.target.style.display = "none";
+                              }}
+                            />
+                          </div>
+                        )}
+                        {selectedStation.exteriorImageUrl && (
+                          <div style={{ flex: "1 1 200px" }}>
+                            <p
+                              style={{
+                                fontSize: "0.85rem",
+                                color: "#64748b",
+                                marginBottom: "0.5rem",
+                              }}
+                            >
+                              Hình bên ngoài:
+                            </p>
+                            <img
+                              src={selectedStation.exteriorImageUrl}
+                              alt="Station exterior"
+                              style={{
+                                width: "100%",
+                                height: "150px",
+                                objectFit: "cover",
+                                borderRadius: "8px",
+                              }}
+                              onError={(e) => {
+                                e.target.style.display = "none";
+                              }}
+                            />
+                          </div>
+                        )}
+                        {selectedStation.thumbnailImageUrl && (
+                          <div style={{ flex: "1 1 200px" }}>
+                            <p
+                              style={{
+                                fontSize: "0.85rem",
+                                color: "#64748b",
+                                marginBottom: "0.5rem",
+                              }}
+                            >
+                              Thumbnail:
+                            </p>
+                            <img
+                              src={selectedStation.thumbnailImageUrl}
+                              alt="Station thumbnail"
+                              style={{
+                                width: "100%",
+                                height: "150px",
+                                objectFit: "cover",
+                                borderRadius: "8px",
+                              }}
+                              onError={(e) => {
+                                e.target.style.display = "none";
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="detail-row">
                     <span className="detail-label">📍 Địa chỉ:</span>
                     <span className="detail-value">
                       {selectedStation.address}
                     </span>
                   </div>
+
+                  {selectedStation.description && (
+                    <div className="detail-row">
+                      <span className="detail-label">📝 Mô tả:</span>
+                      <span className="detail-value">
+                        {selectedStation.description}
+                      </span>
+                    </div>
+                  )}
+
+                  {selectedStation.openingHours && (
+                    <div className="detail-row">
+                      <span className="detail-label">🕐 Giờ mở cửa:</span>
+                      <span className="detail-value">
+                        {selectedStation.openingHours}
+                      </span>
+                    </div>
+                  )}
+
+                  {selectedStation.contactNumber && (
+                    <div className="detail-row">
+                      <span className="detail-label">📞 Số điện thoại:</span>
+                      <span className="detail-value">
+                        {selectedStation.contactNumber}
+                      </span>
+                    </div>
+                  )}
+
                   <div className="detail-row">
-                    <span className="detail-label">🏍️ Tổng số xe:</span>
+                    <span className="detail-label">🏍️ Sức chứa xe:</span>
                     <span className="detail-value">
-                      {selectedStation.totalVehicles} xe
+                      {selectedStation.bikeCapacity ||
+                        selectedStation.totalVehicles}{" "}
+                      xe
                     </span>
                   </div>
                   <div className="detail-row">
