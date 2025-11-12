@@ -133,10 +133,14 @@ export default function Staff() {
 
 // Component Quản lý Giao - Nhận xe
 function VehicleHandover() {
-  const [selectedFilter, setSelectedFilter] = useState("booked"); // 'booked', 'renting', 'completed'
+  const { user } = useAuth();
+  const [selectedFilter, setSelectedFilter] = useState("preparing"); // 'preparing' (1), 'ongoing' (2), 'completed' (4), 'cancelled' (3)
   const [vehicles, setVehicles] = useState([]);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [showHandoverModal, setShowHandoverModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showReturnModal, setShowReturnModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(""); // Search by rentalID or customerName
 
   // Load rentals from API on mount and set up auto-refresh
   useEffect(() => {
@@ -156,34 +160,54 @@ function VehicleHandover() {
         return;
       }
 
-      console.log('🔄 [HANDOVER] Loading rentals from API...');
+      // Get staff accountID
+      const staffAccountID = user?.accountID || user?.AccountID;
+      if (!staffAccountID) {
+        console.error('❌ [HANDOVER] Staff accountID not found!');
+        setVehicles([]);
+        return;
+      }
+
+      console.log(`🔄 [HANDOVER] Loading rentals at station for staff accountID: ${staffAccountID}`);
       
-      // Gọi API để lấy tất cả rentals
-      const allRentals = await getAllRentals(token);
+      // Gọi API GetRentalsAtStation với staffID
+      const response = await fetch(`http://localhost:5168/api/Rental/GetRentalsAtStation/${staffAccountID}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`);
+      }
+
+      const allRentals = await response.json();
       
-      console.log('📋 [HANDOVER] All rentals:', allRentals);
-      
-      // Lọc chỉ lấy status = 1 (Đã xác nhận), status = 2 (Đang cho thuê), status = 4 (Đã thu hồi)
-      const filteredRentals = allRentals.filter(
-        (rental) => rental.status === 1 || rental.status === 2 || rental.status === 4
-      );
-      
-      console.log('✅ [HANDOVER] Filtered rentals (status 1, 2 & 4):', filteredRentals);
+      console.log('📋 [HANDOVER] Rentals at station:', allRentals);
+      console.log('📊 [HANDOVER] Status breakdown:', {
+        preparing: allRentals.filter(r => r.status === 1).length,
+        ongoing: allRentals.filter(r => r.status === 2).length,
+        cancelled: allRentals.filter(r => r.status === 3).length,
+        completed: allRentals.filter(r => r.status === 4).length,
+      });
 
       // Transform rentals to vehicle format for display
-      const transformedVehicles = filteredRentals.map((rental) => {
+      const transformedVehicles = allRentals.map((rental) => {
         const returnDateTime = new Date(rental.endDate);
         const now = new Date();
         const isOverdue = rental.status === 2 && returnDateTime < now;
 
         // Map status number to text for filter tabs
-        let statusText = "booked";
+        let statusText = "preparing";
         if (rental.status === 1) {
-          statusText = "booked";
+          statusText = "preparing"; // Chuẩn bị bàn giao
         } else if (rental.status === 2) {
-          statusText = "renting";
-        } else if (rental.status === 3 || rental.status === 4) {
-          statusText = "completed";
+          statusText = "ongoing"; // Đang hoạt động
+        } else if (rental.status === 3) {
+          statusText = "cancelled"; // Bị hủy
+        } else if (rental.status === 4) {
+          statusText = "completed"; // Đã hoàn tất
         }
 
         return {
@@ -197,6 +221,7 @@ function VehicleHandover() {
           userEmail: rental.email || "N/A",
           bookingId: rental.rentalID,
           status: statusText,
+          rentalStatus: rental.status, // Keep original status number
           pickupDate: rental.startDate ? new Date(rental.startDate).toLocaleString('vi-VN') : "N/A",
           returnDate: rental.endDate ? new Date(rental.endDate).toLocaleString('vi-VN') : "N/A",
           pickupStation: "Điểm nhận xe",
@@ -213,6 +238,17 @@ function VehicleHandover() {
           overdueHours: isOverdue
             ? Math.floor((now - returnDateTime) / (1000 * 60 * 60))
             : 0,
+          // Additional fields for detail modal
+          station: rental.station || null, // Station object with name and address
+          paymentMethod: rental.paymentMethod || 0, // 1=Cash, 2=PayOS
+          dailyRate: rental.dailyRate || rental.pricePerDay || 0,
+          additionalFees: rental.additionalFees || 0,
+          totalCost: rental.totalAmount || 0,
+          // Raw dates for calculation
+          startDate: rental.startDate, // Keep raw date for calculation
+          endDate: rental.endDate, // Keep raw date for calculation
+          // Renter ID for handover API
+          renterID: rental.renterID || rental.renterId || null,
         };
       });
 
@@ -225,28 +261,41 @@ function VehicleHandover() {
   };
 
   const filteredVehicles = vehicles.filter((v) => {
-    if (selectedFilter === "all") return true;
-    return v.status === selectedFilter;
+    // Status filter
+    let statusMatch = true;
+    if (selectedFilter !== "all") {
+      statusMatch = v.status === selectedFilter;
+    }
+
+    // Search filter (by rentalID, customerName, or userPhone)
+    let searchMatch = true;
+    if (searchQuery.trim()) {
+      const query = searchQuery.trim().toLowerCase();
+      const rentalIdStr = v.rentalID?.toString().toLowerCase() || "";
+      const customerName = v.customerName?.toLowerCase() || "";
+      const userPhone = v.userPhone?.toLowerCase() || "";
+      searchMatch = rentalIdStr.includes(query) || customerName.includes(query) || userPhone.includes(query);
+    }
+
+    return statusMatch && searchMatch;
   });
 
   // Count vehicles by status
-  const bookedCount = vehicles.filter((v) => v.status === "booked").length;
-  const rentingCount = vehicles.filter((v) => v.status === "renting").length;
-  const completedCount = vehicles.filter(
-    (v) => v.status === "completed"
-  ).length;
+  const preparingCount = vehicles.filter((v) => v.status === "preparing").length; // status = 1
+  const ongoingCount = vehicles.filter((v) => v.status === "ongoing").length; // status = 2
+  const completedCount = vehicles.filter((v) => v.status === "completed").length; // status = 4
+  const cancelledCount = vehicles.filter((v) => v.status === "cancelled").length; // status = 3
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (rentalStatus) => {
+    // Map theo backend status number: Pending=0, Reserved=1, OnGoing=2, Cancelled=3, Completed=4
     const config = {
-      booked: { text: "Đã đặt trước", class: "status-booked", icon: "📅" },
-      renting: { text: "Đang cho thuê", class: "status-renting", icon: "�" },
-      completed: {
-        text: "Đã hoàn thành",
-        class: "status-completed",
-        icon: "✅",
-      },
+      0: { text: "Đang chờ", class: "status-pending", icon: "⏳" },
+      1: { text: "Chuẩn bị bàn giao", class: "status-reserved", icon: "📅" },
+      2: { text: "Đang hoạt động", class: "status-ongoing", icon: "🚗" },
+      3: { text: "Đã hủy", class: "status-cancelled", icon: "❌" },
+      4: { text: "Đã hoàn tất", class: "status-completed", icon: "✅" },
     };
-    const c = config[status] || config.booked;
+    const c = config[rentalStatus] || config[0];
     return (
       <span className={`status-badge ${c.class}`}>
         {c.icon} {c.text}
@@ -276,6 +325,123 @@ function VehicleHandover() {
     setSelectedVehicle(null);
   };
 
+  // Xử lý bàn giao xe từ card
+  const handleHandOverBikeFromCard = async (vehicle) => {
+    if (!vehicle.rentalID) {
+      alert('❌ Không tìm thấy thông tin Rental ID!');
+      return;
+    }
+
+    if (!window.confirm(`Xác nhận bàn giao xe cho khách hàng ${vehicle.customerName}?`)) {
+      return;
+    }
+
+    try {
+      const token = getToken();
+      if (!token) {
+        alert('❌ Không tìm thấy token xác thực!');
+        return;
+      }
+
+      console.log('🚗 [HANDOVER] Calling HandOverBike API for rentalID:', vehicle.rentalID);
+
+      const response = await fetch(`http://localhost:5168/api/Rental/HandOverBike?rentalID=${vehicle.rentalID}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ [HANDOVER] API Error:', response.status, errorText);
+        alert(`❌ Lỗi bàn giao xe: ${response.status}`);
+        return;
+      }
+
+      const result = await response.json();
+      console.log('✅ [HANDOVER] Bike handed over successfully:', result);
+
+      alert('✅ Bàn giao xe thành công!');
+      // Reload bookings to refresh the display
+      loadBookings();
+    } catch (error) {
+      console.error('❌ [HANDOVER] Error handing over bike:', error);
+      alert('❌ Có lỗi xảy ra khi bàn giao xe!');
+    }
+  };
+
+  // Xử lý hủy đơn
+  const handleCancelRental = async (vehicle) => {
+    if (!vehicle.rentalID) {
+      alert('❌ Không tìm thấy thông tin Rental ID!');
+      return;
+    }
+
+    // Kiểm tra trạng thái đơn - chỉ cho phép hủy đơn đang chuẩn bị (status = 1)
+    if (vehicle.rentalStatus !== 1) {
+      alert('⚠️ Chỉ có thể hủy đơn đang chuẩn bị bàn giao!');
+      return;
+    }
+
+    if (!window.confirm(`⚠️ Xác nhận hủy đơn thuê xe #${vehicle.rentalID}?\n\nKhách hàng: ${vehicle.customerName}\nXe: ${vehicle.vehicleName} (${vehicle.licensePlate})\n\nHành động này không thể hoàn tác!`)) {
+      return;
+    }
+
+    try {
+      const token = getToken();
+      if (!token) {
+        alert('❌ Không tìm thấy token xác thực!');
+        return;
+      }
+
+      console.log('🗑️ [CANCEL] Calling DeleteRental API for rentalID:', vehicle.rentalID);
+
+      const response = await fetch(`http://localhost:5168/api/Rental/DeleteRental/${vehicle.rentalID}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ [CANCEL] API Error:', response.status, errorText);
+        alert(`❌ Lỗi hủy đơn: ${response.status}`);
+        return;
+      }
+
+      const result = await response.json();
+      console.log('✅ [CANCEL] Rental cancelled successfully:', result);
+
+      alert('✅ Hủy đơn thuê xe thành công!');
+      // Reload bookings to refresh the display
+      loadBookings();
+    } catch (error) {
+      console.error('❌ [CANCEL] Error cancelling rental:', error);
+      alert('❌ Có lỗi xảy ra khi hủy đơn!');
+    }
+  };
+
+  // Xử lý thu hồi xe - Mở modal nhập thông tin
+  const handleReturnBike = (vehicle) => {
+    if (!vehicle.rentalID) {
+      alert('❌ Không tìm thấy thông tin Rental ID!');
+      return;
+    }
+
+    // Kiểm tra trạng thái đơn - chỉ cho phép thu hồi đơn đang hoạt động (status = 2)
+    if (vehicle.rentalStatus !== 2) {
+      alert('⚠️ Chỉ có thể thu hồi xe đang hoạt động!');
+      return;
+    }
+
+    setSelectedVehicle(vehicle);
+    setShowReturnModal(true);
+  };
+
   return (
     <div className="management-section">
       <div className="section-header">
@@ -286,19 +452,19 @@ function VehicleHandover() {
       <div className="filter-tabs">
         <button
           className={`filter-tab ${
-            selectedFilter === "booked" ? "active" : ""
+            selectedFilter === "preparing" ? "active" : ""
           }`}
-          onClick={() => setSelectedFilter("booked")}
+          onClick={() => setSelectedFilter("preparing")}
         >
-          📅 Chuẩn bị bàn giao ({bookedCount})
+          📅 Đơn chuẩn bị bàn giao ({preparingCount})
         </button>
         <button
           className={`filter-tab ${
-            selectedFilter === "renting" ? "active" : ""
+            selectedFilter === "ongoing" ? "active" : ""
           }`}
-          onClick={() => setSelectedFilter("renting")}
+          onClick={() => setSelectedFilter("ongoing")}
         >
-          🚗 Đang cho thuê ({rentingCount})
+          🚗 Đơn đang hoạt động ({ongoingCount})
         </button>
         <button
           className={`filter-tab ${
@@ -306,21 +472,106 @@ function VehicleHandover() {
           }`}
           onClick={() => setSelectedFilter("completed")}
         >
-          ✅ Đã thu hồi ({completedCount})
+          ✅ Đơn đã hoàn tất ({completedCount})
         </button>
+        <button
+          className={`filter-tab ${
+            selectedFilter === "cancelled" ? "active" : ""
+          }`}
+          onClick={() => setSelectedFilter("cancelled")}
+        >
+          ❌ Đơn bị hủy ({cancelledCount})
+        </button>
+      </div>
+
+      {/* Search Bar */}
+      <div 
+        className="search-bar" 
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          padding: '12px 20px',
+          background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+          borderRadius: '12px',
+          marginBottom: '20px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+        }}
+      >
+        <span style={{ fontSize: '20px' }}>🔍</span>
+        <input
+          type="text"
+          placeholder="Tìm kiếm theo mã đơn hàng, tên khách hàng hoặc số điện thoại..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{
+            flex: 1,
+            padding: '10px 16px',
+            border: '2px solid #e0e0e0',
+            borderRadius: '8px',
+            fontSize: '15px',
+            outline: 'none',
+            transition: 'all 0.3s ease',
+            backgroundColor: 'white'
+          }}
+          onFocus={(e) => {
+            e.target.style.borderColor = '#4CAF50';
+            e.target.style.boxShadow = '0 0 0 3px rgba(76, 175, 80, 0.1)';
+          }}
+          onBlur={(e) => {
+            e.target.style.borderColor = '#e0e0e0';
+            e.target.style.boxShadow = 'none';
+          }}
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery("")}
+            style={{
+              padding: '8px 16px',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 2px 6px rgba(102, 126, 234, 0.3)'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'translateY(-2px)';
+              e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 2px 6px rgba(102, 126, 234, 0.3)';
+            }}
+          >
+            ✕ Xóa
+          </button>
+        )}
       </div>
 
       <div className="vehicles-list">
         {filteredVehicles.length === 0 && (
           <div className="empty-state">
-            {selectedFilter === "booked" && (
-              <p>📭 Chưa có xe nào cần bàn giao</p>
-            )}
-            {selectedFilter === "renting" && (
-              <p>📭 Chưa có xe nào đang cho thuê</p>
-            )}
-            {selectedFilter === "completed" && (
-              <p>📭 Chưa có xe nào đã hoàn thành</p>
+            {searchQuery ? (
+              <p>🔍 Không tìm thấy đơn với từ khóa: "{searchQuery}"</p>
+            ) : (
+              <>
+                {selectedFilter === "preparing" && (
+                  <p>📭 Chưa có đơn nào cần bàn giao</p>
+                )}
+                {selectedFilter === "ongoing" && (
+                  <p>📭 Chưa có đơn nào đang hoạt động</p>
+                )}
+                {selectedFilter === "completed" && (
+                  <p>📭 Chưa có đơn nào đã hoàn tất</p>
+                )}
+                {selectedFilter === "cancelled" && (
+                  <p>📭 Chưa có đơn nào bị hủy</p>
+                )}
+              </>
             )}
           </div>
         )}
@@ -334,8 +585,7 @@ function VehicleHandover() {
           >
             <div className="vehicle-header">
               <div className="vehicle-title">
-                <h3>{vehicle.vehicleName}</h3>
-                <span className="license-plate">🏍️ {vehicle.licensePlate}</span>
+                <h3>📋 Mã Booking: {vehicle.rentalID || "N/A"}</h3>
               </div>
               <div className="status-badges">
                 {vehicle.isOverdue && (
@@ -343,7 +593,7 @@ function VehicleHandover() {
                     ⚠️ QUÁ HẠN {vehicle.overdueHours}h
                   </span>
                 )}
-                {getStatusBadge(vehicle.status)}
+                {getStatusBadge(vehicle.rentalStatus)}
               </div>
             </div>
 
@@ -359,77 +609,43 @@ function VehicleHandover() {
             )}
 
             <div className="vehicle-details">
-              <div className="detail-row">
-                <span className="label">🔋 Pin:</span>
-                <span className="value">
-                  <div className="battery-indicator">
-                    <div
-                      className="battery-fill"
-                      style={{ width: vehicle.battery }}
-                    />
-                  </div>
-                  {vehicle.battery}
-                </span>
-              </div>
-              <div className="detail-row">
-                <span className="label">🕐 Kiểm tra cuối:</span>
-                <span className="value">{vehicle.lastCheck}</span>
+              {/* Row 1: Ngày bàn giao và Ngày kết thúc */}
+              <div className="detail-row-group">
+                <div className="detail-item">
+                  <span className="label">📅 Ngày bàn giao xe:</span>
+                  <span className="value">{vehicle.pickupDate}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="label">📅 Ngày kết thúc:</span>
+                  <span className="value">{vehicle.returnDate}</span>
+                </div>
               </div>
 
-              {vehicle.customerName && (
-                <>
-                  <div className="detail-row">
-                    <span className="label">👤 Khách hàng:</span>
-                    <span className="value">{vehicle.customerName}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="label">� Mã booking:</span>
-                    <span className="value booking-id">
-                      {vehicle.bookingId || "N/A"}
-                    </span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="label">📱 Số điện thoại:</span>
-                    <span className="value">
-                      {vehicle.userPhone || "Chưa cập nhật"}
-                    </span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="label">� Email:</span>
-                    <span className="value">
-                      {vehicle.userEmail || "Chưa cập nhật"}
-                    </span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="label">� Điểm nhận xe:</span>
-                    <span className="value pickup-location">
-                      {vehicle.pickupStation || "Chưa xác định"}
-                    </span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="label">� Điểm trả xe:</span>
-                    <span className="value return-location">
-                      {vehicle.returnStation || "Chưa xác định"}
-                    </span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="label">� Ngày nhận xe:</span>
-                    <span className="value">{vehicle.pickupDate}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="label">� Ngày trả xe:</span>
-                    <span className="value">{vehicle.returnDate}</span>
-                  </div>
-                  {vehicle.status === "completed" && vehicle.completedDate && (
-                    <div className="detail-row">
-                      <span className="label">✅ Hoàn thành:</span>
-                      <span className="value completed-date">
-                        {vehicle.completedDate}
-                      </span>
-                    </div>
-                  )}
-                </>
-              )}
+              {/* Row 2: Tên khách hàng và Số điện thoại */}
+              <div className="detail-row-group">
+                <div className="detail-item">
+                  <span className="label">👤 Tên khách hàng:</span>
+                  <span className="value">{vehicle.customerName || "N/A"}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="label">📱 Số điện thoại:</span>
+                  <span className="value">
+                    {vehicle.userPhone || "Chưa cập nhật"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Row 3: Loại xe và Biển số xe */}
+              <div className="detail-row-group">
+                <div className="detail-item">
+                  <span className="label">🏍️ Loại xe:</span>
+                  <span className="value">{vehicle.vehicleName || "N/A"}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="label">🔢 Biển số xe:</span>
+                  <span className="value">{vehicle.licensePlate || "N/A"}</span>
+                </div>
+              </div>
             </div>
 
             <div className="vehicle-actions">
@@ -454,7 +670,54 @@ function VehicleHandover() {
                   ✅ Đã hoàn thành
                 </button>
               )}
-              <button className="btn-action btn-view">👁️ Chi tiết xe</button>
+              {vehicle.rentalStatus === 1 && ( // Chỉ hiển thị nút bàn giao cho đơn "Chuẩn bị bàn giao"
+                <button 
+                  className="btn-action btn-handover"
+                  onClick={() => handleHandOverBikeFromCard(vehicle)}
+                  style={{
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    color: 'white',
+                    fontWeight: '600',
+                  }}
+                >
+                  🚗 Bàn giao xe
+                </button>
+              )}
+              {vehicle.rentalStatus === 1 && ( // Chỉ hiển thị nút hủy đơn cho đơn "Chuẩn bị bàn giao"
+                <button 
+                  className="btn-action btn-cancel"
+                  onClick={() => handleCancelRental(vehicle)}
+                  style={{
+                    background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                    color: 'white',
+                    fontWeight: '600',
+                  }}
+                >
+                  ❌ Hủy đơn
+                </button>
+              )}
+              {vehicle.rentalStatus === 2 && ( // Chỉ hiển thị nút thu hồi cho đơn "Đang hoạt động"
+                <button 
+                  className="btn-action btn-return"
+                  onClick={() => handleReturnBike(vehicle)}
+                  style={{
+                    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                    color: 'white',
+                    fontWeight: '600',
+                  }}
+                >
+                  🔄 Thu hồi xe
+                </button>
+              )}
+              <button 
+                className="btn-action btn-view"
+                onClick={() => {
+                  setSelectedVehicle(vehicle);
+                  setShowDetailModal(true);
+                }}
+              >
+                👁️ Chi tiết xe
+              </button>
             </div>
           </div>
         ))}
@@ -470,6 +733,400 @@ function VehicleHandover() {
           onComplete={handleCompleteHandover}
         />
       )}
+
+      {showDetailModal && selectedVehicle && (
+        <RentalDetailModal
+          vehicle={selectedVehicle}
+          onClose={() => {
+            setShowDetailModal(false);
+            setSelectedVehicle(null);
+          }}
+          onReturnBike={(vehicle) => {
+            setShowDetailModal(false);
+            setShowReturnModal(true);
+            setSelectedVehicle(vehicle);
+          }}
+        />
+      )}
+
+      {showReturnModal && selectedVehicle && (
+        <ReturnBikeModal
+          vehicle={selectedVehicle}
+          onClose={() => {
+            setShowReturnModal(false);
+            setSelectedVehicle(null);
+          }}
+          onComplete={() => {
+            loadBookings();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+// Modal chi tiết đơn thuê xe
+function RentalDetailModal({ vehicle, onClose, onReturnBike }) {
+  const [isHandingOver, setIsHandingOver] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  // Tính số ngày thuê (ngày kết thúc - ngày bắt đầu)
+  const calculateRentalDays = () => {
+    if (!vehicle.startDate || !vehicle.endDate) return 0;
+    const start = new Date(vehicle.startDate);
+    const end = new Date(vehicle.endDate);
+    const diffTime = end - start; // Ngày kết thúc - ngày bắt đầu
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0; // Trả về 0 nếu âm
+  };
+
+  const rentalDays = calculateRentalDays();
+
+  // Xử lý bàn giao xe
+  const handleHandOverBike = async () => {
+    if (!vehicle.rentalID) {
+      alert('❌ Không tìm thấy thông tin Rental ID!');
+      return;
+    }
+
+    if (!window.confirm(`Xác nhận bàn giao xe cho khách hàng ${vehicle.customerName}?`)) {
+      return;
+    }
+
+    setIsHandingOver(true);
+
+    try {
+      const token = getToken();
+      if (!token) {
+        alert('❌ Không tìm thấy token xác thực!');
+        setIsHandingOver(false);
+        return;
+      }
+
+      console.log('🚗 [HANDOVER] Calling HandOverBike API for rentalID:', vehicle.rentalID);
+
+      const response = await fetch(`http://localhost:5168/api/Rental/HandOverBike?rentalID=${vehicle.rentalID}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ [HANDOVER] API Error:', response.status, errorText);
+        alert(`❌ Lỗi bàn giao xe: ${response.status}`);
+        setIsHandingOver(false);
+        return;
+      }
+
+      const result = await response.json();
+      console.log('✅ [HANDOVER] Bike handed over successfully:', result);
+
+      alert('✅ Bàn giao xe thành công!');
+      onClose(); // Close modal after success
+      // Trigger a reload of the rentals list if needed
+      window.location.reload();
+    } catch (error) {
+      console.error('❌ [HANDOVER] Error handing over bike:', error);
+      alert('❌ Có lỗi xảy ra khi bàn giao xe!');
+    } finally {
+      setIsHandingOver(false);
+    }
+  };
+
+  // Xử lý hủy đơn
+  const handleCancelRental = async () => {
+    if (!vehicle.rentalID) {
+      alert('❌ Không tìm thấy thông tin Rental ID!');
+      return;
+    }
+
+    if (vehicle.rentalStatus !== 1) {
+      alert('⚠️ Chỉ có thể hủy đơn đang chuẩn bị bàn giao!');
+      return;
+    }
+
+    if (!window.confirm(`⚠️ Xác nhận hủy đơn thuê xe #${vehicle.rentalID}?\n\nHành động này không thể hoàn tác!`)) {
+      return;
+    }
+
+    setIsCancelling(true);
+
+    try {
+      const token = getToken();
+      if (!token) {
+        alert('❌ Không tìm thấy token xác thực!');
+        setIsCancelling(false);
+        return;
+      }
+
+      console.log('🗑️ [CANCEL] Calling DeleteRental API for rentalID:', vehicle.rentalID);
+
+      const response = await fetch(`http://localhost:5168/api/Rental/DeleteRental/${vehicle.rentalID}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ [CANCEL] API Error:', response.status, errorText);
+        alert(`❌ Lỗi hủy đơn: ${response.status}`);
+        setIsCancelling(false);
+        return;
+      }
+
+      const result = await response.json();
+      console.log('✅ [CANCEL] Rental cancelled successfully:', result);
+
+      alert('✅ Hủy đơn thuê xe thành công!');
+      onClose(); // Close modal after success
+      // Trigger a reload of the rentals list
+      window.location.reload();
+    } catch (error) {
+      console.error('❌ [CANCEL] Error cancelling rental:', error);
+      alert('❌ Có lỗi xảy ra khi hủy đơn!');
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  // Xử lý thu hồi xe - Mở modal form
+  const handleReturnBike = () => {
+    if (!vehicle.rentalID) {
+      alert('❌ Không tìm thấy thông tin Rental ID!');
+      return;
+    }
+
+    if (vehicle.rentalStatus !== 2) {
+      alert('⚠️ Chỉ có thể thu hồi xe đang hoạt động!');
+      return;
+    }
+
+    if (onReturnBike) {
+      onReturnBike(vehicle);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content rental-detail-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>📋 Chi Tiết Đơn Thuê Xe</h2>
+          <button className="btn-close" onClick={onClose}>✕</button>
+        </div>
+
+        <div className="modal-body">
+          {/* EV Bike Information */}
+          <div className="detail-section">
+            <h3>🏍️ Thông Tin Xe</h3>
+            <div className="info-grid">
+              <div className="info-item">
+                <span className="info-label">Tên xe:</span>
+                <span className="info-value">{vehicle.vehicleName || "N/A"}</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">Biển số xe:</span>
+                <span className="info-value">{vehicle.licensePlate || "N/A"}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Customer Information */}
+          <div className="detail-section">
+            <h3>👤 Thông Tin Khách Hàng</h3>
+            <div className="info-grid">
+              <div className="info-item">
+                <span className="info-label">Tên:</span>
+                <span className="info-value">{vehicle.customerName || "N/A"}</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">Số điện thoại:</span>
+                <span className="info-value">{vehicle.userPhone || "Chưa cập nhật"}</span>
+              </div>
+              <div className="info-item full-width">
+                <span className="info-label">Email:</span>
+                <span className="info-value">{vehicle.userEmail || "Chưa cập nhật"}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Date & Time Information */}
+          <div className="detail-section">
+            <h3>📅 Thông Tin Ngày Giờ</h3>
+            <div className="info-grid">
+              <div className="info-item full-width">
+                <span className="info-label">Số ngày thuê:</span>
+                <span className="info-value highlight">{rentalDays} ngày</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">Ngày bàn giao:</span>
+                <span className="info-value">{vehicle.pickupDate || "N/A"}</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">Ngày kết thúc bàn giao:</span>
+                <span className="info-value">{vehicle.returnDate || "N/A"}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Station Information */}
+          <div className="detail-section">
+            <h3>🚉 Trạm Thuê Xe</h3>
+            <div className="info-grid">
+              <div className="info-item">
+                <span className="info-label">Tên trạm:</span>
+                <span className="info-value">{vehicle.station?.name || "Chưa xác định"}</span>
+              </div>
+              <div className="info-item full-width">
+                <span className="info-label">Địa chỉ:</span>
+                <span className="info-value">{vehicle.station?.address || "Chưa cập nhật"}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Payment Method */}
+          <div className="detail-section">
+            <h3>💳 Phương Thức Thanh Toán</h3>
+            <div className="info-grid">
+              <div className="info-item">
+                <span className="info-label">Phương thức:</span>
+                <span className="info-value payment-method">
+                  {vehicle.paymentMethod === 1 ? "💵 Cash" : vehicle.paymentMethod === 2 ? "💳 PayOS" : "N/A"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Cost Information */}
+          <div className="detail-section">
+            <h3>💰 Chi Phí</h3>
+            <div className="info-grid">
+              <div className="info-item">
+                <span className="info-label">Tiền thuê 1 ngày:</span>
+                <span className="info-value">{vehicle.dailyRate ? `${vehicle.dailyRate.toLocaleString()} VNĐ` : "N/A"}</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">Phí phát sinh thêm:</span>
+                <span className="info-value">{vehicle.additionalFees ? `${vehicle.additionalFees.toLocaleString()} VNĐ` : "0 VNĐ"}</span>
+              </div>
+              <div className="info-item full-width total-cost">
+                <span className="info-label">Tổng chi phí phải trả:</span>
+                <span className="info-value highlight-cost">{vehicle.totalCost ? `${vehicle.totalCost.toLocaleString()} VNĐ` : "N/A"}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="modal-footer">
+          <button className="btn-close-modal" onClick={onClose}>
+            Đóng
+          </button>
+          {vehicle.rentalStatus === 1 && ( // Only show button for "preparing" status (Reserved)
+            <>
+              <button 
+                className="btn-cancel-rental" 
+                onClick={handleCancelRental}
+                disabled={isCancelling}
+                style={{
+                  padding: '12px 24px',
+                  background: isCancelling ? '#94a3b8' : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  cursor: isCancelling ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isCancelling) {
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 6px 16px rgba(239, 68, 68, 0.4)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)';
+                }}
+              >
+                {isCancelling ? '⏳ Đang hủy...' : '❌ Hủy đơn'}
+              </button>
+              <button 
+                className="btn-handover" 
+                onClick={handleHandOverBike}
+                disabled={isHandingOver}
+                style={{
+                  padding: '12px 24px',
+                  background: isHandingOver ? '#94a3b8' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  cursor: isHandingOver ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isHandingOver) {
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 6px 16px rgba(16, 185, 129, 0.4)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)';
+                }}
+              >
+                {isHandingOver ? '⏳ Đang xử lý...' : '🚗 Bàn giao xe'}
+              </button>
+            </>
+          )}
+          {vehicle.rentalStatus === 2 && ( // Only show button for "ongoing" status
+            <button 
+              className="btn-return-bike" 
+              onClick={handleReturnBike}
+              style={{
+                padding: '12px 24px',
+                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 6px 16px rgba(245, 158, 11, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.3)';
+              }}
+            >
+              🔄 Thu hồi xe
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -680,6 +1337,563 @@ function HandoverModal({ vehicle, onClose, onComplete }) {
             onClick={handleCompleteHandover}
           >
             ✅ Hoàn tất bàn giao
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Modal Thu hồi xe
+function ReturnBikeModal({ vehicle, onClose, onComplete }) {
+  const [returnData, setReturnData] = useState({
+    finalBattery: '',
+    finalBikeCondition: '',
+    returnDate: new Date().toISOString().slice(0, 16), // Format: YYYY-MM-DDTHH:mm
+    fee: vehicle?.totalCost || 0
+  });
+  const [hasAdditionalFee, setHasAdditionalFee] = useState(false);
+  const [additionalFeeReason, setAdditionalFeeReason] = useState('');
+  const [additionalFeeAmount, setAdditionalFeeAmount] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  // Validate form
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!returnData.finalBattery) {
+      newErrors.finalBattery = 'Vui lòng nhập mức pin';
+    } else {
+      const battery = parseFloat(returnData.finalBattery);
+      if (isNaN(battery) || battery < 0 || battery > 100) {
+        newErrors.finalBattery = 'Mức pin phải từ 0 đến 100';
+      }
+    }
+
+    if (!returnData.finalBikeCondition || returnData.finalBikeCondition.trim() === '') {
+      newErrors.finalBikeCondition = 'Vui lòng nhập tình trạng xe';
+    }
+
+    if (!returnData.returnDate) {
+      newErrors.returnDate = 'Vui lòng chọn ngày giờ trả xe';
+    }
+
+    // Validate additional fee if selected
+    if (hasAdditionalFee) {
+      if (!additionalFeeReason || additionalFeeReason.trim() === '') {
+        newErrors.additionalFeeReason = 'Vui lòng nhập lý do chi phí phát sinh';
+      }
+      if (!additionalFeeAmount || parseFloat(additionalFeeAmount) <= 0) {
+        newErrors.additionalFeeAmount = 'Vui lòng nhập số tiền phí phát sinh hợp lệ';
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Handle submit
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    // Calculate total fee
+    const baseFee = vehicle?.totalCost || 0;
+    const additionalAmount = hasAdditionalFee ? parseFloat(additionalFeeAmount) : 0;
+    const totalFee = baseFee + additionalAmount;
+
+    const confirmMessage = hasAdditionalFee 
+      ? `Xác nhận thu hồi xe từ khách hàng ${vehicle.customerName}?\n\nXe: ${vehicle.vehicleName} (${vehicle.licensePlate})\nPin: ${returnData.finalBattery}%\nTình trạng: ${returnData.finalBikeCondition}\n\n💰 Chi phí:\nPhí thuê ban đầu: ${baseFee.toLocaleString()} VNĐ\nPhí phát sinh: ${additionalAmount.toLocaleString()} VNĐ\nLý do: ${additionalFeeReason}\nTổng cộng: ${totalFee.toLocaleString()} VNĐ`
+      : `Xác nhận thu hồi xe từ khách hàng ${vehicle.customerName}?\n\nXe: ${vehicle.vehicleName} (${vehicle.licensePlate})\nPin: ${returnData.finalBattery}%\nTình trạng: ${returnData.finalBikeCondition}\n\n💰 Tổng phí thuê: ${totalFee.toLocaleString()} VNĐ`;
+
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const token = getToken();
+      if (!token) {
+        alert('❌ Không tìm thấy token xác thực!');
+        setIsSubmitting(false);
+        return;
+      }
+
+      console.log('🔄 [RETURN] Calling ReturnBike API for rentalID:', vehicle.rentalID);
+
+      const requestBody = {
+        rentalID: vehicle.rentalID,
+        finalBattery: parseFloat(returnData.finalBattery),
+        finalBikeCondition: returnData.finalBikeCondition.trim(),
+        returnDate: new Date(returnData.returnDate).toISOString(),
+        fee: totalFee
+      };
+
+      console.log('📦 [RETURN] Request body:', requestBody);
+
+      const response = await fetch(`http://localhost:5168/api/Rental/ReturnBike`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ [RETURN] API Error:', response.status, errorText);
+        alert(`❌ Lỗi thu hồi xe: ${response.status}\n${errorText}`);
+        setIsSubmitting(false);
+        return;
+      }
+
+      const result = await response.json();
+      console.log('✅ [RETURN] Bike returned successfully:', result);
+
+      alert('✅ Thu hồi xe thành công!');
+      onClose();
+      if (onComplete) onComplete();
+      // Trigger a reload of the rentals list
+      window.location.reload();
+    } catch (error) {
+      console.error('❌ [RETURN] Error returning bike:', error);
+      alert('❌ Có lỗi xảy ra khi thu hồi xe!');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content return-bike-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+        <div className="modal-header">
+          <h2>🔄 Thu Hồi Xe</h2>
+          <button className="btn-close" onClick={onClose}>✕</button>
+        </div>
+
+        <div className="modal-body" style={{ padding: '24px' }}>
+          {/* Thông tin xe và khách hàng */}
+          <div className="return-info-summary" style={{
+            background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+            padding: '16px',
+            borderRadius: '12px',
+            marginBottom: '24px',
+            border: '1px solid #bae6fd'
+          }}>
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '8px' }}>
+              <span style={{ fontWeight: '600', color: '#0369a1' }}>🏍️ Xe:</span>
+              <span style={{ color: '#0c4a6e' }}>{vehicle.vehicleName} ({vehicle.licensePlate})</span>
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <span style={{ fontWeight: '600', color: '#0369a1' }}>👤 Khách hàng:</span>
+              <span style={{ color: '#0c4a6e' }}>{vehicle.customerName}</span>
+            </div>
+          </div>
+
+          {/* Form nhập thông tin */}
+          <div className="return-form">
+            {/* Mức pin */}
+            <div className="form-group" style={{ marginBottom: '20px' }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '8px', 
+                fontWeight: '600',
+                color: '#1e293b',
+                fontSize: '14px'
+              }}>
+                🔋 Mức pin hiện tại (%) <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                value={returnData.finalBattery}
+                onChange={(e) => {
+                  setReturnData({ ...returnData, finalBattery: e.target.value });
+                  setErrors({ ...errors, finalBattery: '' });
+                }}
+                placeholder="Nhập mức pin từ 0-100"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: errors.finalBattery ? '2px solid #ef4444' : '2px solid #e2e8f0',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  transition: 'all 0.3s ease',
+                  outline: 'none'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                onBlur={(e) => {
+                  if (!errors.finalBattery) {
+                    e.target.style.borderColor = '#e2e8f0';
+                  }
+                }}
+              />
+              {errors.finalBattery && (
+                <span style={{ color: '#ef4444', fontSize: '13px', marginTop: '4px', display: 'block' }}>
+                  {errors.finalBattery}
+                </span>
+              )}
+            </div>
+
+            {/* Tình trạng xe */}
+            <div className="form-group" style={{ marginBottom: '20px' }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '8px', 
+                fontWeight: '600',
+                color: '#1e293b',
+                fontSize: '14px'
+              }}>
+                📝 Tình trạng xe khi trả <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <textarea
+                value={returnData.finalBikeCondition}
+                onChange={(e) => {
+                  setReturnData({ ...returnData, finalBikeCondition: e.target.value });
+                  setErrors({ ...errors, finalBikeCondition: '' });
+                }}
+                placeholder="Mô tả tình trạng xe (vết xước, hư hỏng, ...)"
+                rows="4"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: errors.finalBikeCondition ? '2px solid #ef4444' : '2px solid #e2e8f0',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  resize: 'vertical',
+                  fontFamily: 'inherit',
+                  transition: 'all 0.3s ease',
+                  outline: 'none'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                onBlur={(e) => {
+                  if (!errors.finalBikeCondition) {
+                    e.target.style.borderColor = '#e2e8f0';
+                  }
+                }}
+              />
+              {errors.finalBikeCondition && (
+                <span style={{ color: '#ef4444', fontSize: '13px', marginTop: '4px', display: 'block' }}>
+                  {errors.finalBikeCondition}
+                </span>
+              )}
+            </div>
+
+            {/* Ngày giờ trả xe */}
+            <div className="form-group" style={{ marginBottom: '20px' }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '8px', 
+                fontWeight: '600',
+                color: '#1e293b',
+                fontSize: '14px'
+              }}>
+                📅 Ngày giờ trả xe <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <input
+                type="datetime-local"
+                value={returnData.returnDate}
+                onChange={(e) => {
+                  setReturnData({ ...returnData, returnDate: e.target.value });
+                  setErrors({ ...errors, returnDate: '' });
+                }}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: errors.returnDate ? '2px solid #ef4444' : '2px solid #e2e8f0',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  transition: 'all 0.3s ease',
+                  outline: 'none'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                onBlur={(e) => {
+                  if (!errors.returnDate) {
+                    e.target.style.borderColor = '#e2e8f0';
+                  }
+                }}
+              />
+              {errors.returnDate && (
+                <span style={{ color: '#ef4444', fontSize: '13px', marginTop: '4px', display: 'block' }}>
+                  {errors.returnDate}
+                </span>
+              )}
+            </div>
+
+            {/* Chi phí */}
+            <div className="form-group" style={{ marginBottom: '20px' }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '12px', 
+                fontWeight: '600',
+                color: '#1e293b',
+                fontSize: '14px'
+              }}>
+                💰 Chi phí thuê xe
+              </label>
+
+              {/* Hiển thị phí thuê ban đầu */}
+              <div style={{
+                padding: '12px',
+                background: '#f8fafc',
+                borderRadius: '8px',
+                marginBottom: '12px',
+                border: '1px solid #e2e8f0'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#64748b', fontSize: '14px' }}>Phí thuê ban đầu:</span>
+                  <span style={{ color: '#0f172a', fontWeight: '600', fontSize: '14px' }}>
+                    {(vehicle?.totalCost || 0).toLocaleString()} VNĐ
+                  </span>
+                </div>
+              </div>
+
+              {/* Radio buttons cho chi phí phát sinh */}
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '12px',
+                  border: !hasAdditionalFee ? '2px solid #3b82f6' : '2px solid #e2e8f0',
+                  borderRadius: '8px',
+                  marginBottom: '8px',
+                  cursor: 'pointer',
+                  backgroundColor: !hasAdditionalFee ? '#eff6ff' : 'white',
+                  transition: 'all 0.3s ease'
+                }}>
+                  <input
+                    type="radio"
+                    name="additionalFee"
+                    checked={!hasAdditionalFee}
+                    onChange={() => {
+                      setHasAdditionalFee(false);
+                      setAdditionalFeeReason('');
+                      setAdditionalFeeAmount('');
+                      setErrors({ ...errors, additionalFeeReason: '', additionalFeeAmount: '' });
+                    }}
+                    style={{ marginRight: '12px', width: '18px', height: '18px', cursor: 'pointer' }}
+                  />
+                  <span style={{ fontWeight: '500', color: '#1e293b', fontSize: '14px' }}>
+                    ✅ Không có chi phí phát sinh
+                  </span>
+                </label>
+
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '12px',
+                  border: hasAdditionalFee ? '2px solid #3b82f6' : '2px solid #e2e8f0',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  backgroundColor: hasAdditionalFee ? '#eff6ff' : 'white',
+                  transition: 'all 0.3s ease'
+                }}>
+                  <input
+                    type="radio"
+                    name="additionalFee"
+                    checked={hasAdditionalFee}
+                    onChange={() => setHasAdditionalFee(true)}
+                    style={{ marginRight: '12px', width: '18px', height: '18px', cursor: 'pointer' }}
+                  />
+                  <span style={{ fontWeight: '500', color: '#1e293b', fontSize: '14px' }}>
+                    ⚠️ Có chi phí phát sinh thêm
+                  </span>
+                </label>
+              </div>
+
+              {/* Form chi phí phát sinh - chỉ hiện khi chọn option "có chi phí" */}
+              {hasAdditionalFee && (
+                <div style={{
+                  padding: '16px',
+                  background: '#fef3c7',
+                  borderRadius: '8px',
+                  border: '2px solid #fbbf24',
+                  marginTop: '12px'
+                }}>
+                  <h4 style={{ 
+                    margin: '0 0 12px 0', 
+                    color: '#92400e', 
+                    fontSize: '14px',
+                    fontWeight: '600'
+                  }}>
+                    📋 Chi tiết chi phí phát sinh
+                  </h4>
+
+                  {/* Lý do chi phí phát sinh */}
+                  <div style={{ marginBottom: '12px' }}>
+                    <label style={{ 
+                      display: 'block', 
+                      marginBottom: '6px', 
+                      fontWeight: '500',
+                      color: '#78350f',
+                      fontSize: '13px'
+                    }}>
+                      Lý do chi phí phát sinh <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <textarea
+                      value={additionalFeeReason}
+                      onChange={(e) => {
+                        setAdditionalFeeReason(e.target.value);
+                        setErrors({ ...errors, additionalFeeReason: '' });
+                      }}
+                      placeholder="Ví dụ: Xe bị xước, mất gương, hư hỏng bộ phận..."
+                      rows="3"
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        border: errors.additionalFeeReason ? '2px solid #ef4444' : '2px solid #fbbf24',
+                        borderRadius: '6px',
+                        fontSize: '13px',
+                        resize: 'vertical',
+                        fontFamily: 'inherit',
+                        backgroundColor: 'white',
+                        outline: 'none'
+                      }}
+                      onFocus={(e) => {
+                        if (!errors.additionalFeeReason) {
+                          e.target.style.borderColor = '#f59e0b';
+                        }
+                      }}
+                      onBlur={(e) => {
+                        if (!errors.additionalFeeReason) {
+                          e.target.style.borderColor = '#fbbf24';
+                        }
+                      }}
+                    />
+                    {errors.additionalFeeReason && (
+                      <span style={{ color: '#ef4444', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                        {errors.additionalFeeReason}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Số tiền phí phát sinh */}
+                  <div>
+                    <label style={{ 
+                      display: 'block', 
+                      marginBottom: '6px', 
+                      fontWeight: '500',
+                      color: '#78350f',
+                      fontSize: '13px'
+                    }}>
+                      Số tiền phí phát sinh (VNĐ) <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1000"
+                      value={additionalFeeAmount}
+                      onChange={(e) => {
+                        setAdditionalFeeAmount(e.target.value);
+                        setErrors({ ...errors, additionalFeeAmount: '' });
+                      }}
+                      placeholder="Nhập số tiền phí phát sinh"
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        border: errors.additionalFeeAmount ? '2px solid #ef4444' : '2px solid #fbbf24',
+                        borderRadius: '6px',
+                        fontSize: '13px',
+                        backgroundColor: 'white',
+                        outline: 'none'
+                      }}
+                      onFocus={(e) => {
+                        if (!errors.additionalFeeAmount) {
+                          e.target.style.borderColor = '#f59e0b';
+                        }
+                      }}
+                      onBlur={(e) => {
+                        if (!errors.additionalFeeAmount) {
+                          e.target.style.borderColor = '#fbbf24';
+                        }
+                      }}
+                    />
+                    {errors.additionalFeeAmount && (
+                      <span style={{ color: '#ef4444', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                        {errors.additionalFeeAmount}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Tổng cộng */}
+              <div style={{
+                padding: '16px',
+                background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
+                borderRadius: '8px',
+                marginTop: '16px',
+                border: '2px solid #3b82f6'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#1e3a8a', fontWeight: '700', fontSize: '16px' }}>💵 TỔNG CỘNG:</span>
+                  <span style={{ color: '#1e3a8a', fontWeight: '700', fontSize: '18px' }}>
+                    {((vehicle?.totalCost || 0) + (hasAdditionalFee ? parseFloat(additionalFeeAmount) || 0 : 0)).toLocaleString()} VNĐ
+                  </span>
+                </div>
+                {hasAdditionalFee && additionalFeeAmount && (
+                  <div style={{ marginTop: '8px', fontSize: '12px', color: '#1e40af' }}>
+                    <div>• Phí thuê: {(vehicle?.totalCost || 0).toLocaleString()} VNĐ</div>
+                    <div>• Phí phát sinh: {(parseFloat(additionalFeeAmount) || 0).toLocaleString()} VNĐ</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="modal-footer" style={{ 
+          padding: '16px 24px',
+          borderTop: '1px solid #e2e8f0',
+          display: 'flex',
+          gap: '12px',
+          justifyContent: 'flex-end'
+        }}>
+          <button 
+            className="btn-cancel" 
+            onClick={onClose}
+            disabled={isSubmitting}
+            style={{
+              padding: '10px 24px',
+              background: '#f1f5f9',
+              color: '#475569',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: isSubmitting ? 'not-allowed' : 'pointer',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            Hủy
+          </button>
+          <button 
+            className="btn-submit" 
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            style={{
+              padding: '10px 24px',
+              background: isSubmitting ? '#94a3b8' : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: isSubmitting ? 'not-allowed' : 'pointer',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            {isSubmitting ? '⏳ Đang xử lý...' : '✅ Xác nhận thu hồi'}
           </button>
         </div>
       </div>
@@ -1455,17 +2669,18 @@ function PaymentManagement() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [cancellingPayment, setCancellingPayment] = useState(null);
-  const [paymentType, setPaymentType] = useState("cash"); // 'cash' (paymentMethod=2), 'online' (paymentMethod=1)
+  const [paymentType, setPaymentType] = useState("cash"); // 'cash' (paymentMethod=1), 'online' (paymentMethod=2 - PayOS)
   const [paymentFilter, setPaymentFilter] = useState("pending"); // 'pending' (status=0), 'verified' (status=1), 'cancelled' (status=-1)
+  const [searchQuery, setSearchQuery] = useState(""); // Search by paymentID
   const [loading, setLoading] = useState(false);
   const [loadingRental, setLoadingRental] = useState(false);
   const [error, setError] = useState(null);
 
-  // Load payments from API when component mounts
+  // Load payments from API when component mounts, paymentType or paymentFilter changes
   useEffect(() => {
-    console.log("🔄 [PAYMENTS] Component mounted - Loading payments...");
+    console.log("🔄 [PAYMENTS] Loading payments for type:", paymentType, "filter:", paymentFilter);
     loadPayments();
-  }, []);
+  }, [paymentType, paymentFilter]); // Reload when switching type or filter
 
   // Auto-switch to "verified" filter when switching to online payment
   useEffect(() => {
@@ -1487,36 +2702,79 @@ function PaymentManagement() {
         return [];
       }
 
-      console.log("📋 [PAYMENTS] Fetching pending payments from API...");
+      // Get staff accountID from user object
+      const staffAccountID = user?.accountID || user?.AccountID;
       
-      // Call API to get pending payments (status = 0 or 2)
-      const response = await fetch('http://localhost:5168/api/Payment/GetPendingPayments', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`API Error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      if (data && Array.isArray(data)) {
-        console.log("🔍 [PAYMENTS] Sample payment data:", data[0]);
-        console.log("🔍 [PAYMENTS] First payment accountID:", data[0]?.accountID);
-        console.log("🔍 [PAYMENTS] All payment keys:", data[0] ? Object.keys(data[0]) : []);
-        
-        setPayments(data);
-        console.log(`✅ [PAYMENTS] Loaded ${data.length} pending payments from API`);
-        console.log(`📊 Status=0 (Cash - Chưa thanh toán): ${data.filter(p => p.status === 0).length}`);
-        console.log(`📊 Status=2 (PayOS - Đã thanh toán): ${data.filter(p => p.status === 2).length}`);
-        return data; // Return data for use in onClick
-      } else {
+      if (!staffAccountID) {
+        console.error("❌ [PAYMENTS] Staff accountID not found!");
         setPayments([]);
-        console.warn("⚠️ [PAYMENTS] Invalid response format");
         return [];
+      }
+      
+      // Case 1: Cash payments (all filters) → GetCashPaymentsAtStation
+      if (paymentType === "cash") {
+        console.log(`📋 [PAYMENTS] Fetching CASH payments at station for staff accountID: ${staffAccountID}`);
+        
+        const response = await fetch(`http://localhost:5168/api/Payment/GetCashPaymentsAtStation/${staffAccountID}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`API Error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (data && Array.isArray(data)) {
+          console.log(`✅ [PAYMENTS] Loaded ${data.length} cash payments at station`);
+          console.log(` Status breakdown:`, {
+            pending: data.filter(p => p.status === 0).length,
+            verified: data.filter(p => p.status === 1).length,
+            cancelled: data.filter(p => p.status === -1).length,
+          });
+          setPayments(data);
+          return data;
+        } else {
+          setPayments([]);
+          console.warn("⚠️ [PAYMENTS] Invalid response format");
+          return [];
+        }
+      }
+      
+      // Case 2: Online payments (all filters) → GetPayOSPaymentsAtStation
+      if (paymentType === "online") {
+        console.log(`📋 [PAYMENTS] Fetching PayOS payments at station for staff accountID: ${staffAccountID}`);
+        
+        const response = await fetch(`http://localhost:5168/api/Payment/GetPayOSPaymentsAtStation/${staffAccountID}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`API Error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (data && Array.isArray(data)) {
+          console.log(`✅ [PAYMENTS] Loaded ${data.length} PayOS payments at station`);
+          console.log(`📊 Status breakdown:`, {
+            pending: data.filter(p => p.status === 0).length,
+            verified: data.filter(p => p.status === 1).length,
+            cancelled: data.filter(p => p.status === -1).length,
+          });
+          setPayments(data);
+          return data;
+        } else {
+          setPayments([]);
+          console.warn("⚠️ [PAYMENTS] Invalid response format");
+          return [];
+        }
       }
     } catch (err) {
       console.error("❌ [PAYMENTS] Error:", err);
@@ -1651,18 +2909,25 @@ function PaymentManagement() {
 
   // Filter payments based on payment type and status
   const filteredPayments = payments.filter((p) => {
-    // First filter by payment type
-    const matchesType = paymentType === "cash" ? p.paymentMethod === 2 : p.paymentMethod === 1;
-    
-    if (!matchesType) return false;
-    
-    // Then filter by status
+    // Filter by status
+    let statusMatch = true;
     if (paymentFilter === "pending") {
-      return p.status === 0 || p.status === 2;
+      statusMatch = p.status === 0; // Chưa xác nhận
+    } else if (paymentFilter === "verified") {
+      statusMatch = p.status === 1; // Đã xác nhận
+    } else if (paymentFilter === "cancelled") {
+      statusMatch = p.status === -1; // Đã hủy
     }
-    if (paymentFilter === "verified") return p.status === 1;
-    if (paymentFilter === "cancelled") return p.status === -1;
-    return true;
+
+    // Filter by search query (paymentID)
+    let searchMatch = true;
+    if (searchQuery.trim()) {
+      const query = searchQuery.trim().toLowerCase();
+      const paymentIdStr = p.paymentID?.toString().toLowerCase() || "";
+      searchMatch = paymentIdStr.includes(query);
+    }
+
+    return statusMatch && searchMatch;
   });
 
   // Calculate totals
@@ -1821,13 +3086,77 @@ function PaymentManagement() {
           ❌ Đã hủy ({payments.filter((p) => p.status === -1).length})
         </button>
       </div>
+
+      {/* Search Bar */}
+      <div className="search-bar" style={{
+        margin: '20px 0',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        padding: '15px',
+        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+        borderRadius: '10px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+      }}>
+        <span style={{ fontSize: '20px' }}>🔍</span>
+        <input
+          type="text"
+          placeholder="Tìm kiếm theo mã Payment ID..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{
+            flex: 1,
+            padding: '12px 16px',
+            fontSize: '15px',
+            border: '2px solid #e0e0e0',
+            borderRadius: '8px',
+            outline: 'none',
+            transition: 'all 0.3s ease',
+            background: 'white'
+          }}
+          onFocus={(e) => {
+            e.target.style.borderColor = '#667eea';
+            e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+          }}
+          onBlur={(e) => {
+            e.target.style.borderColor = '#e0e0e0';
+            e.target.style.boxShadow = 'none';
+          }}
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery("")}
+            style={{
+              padding: '8px 16px',
+              background: '#f44336',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '600',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => e.target.style.background = '#d32f2f'}
+            onMouseLeave={(e) => e.target.style.background = '#f44336'}
+          >
+            ✕ Xóa
+          </button>
+        )}
+      </div>
       
       <div className="payment-list">
         {filteredPayments.length === 0 && (
           <div className="empty-state">
-            {paymentFilter === "pending" && <p>📭 Chưa có thanh toán nào cần xác nhận</p>}
-            {paymentFilter === "verified" && <p>📭 Chưa có thanh toán nào đã xác nhận</p>}
-            {paymentFilter === "cancelled" && <p>📭 Chưa có thanh toán nào bị hủy</p>}
+            {searchQuery ? (
+              <p>🔍 Không tìm thấy payment với ID: "{searchQuery}"</p>
+            ) : (
+              <>
+                {paymentFilter === "pending" && <p>📭 Chưa có thanh toán nào cần xác nhận</p>}
+                {paymentFilter === "verified" && <p>📭 Chưa có thanh toán nào đã xác nhận</p>}
+                {paymentFilter === "cancelled" && <p>📭 Chưa có thanh toán nào bị hủy</p>}
+              </>
+            )}
           </div>
         )}
 
