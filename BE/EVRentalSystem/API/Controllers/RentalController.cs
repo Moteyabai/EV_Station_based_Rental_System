@@ -166,7 +166,7 @@ namespace API.Controllers
             }
         }
 
-        [HttpGet("GetRentalsAtStation/{staffID}")]
+        [HttpGet("GetRentalsAtStation/{accountID}")]
         [Authorize]
         public async Task<ActionResult<IEnumerable<Rental>>> GetRentalsAtStation(int accountID)
         {

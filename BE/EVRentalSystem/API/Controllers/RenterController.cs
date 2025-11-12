@@ -88,6 +88,9 @@ namespace API.Controllers
                         RenterID = renter.RenterID,
                         AccountID = renter.AccountID,
                         FullName = account.FullName,
+                        DateOfBirth = document.DateOfBirth.Value,
+                        IDNumber = document.IDNumber,
+                        LicenseNumber = document.LicenseNumber,
                         Email = account.Email,
                         Phone = account.Phone,
                         Avatar = account.Avatar,
@@ -174,9 +177,12 @@ namespace API.Controllers
                     RenterID = renter.RenterID,
                     AccountID = renter.AccountID,
                     FullName = account.FullName,
+                    DateOfBirth = document.DateOfBirth.Value,
                     Email = account.Email,
                     Phone = account.Phone,
                     Avatar = account.Avatar,
+                    IDNumber = document.IDNumber,
+                    LicenseNumber = document.LicenseNumber,
                     DocumentID = renter.DocumentID,
                     DocumentStatus = document.Status,
                     TotalRental = renter.TotalRental,
@@ -235,7 +241,7 @@ namespace API.Controllers
                     return NotFound(res);
                 }
 
-                if (renter.DocumentID.HasValue)
+                if (!renter.DocumentID.HasValue)
                 {
                    var res = new ResponseDTO
                     {
