@@ -29,9 +29,12 @@ const Admin = () => {
   const [showEditBikeTypeModal, setShowEditBikeTypeModal] = useState(false);
   const [showAddBikeInstanceModal, setShowAddBikeInstanceModal] =
     useState(false);
+  const [showEditBikeInstanceModal, setShowEditBikeInstanceModal] =
+    useState(false);
   const [selectedBrand, setSelectedBrand] = useState(null);
   const [selectedBikeType, setSelectedBikeType] = useState(null);
   const [selectedBike, setSelectedBike] = useState(null);
+  const [selectedBikeInstance, setSelectedBikeInstance] = useState(null);
   const [brands, setBrands] = useState([]);
   const [bikeTypes, setBikeTypes] = useState([]);
   const [bikeInstances, setBikeInstances] = useState([]);
@@ -682,7 +685,16 @@ const Admin = () => {
       if (!response.ok) {
         const errorText = await response.text();
         console.error("Error response:", errorText);
-        throw new Error(`HTTP error! status: ${response.status}`);
+
+        if (response.status === 401) {
+          throw new Error(
+            "⛔ Không có quyền truy cập! Vui lòng đăng nhập lại bằng tài khoản Admin."
+          );
+        }
+
+        throw new Error(
+          `HTTP error! status: ${response.status} - ${errorText}`
+        );
       }
 
       const result = await response.json();
@@ -737,8 +749,36 @@ const Admin = () => {
     alert("✅ Đã cập nhật loại xe thành công!");
   };
 
-  const handleDeleteBikeType = (bikeTypeId) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa loại xe này?")) {
+  const handleDeleteBikeType = async (bikeTypeId) => {
+    if (!window.confirm("Bạn có chắc chắn muốn vô hiệu hóa loại xe này?")) {
+      return;
+    }
+
+    try {
+      const token = getToken();
+
+      if (!token) {
+        alert("❌ Vui lòng đăng nhập lại");
+        return;
+      }
+
+      // 🔴 API: PUT /api/EVBike/UnactivateBike/{bikeId} - Vô hiệu hóa loại xe
+      const response = await fetch(
+        `http://localhost:5168/api/EVBike/UnactivateBike/${bikeTypeId}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Không thể xóa loại xe");
+      }
+
+      // Update local state after successful API call
       const bikeType = bikeTypes.find((bt) => bt.id === bikeTypeId);
       setBikeTypes(bikeTypes.filter((bt) => bt.id !== bikeTypeId));
 
@@ -753,7 +793,10 @@ const Admin = () => {
         );
       }
 
-      alert("✅ Đã xóa loại xe!");
+      alert("✅ Đã vô hiệu hóa loại xe!");
+    } catch (error) {
+      console.error("Error deleting bike type:", error);
+      alert("❌ Lỗi khi xóa loại xe: " + error.message);
     }
   };
 
@@ -819,6 +862,138 @@ const Admin = () => {
     } catch (error) {
       console.error("Error adding bike instance:", error);
       alert("❌ Không thể thêm xe: " + error.message);
+    }
+  };
+
+  const handleOpenEditBikeInstance = (instance) => {
+    setSelectedBikeInstance(instance);
+    setNewBikeInstance({
+      licensePlate: instance.licensePlate || "",
+      color: instance.color || 0,
+      modelYear: instance.modelYear || new Date().getFullYear(),
+      stationId: instance.stationId || "",
+      status: instance.status || 1,
+    });
+    setShowEditBikeInstanceModal(true);
+  };
+
+  const handleUpdateBikeInstance = async () => {
+    if (!newBikeInstance.licensePlate || !newBikeInstance.stationId) {
+      alert("Vui lòng điền đầy đủ thông tin bắt buộc (biển số xe, trạm)");
+      return;
+    }
+
+    if (!selectedBikeInstance || !selectedBikeInstance.id) {
+      alert("❌ Không tìm thấy thông tin xe cần cập nhật");
+      return;
+    }
+
+    try {
+      const token = getToken();
+
+      if (!token) {
+        alert("❌ Vui lòng đăng nhập lại");
+        return;
+      }
+
+      const requestBody = {
+        stockID: selectedBikeInstance.id,
+        bikeID: selectedBike.id,
+        color: parseInt(newBikeInstance.color) || 0,
+        licensePlate: newBikeInstance.licensePlate,
+        batteryCapacity: selectedBikeInstance.batteryCapacity || 0,
+        status: parseInt(newBikeInstance.status) || 1,
+      };
+
+      console.log("Updating bike instance:", requestBody);
+      console.log("Selected bike instance:", selectedBikeInstance);
+      console.log("Update ID:", selectedBikeInstance.id);
+
+      // 🔴 API: PUT /api/EVBike_Stocks/UpdateEVBikeStock/{id} - Cập nhật xe trong kho
+      const response = await fetch(
+        `http://localhost:5168/api/EVBike_Stocks/UpdateEVBikeStock/${selectedBikeInstance.id}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Update failed:", errorText);
+        throw new Error(errorText || "Không thể cập nhật xe");
+      }
+
+      console.log("Bike instance updated successfully");
+
+      // Refresh bike instances list
+      if (selectedBike?.id) {
+        await fetchBikeInstances(selectedBike.id);
+      }
+
+      setShowEditBikeInstanceModal(false);
+      setSelectedBikeInstance(null);
+      setNewBikeInstance({
+        licensePlate: "",
+        color: 0,
+        modelYear: new Date().getFullYear(),
+        stationId: "",
+        status: 1,
+      });
+      alert("✅ Đã cập nhật xe thành công!");
+    } catch (error) {
+      console.error("Error updating bike instance:", error);
+      alert("❌ Không thể cập nhật xe: " + error.message);
+    }
+  };
+
+  const handleDeleteBikeInstance = async (instanceId, licensePlate) => {
+    if (!window.confirm(`Bạn có chắc muốn xóa xe biển số ${licensePlate}?`)) {
+      return;
+    }
+
+    try {
+      const token = getToken();
+
+      if (!token) {
+        alert("❌ Vui lòng đăng nhập lại");
+        return;
+      }
+
+      console.log("Deleting bike instance ID:", instanceId);
+
+      // 🔴 API: DELETE /api/EVBike_Stocks/DeleteEVBikeStock/{id} - Xóa xe trong kho
+      const response = await fetch(
+        `http://localhost:5168/api/EVBike_Stocks/DeleteEVBikeStock/${instanceId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Delete failed:", errorText);
+        throw new Error(errorText || "Không thể xóa xe");
+      }
+
+      console.log("Bike instance deleted successfully");
+
+      // Refresh bike instances list
+      if (selectedBike?.id) {
+        await fetchBikeInstances(selectedBike.id);
+      }
+
+      alert("✅ Đã xóa xe thành công!");
+    } catch (error) {
+      console.error("Error deleting bike instance:", error);
+      alert("❌ Không thể xóa xe: " + error.message);
     }
   };
 
@@ -1454,8 +1629,12 @@ const Admin = () => {
       const data = await response.json();
       console.log("Bikes fetched for brand", brandId, ":", data);
 
+      // Filter out bikes with status = 0 (unactivated bikes)
+      const activeBikes = data.filter((bike) => bike.status !== 0);
+      console.log("Active bikes after filter:", activeBikes);
+
       // Map API data to match our state structure
-      const mappedBikes = data.map((bike) => ({
+      const mappedBikes = activeBikes.map((bike) => ({
         id: bike.bikeID,
         name: bike.bikeName,
         brandId: bike.brandID,
@@ -2168,26 +2347,12 @@ const Admin = () => {
                       min="0"
                     />
                   </div>
-
-                  <div className="form-group">
-                    <label>Số trạm sạc</label>
-                    <input
-                      type="number"
-                      name="chargingStations"
-                      value={newStation.chargingStations}
-                      onChange={handleInputChange}
-                      placeholder="0"
-                      className="form-input"
-                      min="0"
-                    />
-                  </div>
                 </div>
 
                 <div className="info-note">
                   <span className="note-icon">💡</span>
                   <p>
-                    Thông tin về số lượng xe và trạm sạc có thể cập nhật sau khi
-                    tạo trạm.
+                    Thông tin về số lượng xe có thể cập nhật sau khi tạo trạm.
                   </p>
                 </div>
               </div>
@@ -2271,19 +2436,6 @@ const Admin = () => {
                       min="0"
                     />
                   </div>
-
-                  <div className="form-group">
-                    <label>Số trạm sạc</label>
-                    <input
-                      type="number"
-                      name="chargingStations"
-                      value={newStation.chargingStations}
-                      onChange={handleInputChange}
-                      placeholder="0"
-                      className="form-input"
-                      min="0"
-                    />
-                  </div>
                 </div>
               </div>
 
@@ -2358,13 +2510,7 @@ const Admin = () => {
                     </span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">🔌 Trạm sạc:</span>
-                    <span className="detail-value">
-                      {selectedStation.chargingStations} trạm
-                    </span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="detail-label">📊 Trạng thái:</span>
+                    <span className="detail-label"> Trạng thái:</span>
                     <span className={`status-badge ${selectedStation.status}`}>
                       {selectedStation.status === "active"
                         ? "✅ Hoạt động"
@@ -2661,15 +2807,6 @@ const Admin = () => {
                             </div>
                           </div>
                           <div className="summary-item">
-                            <span className="summary-icon">📊</span>
-                            <div>
-                              <p className="summary-label">Hiệu suất TB</p>
-                              <p className="summary-number">
-                                {avgPerformance}%
-                              </p>
-                            </div>
-                          </div>
-                          <div className="summary-item">
                             <span className="summary-icon">🚚</span>
                             <div>
                               <p className="summary-label">Tổng giao/nhận</p>
@@ -2696,7 +2833,6 @@ const Admin = () => {
                                   <tr>
                                     <th>Họ tên</th>
                                     <th>Vai trò</th>
-                                    <th>Hiệu suất</th>
                                     <th>Số lượt</th>
                                     <th>Thao tác</th>
                                   </tr>
@@ -2708,24 +2844,6 @@ const Admin = () => {
                                         {member.name}
                                       </td>
                                       <td>{member.role}</td>
-                                      <td>
-                                        <div className="performance-bar">
-                                          <div
-                                            className="performance-fill"
-                                            style={{
-                                              width: `${member.performance}%`,
-                                              backgroundColor:
-                                                member.performance > 90
-                                                  ? "#4caf50"
-                                                  : member.performance > 70
-                                                  ? "#ff9800"
-                                                  : "#f44336",
-                                            }}
-                                          >
-                                            {member.performance}%
-                                          </div>
-                                        </div>
-                                      </td>
                                       <td>{member.totalDeliveries}</td>
                                       <td>
                                         <div className="table-actions">
@@ -4282,8 +4400,25 @@ const Admin = () => {
                               </td>
                               <td>
                                 <div className="action-buttons">
-                                  <button className="btn-edit">✏️ Sửa</button>
-                                  <button className="btn-delete">🗑️ Xóa</button>
+                                  <button
+                                    className="btn-edit"
+                                    onClick={() =>
+                                      handleOpenEditBikeInstance(instance)
+                                    }
+                                  >
+                                    ✏️ Sửa
+                                  </button>
+                                  <button
+                                    className="btn-delete"
+                                    onClick={() =>
+                                      handleDeleteBikeInstance(
+                                        instance.id,
+                                        instance.licensePlate
+                                      )
+                                    }
+                                  >
+                                    🗑️ Xóa
+                                  </button>
                                 </div>
                               </td>
                             </tr>
@@ -4852,6 +4987,111 @@ const Admin = () => {
                 </button>
                 <button className="btn-confirm" onClick={handleAddBikeInstance}>
                   Thêm xe
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Bike Instance Modal */}
+        {showEditBikeInstanceModal && selectedBike && selectedBikeInstance && (
+          <div
+            className="modal-overlay"
+            onClick={() => setShowEditBikeInstanceModal(false)}
+          >
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>✏️ Chỉnh Sửa Xe - {selectedBike.name}</h2>
+                <button
+                  className="btn-close"
+                  onClick={() => setShowEditBikeInstanceModal(false)}
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label>Biển số xe *</label>
+                  <input
+                    type="text"
+                    value={newBikeInstance.licensePlate}
+                    onChange={(e) =>
+                      setNewBikeInstance({
+                        ...newBikeInstance,
+                        licensePlate: e.target.value,
+                      })
+                    }
+                    placeholder="VD: 29A-12345"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Màu sắc</label>
+                  <select
+                    value={newBikeInstance.color}
+                    onChange={(e) =>
+                      setNewBikeInstance({
+                        ...newBikeInstance,
+                        color: e.target.value,
+                      })
+                    }
+                    style={{
+                      width: "100%",
+                      padding: "0.75rem",
+                      borderRadius: "8px",
+                      border: "2px solid #e2e8f0",
+                      fontSize: "0.95rem",
+                    }}
+                  >
+                    <option value="">-- Chọn màu --</option>
+                    <option value="1">Trắng</option>
+                    <option value="2">Đen</option>
+                    <option value="3">Đỏ</option>
+                    <option value="4">Xanh dương</option>
+                    <option value="5">Xanh lá</option>
+                    <option value="6">Vàng</option>
+                    <option value="7">Xám</option>
+                    <option value="8">Bạc</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Trạm hiện tại *</label>
+                  <select
+                    value={newBikeInstance.stationId}
+                    onChange={(e) =>
+                      setNewBikeInstance({
+                        ...newBikeInstance,
+                        stationId: e.target.value,
+                      })
+                    }
+                    style={{
+                      width: "100%",
+                      padding: "0.75rem",
+                      borderRadius: "8px",
+                      border: "2px solid #e2e8f0",
+                      fontSize: "0.95rem",
+                    }}
+                  >
+                    <option value="">-- Chọn trạm --</option>
+                    {stations.map((station) => (
+                      <option key={station.id} value={station.id}>
+                        {station.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="btn-cancel"
+                  onClick={() => setShowEditBikeInstanceModal(false)}
+                >
+                  Hủy
+                </button>
+                <button
+                  className="btn-confirm"
+                  onClick={handleUpdateBikeInstance}
+                >
+                  💾 Cập nhật
                 </button>
               </div>
             </div>
