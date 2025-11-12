@@ -433,7 +433,7 @@ namespace API.Controllers
 
         [HttpPut("UpdateStation")]
         [Authorize]
-        public async Task<ActionResult> UpdateStation([FromBody] StationUpdateDTO stationDto)
+        public async Task<ActionResult> UpdateStation([FromForm] StationUpdateDTO stationDto)
         {
             // Check user permission (only admin can update stations)
             var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
