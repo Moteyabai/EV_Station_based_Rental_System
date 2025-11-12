@@ -77,13 +77,10 @@ namespace BusinessObject.Models.DTOs
         [StringLength(20, ErrorMessage = "S? ?i?n tho?i không ???c quá 20 ký t?")]
         public string? ContactNumber { get; set; }
 
-        [StringLength(500, ErrorMessage = "URL hình ?nh không ???c quá 500 ký t?")]
         public IFormFile ImageUrl { get; set; }
 
-        [StringLength(500, ErrorMessage = "URL hình ?nh bên ngoài không ???c quá 500 ký t?")]
         public IFormFile ExteriorImageUrl { get; set; }
 
-        [StringLength(500, ErrorMessage = "URL hình ?nh thu nh? không ???c quá 500 ký t?")]
         public IFormFile ThumbnailImageUrl { get; set; }
 
         public bool? IsActive { get; set; }
