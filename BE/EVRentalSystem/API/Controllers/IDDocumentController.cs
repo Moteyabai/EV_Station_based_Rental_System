@@ -100,7 +100,6 @@ namespace API.Controllers
                             UserName = renter.Account.FullName,
                             FullName = doc.FullName,
                             PhoneNumber = renter.Account.Phone,
-                            DateOfBirth = doc.DateOfBirth,
                             Status = doc.Status,
                             Email = renter.Account.Email,
                             IDNumber = doc.IDNumber,
@@ -294,6 +293,10 @@ namespace API.Controllers
                 existingDocument.IDCardBack = IDBackUrl;
                 existingDocument.LicenseCardFront = LSFrontUrl;
                 existingDocument.LicenseCardBack = LSBackUrl;
+                existingDocument.FullName = null;
+                existingDocument.DateOfBirth = null;
+                existingDocument.IDNumber = null;
+                existingDocument.LicenseNumber = null;
                 existingDocument.Status = (int)DocumentStatus.Pending;
                 existingDocument.UpdatedAt = DateTime.Now;
 
@@ -343,8 +346,8 @@ namespace API.Controllers
                 existingDocument.UpdatedAt = DateTime.Now;
                 existingDocument.Note = verifyIDDTO.Note;
                 existingDocument.VerifiedByStaffID = staff.StaffID;
-                existingDocument.FullName = verifyIDDTO.Name;
                 existingDocument.DateOfBirth = verifyIDDTO.DateOfBirth;
+                existingDocument.FullName = verifyIDDTO.Name;
                 existingDocument.IDNumber = verifyIDDTO.IDNumber;
                 existingDocument.LicenseNumber = verifyIDDTO.LicenseNumber;
 

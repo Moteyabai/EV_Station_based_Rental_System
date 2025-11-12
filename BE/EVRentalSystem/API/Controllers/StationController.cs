@@ -492,16 +492,80 @@ namespace API.Controllers
                     existingStation.OpeningHours = stationDto.OpeningHours;
                 if (!string.IsNullOrEmpty(stationDto.ContactNumber))
                     existingStation.ContactNumber = stationDto.ContactNumber;
-                if (!string.IsNullOrEmpty(stationDto.ImageUrl))
-                    existingStation.ImageUrl = stationDto.ImageUrl;
-                if (!string.IsNullOrEmpty(stationDto.ExteriorImageUrl))
-                    existingStation.ExteriorImageUrl = stationDto.ExteriorImageUrl;
-                if (!string.IsNullOrEmpty(stationDto.ThumbnailImageUrl))
-                    existingStation.ThumbnailImageUrl = stationDto.ThumbnailImageUrl;
                 if (stationDto.IsActive.HasValue)
                     existingStation.IsActive = stationDto.IsActive.Value;
 
+                var storage = new Storage(_appWriteClient);
+                var bucketID = _configuration.GetValue<string>("Appwrite:BucketId");
+                var projectID = _configuration.GetValue<string>("Appwrite:ProjectId");
+
+                List<string> perms = new List<string>() { Permission.Write(Appwrite.Role.Any()), Permission.Read(Appwrite.Role.Any()) };
+
+                //Upload image
+                var imageUID = Guid.NewGuid().ToString();
+                var image = InputFile.FromStream(
+                    stationDto.ImageUrl.OpenReadStream(),
+                    stationDto.ImageUrl.FileName,
+                    stationDto.ImageUrl.ContentType
+                    );
+                var response = await storage.CreateFile(
+                            bucketID,
+                            imageUID,
+                            image,
+                            perms,
+                            null
+                            );
+
+                var imageID = response.Id;
+                // Use Appwrite CDN URL for better performance
+                var imageUrl = $"{_appWriteClient.Endpoint}/storage/buckets/{response.BucketId}/files/{imageID}/view?project={projectID}";
+
+                Console.WriteLine($"[STATION] Uploaded image URL: {imageUrl}"); // Debug log
+
+                //Upload exterior image
+
+                var exteriorImageUID = Guid.NewGuid().ToString();
+                var exteriorImage = InputFile.FromStream(
+                    stationDto.ExteriorImageUrl.OpenReadStream(),
+                    stationDto.ExteriorImageUrl.FileName,
+                    stationDto.ExteriorImageUrl.ContentType
+                    );
+                var exteriorResponse = await storage.CreateFile(
+                            bucketID,
+                            exteriorImageUID,
+                            exteriorImage,
+                            perms,
+                            null
+                            );
+                var exteriorImageID = exteriorResponse.Id;
+                var exteriorImageUrl = $"{_appWriteClient.Endpoint}/storage/buckets/{exteriorResponse.BucketId}/files/{exteriorImageID}/view?project={projectID}";
+
+                //Upload thumbnail image
+                var thumbnailImageUID = Guid.NewGuid().ToString();
+                var thumbnailImage = InputFile.FromStream(
+                    stationDto.ThumbnailImageUrl.OpenReadStream(),
+                    stationDto.ThumbnailImageUrl.FileName,
+                    stationDto.ThumbnailImageUrl.ContentType
+                    );
+                var thumbnailResponse = await storage.CreateFile(
+                            bucketID,
+                            thumbnailImageUID,
+                            thumbnailImage,
+                            perms,
+                            null
+                            );
+                var thumbnailImageID = thumbnailResponse.Id;
+                var thumbnailImageUrl = $"{_appWriteClient.Endpoint}/storage/buckets/{thumbnailResponse.BucketId}/files/{thumbnailImageID}/view?project={projectID}";
+
+
                 existingStation.UpdatedAt = DateTime.Now;
+                existingStation.ImageUrl = stationDto.ImageUrl != null ? imageUrl : existingStation.ImageUrl;
+                existingStation.ExteriorImageUrl = stationDto.ExteriorImageUrl != null ? exteriorImageUrl : existingStation.ExteriorImageUrl;
+                existingStation.ThumbnailImageUrl = stationDto.ThumbnailImageUrl != null ? thumbnailImageUrl : existingStation.ThumbnailImageUrl;
+                existingStation.OpeningHours = stationDto.OpeningHours ?? existingStation.OpeningHours;
+                existingStation.Address = stationDto.Address ?? existingStation.Address;
+                existingStation.Description = stationDto.Description ?? existingStation.Description;
+
 
                 await _stationService.UpdateAsync(existingStation);
 
