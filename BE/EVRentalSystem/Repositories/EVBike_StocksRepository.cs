@@ -52,6 +52,13 @@ namespace Repositories
                 .AsNoTracking()
                 .CountAsync(stock => stock.BikeID == bikeID);
         }
+        public async Task<int> GetAvailableStockCountByBikeIDAsync(int bikeID)
+        {
+            // ✅ Use AsNoTracking to avoid tracking conflicts
+            return await _context.EVBike_Stocks
+                .AsNoTracking()
+                .CountAsync(stock => stock.BikeID == bikeID && stock.Status == (int)BikeStatus.Available);
+        }
 
         /// <summary>
         /// Get stock count by stationID - uses AsNoTracking for read-only operations
@@ -111,6 +118,15 @@ namespace Repositories
             {
                 throw new Exception($"Error getting available stock count by station: {ex.Message}");
             }
+        }
+
+        //get availble stocks at a station
+        public async Task<List<EVBike_Stocks>> GetAvailableStocksAtStationAsync(int stationID)
+        {
+            return await _context.EVBike_Stocks
+                .Include(s => s.Station)
+                .Where(stock => stock.StationID == stationID && stock.Status == (int)BikeStatus.Available)
+                .ToListAsync();
         }
     }
 }

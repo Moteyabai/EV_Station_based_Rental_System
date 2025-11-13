@@ -85,7 +85,7 @@ namespace API.Controllers
                 var display = new List<EVBikeDisplayDTO>();
                 foreach (var bike in bikes)
                 {
-                    var quantity = await _stocks.GetStockCountByBikeIDAsync(bike.BikeID);
+                    var quantity = await _stocks.GetAvailableStockCountByBikeIDAsync(bike.BikeID);
                     var bikeDTO = new EVBikeDisplayDTO
                     {
                         BikeID = bike.BikeID,
@@ -191,6 +191,60 @@ namespace API.Controllers
                 var res = new ResponseDTO();
                 res.Message = "Thêm xe thành công!";
                 return Ok(res);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpGet("GetAvailableBikesByStationID/{stationId}")]
+        public async Task<ActionResult<IEnumerable<EVBikeDisplayDTO>>> GetAvailableBikesByStationID(int stationId)
+        {
+            try
+            {
+                var stock = await _stocks.GetAvailableStocksAtStationAsync(stationId);
+                if (stock == null || !stock.Any())
+                {
+                    var res = new ResponseDTO();
+                    res.Message = "Danh sách trống";
+                    return NotFound(res);
+                }
+
+                var bikeIDs = stock.Select(s => s.BikeID).Distinct();
+                var bikes = new List<EVBike>();
+                foreach (var bikeID in bikeIDs)
+                {
+                    var bike = await _evBikeService.GetBikeByIdAsync(bikeID);
+                    if (bike != null)
+                    {
+                        bikes.Add(bike);
+                    }
+                }
+                var display = new List<EVBikeDisplayDTO>();
+                foreach (var bike in bikes)
+                {
+                    var quantity = await _stocks.GetAvailableStockCountByBikeIDAsync(bike.BikeID);
+                    var bikeDTO = new EVBikeDisplayDTO
+                    {
+                        BikeID = bike.BikeID,
+                        BikeName = bike.BikeName,
+                        BrandID = bike.BrandID,
+                        BrandName = bike.Brand.BrandName,
+                        FrontImg = bike.FrontImg,
+                        BackImg = bike.BackImg,
+                        MaxSpeed = bike.MaxSpeed,
+                        MaxDistance = bike.MaxDistance,
+                        TimeRented = bike.TimeRented,
+                        Quantity = quantity,
+                        Description = bike.Description,
+                        PricePerDay = bike.PricePerDay,
+                        BatteryCapacity = bike.BatteryCapacity,
+                        Status = bike.Status
+                    };
+                    display.Add(bikeDTO);
+                }
+                return Ok(display);
             }
             catch (Exception ex)
             {

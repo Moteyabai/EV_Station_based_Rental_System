@@ -34,5 +34,6 @@ namespace Services
         /// Use this for display purposes to avoid tracking conflicts
         /// </summary>
         public async Task<EVBike?> GetByIdWithBrandAsync(int id) => await _repository.GetByIdWithBrandAsync(id);
+        public async Task<EVBike?> GetBikeByIdAsync(int bikeID) => await _repository.GetBikeByIdAsync(bikeID);
     }
 }
