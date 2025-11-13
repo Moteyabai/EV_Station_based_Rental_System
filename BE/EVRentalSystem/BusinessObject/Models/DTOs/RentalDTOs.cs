@@ -126,7 +126,7 @@ namespace BusinessObject.Models.DTOs
         [StringLength(500, ErrorMessage = "Tình trạng xe không được quá 500 ký tự!")]
         public string FinalBikeCondition { get; set; }
 
-        public string Note { get; set; }
+        public string? Note { get; set; }
 
         [Required(ErrorMessage = "Ngày trả xe là bắt buộc")]
         public DateTime ReturnDate { get; set; }

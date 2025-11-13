@@ -1,4 +1,6 @@
 ﻿using BusinessObject.Models;
+using BusinessObject.Models.Enum;
+using Microsoft.EntityFrameworkCore;
 using Repositories;
 using Repositories.DBContext;
 using Services.Interfaces;
@@ -39,6 +41,7 @@ namespace Services
 
         public async Task<List<Station>> GetStationsWithAvailableStockByBikeIDAsync(int bikeID) => await _evBikeStocksRepository.GetStationsWithAvailableStockByBikeIDAsync(bikeID);
 
-        public async Task<Dictionary<int, int>> GetAvailableStockCountByStationAsync(int bikeID) => await _evBikeStocksRepository.GetAvailableStockCountByStationAsync(bikeID);
+        public async Task<int> GetAvailableStockCountByBikeIDAsync(int bikeID) => await _evBikeStocksRepository.GetAvailableStockCountByBikeIDAsync(bikeID);
+        public async Task<List<EVBike_Stocks>> GetAvailableStocksAtStationAsync(int stationID) => await _evBikeStocksRepository.GetAvailableStocksAtStationAsync(stationID);
     }
 }

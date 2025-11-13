@@ -66,5 +66,21 @@ namespace Repositories
                 throw new Exception($"Error getting bike by ID: {ex.Message}");
             }
         }
+
+        //get bike by id
+        public async Task<EVBike?> GetBikeByIdAsync(int bikeID)
+        {
+            try
+            {
+                return await _context.EVBikes
+                    .AsNoTracking()
+                    .Include(b => b.Brand)// ✅ Read-only, prevents tracking conflicts
+                    .FirstOrDefaultAsync(bike => bike.BikeID == bikeID);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error getting bike by ID: {ex.Message}");
+            }
+        }
     }
 }

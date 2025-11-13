@@ -448,7 +448,7 @@ namespace API.Controllers
         }
 
         [HttpPut("success")]
-        public async Task<ActionResult> RenterPaymentSuccess([FromQuery] int paymentID)
+        public async Task<ActionResult> RenterPaymentSuccess([FromQuery] int orderID)
         {
             if (!ModelState.IsValid)
             {
@@ -460,7 +460,7 @@ namespace API.Controllers
             }
             try
             {
-                var payment = await _paymentService.GetPaymentByIDAsync(paymentID);
+                var payment = await _paymentService.GetPaymentByIDAsync(orderID);
                 if (payment == null)
                 {
                     var res = new ResponseDTO
