@@ -15,7 +15,6 @@ import {
   CarOutlined,
   EnvironmentOutlined,
   InfoCircleOutlined,
-  ShoppingCartOutlined,
   UserOutlined,
   LogoutOutlined,
   HistoryOutlined,
@@ -182,7 +181,6 @@ export default function NavBar() {
             <Badge count={getItemCount()} showZero={false}>
               <Button
                 type="text"
-                icon={<ShoppingCartOutlined />}
                 size="large"
                 style={{
                   display: "flex",
@@ -190,7 +188,7 @@ export default function NavBar() {
                   color: "#595959",
                 }}
               >
-                Giỏ hàng
+                📋Đơn Thuê Xe
               </Button>
             </Badge>
           </Link>
