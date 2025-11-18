@@ -1470,10 +1470,6 @@
   transition: all 0.3s ease;
 }
 
-.summary-item:hover {
-  background: #f9fafb;
-}
-
 .summary-label {
   font-size: 0.875rem;
   color: #6b7280;
@@ -1770,6 +1766,7 @@
   font-size: 1.75rem;
   font-weight: 700;
   margin: 0;
+  text-align: center;
 }
 
 .vehicles-actions {

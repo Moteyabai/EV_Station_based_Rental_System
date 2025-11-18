@@ -36,7 +36,7 @@ export default function Login() {
 
       if (!response.ok) {
         // Xử lý lỗi từ backend
-        throw new Error(data.error || "Đăng nhập thất bại");
+        throw new Error(data.message || "Đăng nhập thất bại");
       }
 
       // Lưu token và user vào storage (token key standardized to ev_token)

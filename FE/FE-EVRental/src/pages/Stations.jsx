@@ -55,7 +55,7 @@ export default function Stations() {
           openingHours: s.openingHours || s.OpeningHours || "24/7",
           image: s.thumbnailImageUrl || s.ThumbnailImageUrl || s.imageUrl || s.ImageUrl,
           location: { lat: 10.762622, lng: 106.660172 },
-          availableVehicles: s.availableBikes || 0,
+          availableVehicles: s.bikeCapacity || 0,
           chargingStations: 0,
           amenities: [],
           rating: 5,

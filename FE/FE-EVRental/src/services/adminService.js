@@ -292,6 +292,26 @@ export const getRentalStatistics = async () => {
   }
 };
 
+// Get completed and ongoing rentals
+export const getCompletedAndOngoingRentals = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/Rental/GetCompletedAndOngoingRentals`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching completed and ongoing rentals:', error);
+    throw error;
+  }
+};
+
 // ==================== PAYMENT APIs ====================
 
 // Get all payments
@@ -335,6 +355,7 @@ export default {
   // Rentals
   getAllRentals,
   getRentalStatistics,
+  getCompletedAndOngoingRentals,
   
   // Payments
   getAllPayments

@@ -81,7 +81,7 @@ namespace API.Controllers
         /// Get all stations
         /// </summary>
         [HttpGet("GetAllStations")]
-        public async Task<ActionResult<IEnumerable<Station>>> GetAllStations()
+        public async Task<ActionResult<IEnumerable<StationDisplayDTO>>> GetAllStations()
         {
             try
             {
@@ -94,7 +94,30 @@ namespace API.Controllers
                     };
                     return NotFound(res);
                 }
-                return Ok(stations);
+
+                var display = new List<StationDisplayDTO>();
+                foreach (var station in stations)
+                {
+                    var quantity = await _eVBikeStocksService.GetStockCountByStationIDAsync(station.StationID);
+                    var dis = new StationDisplayDTO
+                    {
+                        StationID = station.StationID,
+                        Name = station.Name,
+                        Address = station.Address,
+                        Description = station.Description,
+                        BikeCapacity = quantity,
+                        StationCapacity = station.StationCapacity,
+                        OpeningHours = station.OpeningHours,
+                        ContactNumber = station.ContactNumber,
+                        ImageUrl = ConvertToPublicUrl(station.ImageUrl),
+                        IsActive = station.IsActive,
+                        CreatedAt = station.CreatedAt,
+                        UpdatedAt = station.UpdatedAt
+                    };
+                    display.Add(dis);
+                }
+
+                return Ok(display);
             }
             catch (Exception ex)
             {
@@ -127,8 +150,6 @@ namespace API.Controllers
 
                     // Convert local path to URL endpoint if needed
                     string? imageUrl = ConvertToPublicUrl(station.ImageUrl);
-                    string? exteriorUrl = ConvertToPublicUrl(station.ExteriorImageUrl);
-                    string? thumbnailUrl = ConvertToPublicUrl(station.ThumbnailImageUrl);
 
                     var dis = new StationDisplayDTO
                     {
@@ -137,11 +158,10 @@ namespace API.Controllers
                         Address = station.Address,
                         Description = station.Description,
                         BikeCapacity = quantity,
+                        StationCapacity = station.StationCapacity,
                         OpeningHours = station.OpeningHours,
                         ContactNumber = station.ContactNumber,
                         ImageUrl = imageUrl,
-                        ExteriorImageUrl = exteriorUrl,
-                        ThumbnailImageUrl = thumbnailUrl,
                         IsActive = station.IsActive,
                         CreatedAt = station.CreatedAt,
                         UpdatedAt = station.UpdatedAt
@@ -240,11 +260,10 @@ namespace API.Controllers
                         Address = station.Address,
                         Description = station.Description,
                         BikeCapacity = quantity,
+                        StationCapacity = station.StationCapacity,
                         OpeningHours = station.OpeningHours,
                         ContactNumber = station.ContactNumber,
                         ImageUrl = station.ImageUrl,
-                        ExteriorImageUrl = station.ExteriorImageUrl,
-                        ThumbnailImageUrl = station.ThumbnailImageUrl,
                         IsActive = station.IsActive,
                         CreatedAt = station.CreatedAt,
                         UpdatedAt = station.UpdatedAt
@@ -284,11 +303,10 @@ namespace API.Controllers
                     Address = station.Address,
                     Description = station.Description,
                     BikeCapacity = await _eVBikeStocksService.GetStockCountByStationIDAsync(station.StationID),
+                    StationCapacity = station.StationCapacity,
                     OpeningHours = station.OpeningHours,
                     ContactNumber = station.ContactNumber,
                     ImageUrl = station.ImageUrl,
-                    ExteriorImageUrl = station.ExteriorImageUrl,
-                    ThumbnailImageUrl = station.ThumbnailImageUrl,
                     IsActive = station.IsActive,
                     CreatedAt = station.CreatedAt,
                     UpdatedAt = station.UpdatedAt
@@ -366,41 +384,6 @@ namespace API.Controllers
 
                 Console.WriteLine($"[STATION] Uploaded image URL: {imageUrl}"); // Debug log
 
-                //Upload exterior image
-
-                var exteriorImageUID = Guid.NewGuid().ToString();
-                var exteriorImage = InputFile.FromStream(
-                    stationDto.ExteriorImageUrl.OpenReadStream(),
-                    stationDto.ExteriorImageUrl.FileName,
-                    stationDto.ExteriorImageUrl.ContentType
-                    );
-                var exteriorResponse = await storage.CreateFile(
-                            bucketID,
-                            exteriorImageUID,
-                            exteriorImage,
-                            perms,
-                            null
-                            );
-                var exteriorImageID = exteriorResponse.Id;
-                var exteriorImageUrl = $"{_appWriteClient.Endpoint}/storage/buckets/{exteriorResponse.BucketId}/files/{exteriorImageID}/view?project={projectID}";
-
-                //Upload thumbnail image
-                var thumbnailImageUID = Guid.NewGuid().ToString();
-                var thumbnailImage = InputFile.FromStream(
-                    stationDto.ThumbnailImageUrl.OpenReadStream(),
-                    stationDto.ThumbnailImageUrl.FileName,
-                    stationDto.ThumbnailImageUrl.ContentType
-                    );
-                var thumbnailResponse = await storage.CreateFile(
-                            bucketID,
-                            thumbnailImageUID,
-                            thumbnailImage,
-                            perms,
-                            null
-                            );
-                var thumbnailImageID = thumbnailResponse.Id;
-                var thumbnailImageUrl = $"{_appWriteClient.Endpoint}/storage/buckets/{thumbnailResponse.BucketId}/files/{thumbnailImageID}/view?project={projectID}";
-
                 // Create new station
                 var station = new Station
                 {
@@ -410,9 +393,8 @@ namespace API.Controllers
                     OpeningHours = stationDto.OpeningHours,
                     ContactNumber = stationDto.ContactNumber,
                     ImageUrl = imageUrl,
-                    ExteriorImageUrl = exteriorImageUrl,
-                    ThumbnailImageUrl = thumbnailImageUrl,
                     IsActive = stationDto.IsActive,
+                    StationCapacity = stationDto.StationCapacity,
                     CreatedAt = DateTime.Now,
                     UpdatedAt = DateTime.Now
                 };
@@ -494,6 +476,8 @@ namespace API.Controllers
                     existingStation.ContactNumber = stationDto.ContactNumber;
                 if (stationDto.IsActive.HasValue)
                     existingStation.IsActive = stationDto.IsActive.Value;
+                if (stationDto.StationCapacity.HasValue)
+                    existingStation.StationCapacity = stationDto.StationCapacity.Value;
 
                 var storage = new Storage(_appWriteClient);
                 var bucketID = _configuration.GetValue<string>("Appwrite:BucketId");
@@ -522,50 +506,11 @@ namespace API.Controllers
 
                 Console.WriteLine($"[STATION] Uploaded image URL: {imageUrl}"); // Debug log
 
-                //Upload exterior image
-
-                var exteriorImageUID = Guid.NewGuid().ToString();
-                var exteriorImage = InputFile.FromStream(
-                    stationDto.ExteriorImageUrl.OpenReadStream(),
-                    stationDto.ExteriorImageUrl.FileName,
-                    stationDto.ExteriorImageUrl.ContentType
-                    );
-                var exteriorResponse = await storage.CreateFile(
-                            bucketID,
-                            exteriorImageUID,
-                            exteriorImage,
-                            perms,
-                            null
-                            );
-                var exteriorImageID = exteriorResponse.Id;
-                var exteriorImageUrl = $"{_appWriteClient.Endpoint}/storage/buckets/{exteriorResponse.BucketId}/files/{exteriorImageID}/view?project={projectID}";
-
-                //Upload thumbnail image
-                var thumbnailImageUID = Guid.NewGuid().ToString();
-                var thumbnailImage = InputFile.FromStream(
-                    stationDto.ThumbnailImageUrl.OpenReadStream(),
-                    stationDto.ThumbnailImageUrl.FileName,
-                    stationDto.ThumbnailImageUrl.ContentType
-                    );
-                var thumbnailResponse = await storage.CreateFile(
-                            bucketID,
-                            thumbnailImageUID,
-                            thumbnailImage,
-                            perms,
-                            null
-                            );
-                var thumbnailImageID = thumbnailResponse.Id;
-                var thumbnailImageUrl = $"{_appWriteClient.Endpoint}/storage/buckets/{thumbnailResponse.BucketId}/files/{thumbnailImageID}/view?project={projectID}";
-
-
                 existingStation.UpdatedAt = DateTime.Now;
                 existingStation.ImageUrl = stationDto.ImageUrl != null ? imageUrl : existingStation.ImageUrl;
-                existingStation.ExteriorImageUrl = stationDto.ExteriorImageUrl != null ? exteriorImageUrl : existingStation.ExteriorImageUrl;
-                existingStation.ThumbnailImageUrl = stationDto.ThumbnailImageUrl != null ? thumbnailImageUrl : existingStation.ThumbnailImageUrl;
                 existingStation.OpeningHours = stationDto.OpeningHours ?? existingStation.OpeningHours;
                 existingStation.Address = stationDto.Address ?? existingStation.Address;
                 existingStation.Description = stationDto.Description ?? existingStation.Description;
-
 
                 await _stationService.UpdateAsync(existingStation);
 
@@ -640,52 +585,6 @@ namespace API.Controllers
             try
             {
                 var stations = await _stationService.GetInactiveStationsAsync();
-                return Ok(stations);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        [HttpPost("SearchStations")]
-        public async Task<ActionResult<IEnumerable<Station>>> SearchStations([FromBody] StationSearchDTO searchDto)
-        {
-            try
-            {
-                var stations = await _stationService.GetAllAsync();
-
-                // Apply filters
-                if (!string.IsNullOrEmpty(searchDto.Name))
-                {
-                    stations = stations.Where(s => s.Name.Contains(searchDto.Name, StringComparison.OrdinalIgnoreCase));
-                }
-
-                if (!string.IsNullOrEmpty(searchDto.Address))
-                {
-                    stations = stations.Where(s => s.Address.Contains(searchDto.Address, StringComparison.OrdinalIgnoreCase));
-                }
-
-                if (searchDto.IsActive.HasValue)
-                {
-                    stations = stations.Where(s => s.IsActive == searchDto.IsActive.Value);
-                }
-
-                if (searchDto.CreatedAfter.HasValue)
-                {
-                    stations = stations.Where(s => s.CreatedAt >= searchDto.CreatedAfter.Value);
-                }
-
-                if (searchDto.CreatedBefore.HasValue)
-                {
-                    stations = stations.Where(s => s.CreatedAt <= searchDto.CreatedBefore.Value);
-                }
-
-                if (!string.IsNullOrEmpty(searchDto.OpeningHours))
-                {
-                    stations = stations.Where(s => s.OpeningHours.Contains(searchDto.OpeningHours, StringComparison.OrdinalIgnoreCase));
-                }
-
                 return Ok(stations);
             }
             catch (Exception ex)

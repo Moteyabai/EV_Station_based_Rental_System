@@ -80,8 +80,7 @@ export default function Vehicles() {
             specs: {
               range: `${bike.maxDistance || 'N/A'} km`,
               maxSpeed: `${bike.maxSpeed || 'N/A'} km/h`,
-              batteryCapacity: `${bike.batteryCapacity || bike.BatteryCapacity || 'N/A'}Ah`,
-              chargingTime: bike.chargingTime || bike.ChargingTime || 'N/A'
+              batteryCapacity: `${bike.batteryCapacity || bike.BatteryCapacity || 'N/A'} kWh`,
             },
             status: isAvailable ? 'available' : 'out-of-stock',
             statusText: isAvailable ? 'Có sẵn' : 'Hết xe',
@@ -317,6 +316,12 @@ export default function Vehicles() {
                           {vehicle.specs.maxSpeed}
                         </span>
                       </div>
+                      <div className="spec">
+                        <span className="spec-icon">🔋</span>
+                        <span className="spec-value">
+                          {vehicle.specs.batteryCapacity}
+                        </span>
+                      </div>
                     </div>
                     <div className="vehicle-actions">
                       <Link
@@ -328,6 +333,10 @@ export default function Vehicles() {
                       <button
                         onClick={() => {
                           if (vehicle.status === 'available') {
+                            if (!user) {
+                              navigate('/login');
+                              return;
+                            }
                             setSelectedVehicle(vehicle);
                             setShowBookingForm(true);
                           }

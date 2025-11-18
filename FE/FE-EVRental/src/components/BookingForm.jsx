@@ -35,7 +35,7 @@ const { Title, Text } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 
-export default function BookingForm({ vehicle, onSubmit, onCancel }) {
+export default function BookingForm({ vehicle, stationId, onSubmit, onCancel }) {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const [form] = Form.useForm();
@@ -336,6 +336,8 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
       styles={{ body: { maxHeight: "70vh", overflowY: "auto" } }}
       maskClosable={false}
       destroyOnClose={false}
+      autoFocus={true}
+      focusTriggerAfterClose={false}
     >
       <Form
         form={form}
@@ -348,6 +350,8 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
             .split("T")[0],
           pickupTime: "09:00",
           returnTime: "18:00",
+          pickupStationId: stationId ? String(stationId) : undefined,
+          returnStationId: stationId ? String(stationId) : undefined,
         }}
       >
         {/* Vehicle Info */}
@@ -398,7 +402,10 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
                     borderRadius: "6px",
                     border: "1px solid #d9d9d9",
                     fontSize: "14px",
+                    backgroundColor: stationId ? "#f5f5f5" : "white",
+                    cursor: stationId ? "not-allowed" : "pointer",
                   }}
+                  disabled={!!stationId}
                   onChange={(e) => {
                     form.setFieldValue("pickupStationId", e.target.value);
                     form.setFieldValue("returnStationId", e.target.value);
@@ -523,13 +530,6 @@ export default function BookingForm({ vehicle, onSubmit, onCancel }) {
               </Form.Item>
             </Col>
           </Row>
-
-          <Form.Item name="specialRequests" label="Yêu cầu đặc biệt">
-            <TextArea
-              rows={2}
-              placeholder="Nhập yêu cầu đặc biệt (nếu có)..."
-            />
-          </Form.Item>
         </Card>
 
         {/* Price Summary */}

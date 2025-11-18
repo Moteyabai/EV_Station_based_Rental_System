@@ -16,9 +16,9 @@ namespace BusinessObject.Models.DTOs
         [StringLength(500, ErrorMessage = "Mô tả không được quá 500 ký tự")]
         public string? Description { get; set; }
 
-        [Required(ErrorMessage = "Sức chứa xe là bắt buộc")]
-        [Range(1, 20, ErrorMessage = "Sức chứa xe từ 1 đến 20")]
-        public int BikeCapacity { get; set; }
+        [Required(ErrorMessage = "Sức chứa trạm là bắt buộc")]
+        [Range(1, 10000, ErrorMessage = "Sức chứa trạm phải từ 1 đến 10000")]
+        public int StationCapacity { get; set; }
 
         public string OpeningHours { get; set; } = "24/7";
 
@@ -28,9 +28,11 @@ namespace BusinessObject.Models.DTOs
 
         public IFormFile ImageUrl { get; set; }
 
-        public IFormFile ExteriorImageUrl { get; set; }
+        [Range(-90, 90, ErrorMessage = "Vĩ độ phải từ -90 đến 90")]
+        public decimal? Latitude { get; set; }
 
-        public IFormFile ThumbnailImageUrl { get; set; }
+        [Range(-180, 180, ErrorMessage = "Kinh độ phải từ -180 đến 180")]
+        public decimal? Longitude { get; set; }
 
         public bool IsActive { get; set; } = false;
     }
@@ -42,11 +44,12 @@ namespace BusinessObject.Models.DTOs
         public string Address { get; set; } = string.Empty;
         public string? Description { get; set; }
         public int BikeCapacity { get; set; }
+        public int StationCapacity { get; set; }
         public string OpeningHours { get; set; } = string.Empty;
         public string? ContactNumber { get; set; }
         public string? ImageUrl { get; set; }
-        public string? ExteriorImageUrl { get; set; }
-        public string? ThumbnailImageUrl { get; set; }
+        public decimal? Latitude { get; set; }
+        public decimal? Longitude { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
@@ -54,59 +57,37 @@ namespace BusinessObject.Models.DTOs
 
     public class StationUpdateDTO
     {
-        [Required(ErrorMessage = "Station ID là b?t bu?c")]
+        [Required(ErrorMessage = "Station ID là bắt buộc")]
         public int StationID { get; set; }
 
-        [StringLength(255, ErrorMessage = "Tên tr?m không ???c quá 255 ký t?")]
+        [StringLength(255, ErrorMessage = "Tên trạm không được quá 255 ký tự")]
         public string? Name { get; set; }
 
-        [StringLength(500, ErrorMessage = "??a ch? không ???c quá 500 ký t?")]
+        [StringLength(500, ErrorMessage = "Địa chỉ không được quá 500 ký tự")]
         public string? Address { get; set; }
 
-        [StringLength(500, ErrorMessage = "Mô t? không ???c quá 500 ký t?")]
+        [StringLength(500, ErrorMessage = "Mô tả không được quá 500 ký tự")]
         public string? Description { get; set; }
 
-        [Range(1, 1000, ErrorMessage = "S?c ch?a xe ph?i t? 1 ??n 1000")]
-        public int? BikeCapacity { get; set; }
+        [Range(1, 10000, ErrorMessage = "Sức chứa trạm phải từ 1 đến 10000")]
+        public int? StationCapacity { get; set; }
 
-        [StringLength(100, ErrorMessage = "Gi? m? c?a không ???c quá 100 ký t?")]
+        [StringLength(100, ErrorMessage = "Giờ mở cửa không được quá 100 ký tự")]
         public string? OpeningHours { get; set; }
 
         [RegularExpression(@"^(\+84|84|0)(3[2-9]|5[6|8|9]|7[0|6-9]|8[1-6|8-9]|9[0-9])[0-9]{7}$",
-            ErrorMessage = "Vui lòng nh?p ?úng ??nh d?ng s? ?i?n tho?i Vi?t Nam")]
-        [StringLength(20, ErrorMessage = "S? ?i?n tho?i không ???c quá 20 ký t?")]
+            ErrorMessage = "Vui lòng nhập đúng định dạng số điện thoại Việt Nam")]
+        [StringLength(20, ErrorMessage = "Số điện thoại không được quá 20 ký tự")]
         public string? ContactNumber { get; set; }
 
         public IFormFile ImageUrl { get; set; }
 
-        public IFormFile ExteriorImageUrl { get; set; }
+        [Range(-90, 90, ErrorMessage = "Vĩ độ phải từ -90 đến 90")]
+        public decimal? Latitude { get; set; }
 
-        public IFormFile ThumbnailImageUrl { get; set; }
-
-        public bool? IsActive { get; set; }
-    }
-
-    public class StationSearchDTO
-    {
-        [StringLength(255, ErrorMessage = "Tên tìm ki?m không ???c quá 255 ký t?")]
-        public string? Name { get; set; }
-
-        [StringLength(500, ErrorMessage = "??a ch? tìm ki?m không ???c quá 500 ký t?")]
-        public string? Address { get; set; }
+        [Range(-180, 180, ErrorMessage = "Kinh độ phải từ -180 đến 180")]
+        public decimal? Longitude { get; set; }
 
         public bool? IsActive { get; set; }
-
-        [Range(1, 1000, ErrorMessage = "S?c ch?a t?i thi?u ph?i t? 1 ??n 1000")]
-        public int? MinCapacity { get; set; }
-
-        [Range(1, 1000, ErrorMessage = "S?c ch?a t?i ?a ph?i t? 1 ??n 1000")]
-        public int? MaxCapacity { get; set; }
-
-        public DateTime? CreatedAfter { get; set; }
-
-        public DateTime? CreatedBefore { get; set; }
-
-        [StringLength(100, ErrorMessage = "Gi? m? c?a không ???c quá 100 ký t?")]
-        public string? OpeningHours { get; set; }
     }
 }
