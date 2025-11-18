@@ -210,6 +210,11 @@ const Admin = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
+  // Delivery history state
+  const [deliveryHistory, setDeliveryHistory] = useState([]);
+  const [deliveryLoading, setDeliveryLoading] = useState(false);
+  const [deliveryError, setDeliveryError] = useState(null);
+
   // staff list will be loaded from API; start empty to avoid showing mock data
   const [staff, setStaff] = useState([]);
   const [staffLoading, setStaffLoading] = useState(false);
@@ -252,10 +257,19 @@ const Admin = () => {
     ],
   });
 
-  // Fetch stations from API
+  // Fetch stations from API only when vehicles tab is active
   useEffect(() => {
-    fetchStations();
-  }, []);
+    if (activeTab === "vehicles") {
+      fetchStations();
+    }
+  }, [activeTab]);
+
+  // Fetch delivery history when delivery tab is active
+  useEffect(() => {
+    if (activeTab === "delivery") {
+      fetchDeliveryHistory();
+    }
+  }, [activeTab]);
 
   // Helper function to get full image URL
   const getStationImageUrl = (filename) => {
@@ -285,11 +299,10 @@ const Admin = () => {
         name: station.name,
         address: station.address,
         description: station.description,
-        bikeCapacity: station.bikeCapacity,
         openingHours: station.openingHours,
         contactNumber: station.contactNumber,
         availableVehicles: station.bikeCapacity || 0, // This should come from bike count API
-        totalVehicles: station.bikeCapacity || 0,
+        totalVehicles: station.stationCapacity || 0,
         chargingStations: 0, // Not in API, keep as 0 or add to API
         status: station.isActive ? "active" : "maintenance",
         // Convert image filenames to full URLs
@@ -304,6 +317,52 @@ const Admin = () => {
       setStationsError("Không thể tải danh sách trạm. Vui lòng thử lại.");
     } finally {
       setStationsLoading(false);
+    }
+  };
+
+  const fetchDeliveryHistory = async () => {
+    setDeliveryLoading(true);
+    setDeliveryError(null);
+
+    try {
+      const data = await adminService.getCompletedAndOngoingRentals();
+      console.log("Delivery history loaded from API:", data);
+
+      // Transform API data to match component structure
+      const transformedDelivery = data.map((rental) => ({
+        id: rental.rentalID,
+        rentalId: rental.rentalID,
+        bikeId: rental.bikeID,
+        bikeName: rental.bikeImage || "N/A",
+        bikeImage: rental.bikeImage,
+        stationId: rental.stationID,
+        stationName: rental.stationName,
+        stationAddress: rental.stationAddress,
+        licensePlate: rental.licensePlate,
+        phoneNumber: rental.phoneNumber,
+        email: rental.email,
+        startDate: rental.startDate,
+        endDate: rental.endDate,
+        handoverDate: rental.handoverDate,
+        returnDate: rental.returnDate,
+        status: rental.status,
+        initialBattery: rental.initialBattery,
+        finalBattery: rental.finalBattery,
+        initBikeCondition: rental.initBikeCondition,
+        finalBikeCondition: rental.finalBikeCondition,
+        deposit: rental.deposit,
+        fee: rental.fee,
+        paymentId: rental.paymentID,
+        createdAt: rental.createdAt,
+        updatedAt: rental.updatedAt,
+      }));
+
+      setDeliveryHistory(transformedDelivery);
+    } catch (error) {
+      console.error("Error loading delivery history:", error);
+      setDeliveryError("Không thể tải lịch sử giao/nhận. Vui lòng thử lại.");
+    } finally {
+      setDeliveryLoading(false);
     }
   };
 
@@ -2239,18 +2298,6 @@ const Admin = () => {
           <div style={{ display: "flex", gap: "10px" }}>
             <button
               className="btn-primary"
-              onClick={() => {
-                console.log("TEST: Opening detail modal for first station");
-                if (stations.length > 0) {
-                  handleViewStationDetail(stations[0]);
-                }
-              }}
-              style={{ background: "#10b981" }}
-            >
-              🧪 Test Chi tiết
-            </button>
-            <button
-              className="btn-primary"
               onClick={() => setShowAddStationModal(true)}
             >
               + Thêm trạm mới
@@ -2298,7 +2345,7 @@ const Admin = () => {
             <tbody>
               {filteredStations.map((station) => {
                 const usageRate =
-                  ((station.totalVehicles - station.availableVehicles) /
+                  (station.availableVehicles /
                     station.totalVehicles) *
                   100;
                 return (
@@ -2323,9 +2370,9 @@ const Admin = () => {
                             style={{
                               width: `${usageRate}%`,
                               backgroundColor:
-                                station.availableVehicles < 5
+                                station.availableVehicles >= 20
                                   ? "#f44336"
-                                  : station.availableVehicles < 10
+                                  : station.availableVehicles >= 10
                                   ? "#ff9800"
                                   : "#4caf50",
                             }}
@@ -2557,58 +2604,6 @@ const Admin = () => {
                   )}
                 </div>
 
-                <div className="form-group">
-                  <label>Hình ảnh bên ngoài</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) =>
-                      setNewStation({
-                        ...newStation,
-                        exteriorImageUrl: e.target.files[0],
-                      })
-                    }
-                    className="form-input"
-                  />
-                  {newStation.exteriorImageUrl && (
-                    <p
-                      style={{
-                        fontSize: "0.85rem",
-                        color: "#64748b",
-                        marginTop: "0.5rem",
-                      }}
-                    >
-                      ✅ {newStation.exteriorImageUrl.name}
-                    </p>
-                  )}
-                </div>
-
-                <div className="form-group">
-                  <label>Hình thumbnail</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) =>
-                      setNewStation({
-                        ...newStation,
-                        thumbnailImageUrl: e.target.files[0],
-                      })
-                    }
-                    className="form-input"
-                  />
-                  {newStation.thumbnailImageUrl && (
-                    <p
-                      style={{
-                        fontSize: "0.85rem",
-                        color: "#64748b",
-                        marginTop: "0.5rem",
-                      }}
-                    >
-                      ✅ {newStation.thumbnailImageUrl.name}
-                    </p>
-                  )}
-                </div>
-
                 <div className="info-note">
                   <span className="note-icon">💡</span>
                   <p>
@@ -2760,64 +2755,6 @@ const Admin = () => {
                         }}
                       >
                         ✅ {newStation.imageUrl.name}
-                      </p>
-                    )}
-                </div>
-
-                <div className="form-group">
-                  <label>
-                    Hình ảnh bên ngoài (để trống nếu không muốn thay đổi)
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) =>
-                      setNewStation({
-                        ...newStation,
-                        exteriorImageUrl: e.target.files[0],
-                      })
-                    }
-                    className="form-input"
-                  />
-                  {newStation.exteriorImageUrl &&
-                    newStation.exteriorImageUrl instanceof File && (
-                      <p
-                        style={{
-                          fontSize: "0.85rem",
-                          color: "#64748b",
-                          marginTop: "0.5rem",
-                        }}
-                      >
-                        ✅ {newStation.exteriorImageUrl.name}
-                      </p>
-                    )}
-                </div>
-
-                <div className="form-group">
-                  <label>
-                    Hình thumbnail (để trống nếu không muốn thay đổi)
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) =>
-                      setNewStation({
-                        ...newStation,
-                        thumbnailImageUrl: e.target.files[0],
-                      })
-                    }
-                    className="form-input"
-                  />
-                  {newStation.thumbnailImageUrl &&
-                    newStation.thumbnailImageUrl instanceof File && (
-                      <p
-                        style={{
-                          fontSize: "0.85rem",
-                          color: "#64748b",
-                          marginTop: "0.5rem",
-                        }}
-                      >
-                        ✅ {newStation.thumbnailImageUrl.name}
                       </p>
                     )}
                 </div>
@@ -2999,8 +2936,7 @@ const Admin = () => {
                   <div className="detail-row">
                     <span className="detail-label">🏍️ Sức chứa xe:</span>
                     <span className="detail-value">
-                      {selectedStation.bikeCapacity ||
-                        selectedStation.totalVehicles}{" "}
+                      {selectedStation.totalVehicles}{" "}
                       xe
                     </span>
                   </div>
@@ -3008,14 +2944,6 @@ const Admin = () => {
                     <span className="detail-label">✅ Xe khả dụng:</span>
                     <span className="detail-value">
                       {selectedStation.availableVehicles} xe
-                    </span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="detail-label">🚴 Xe đang cho thuê:</span>
-                    <span className="detail-value">
-                      {selectedStation.totalVehicles -
-                        selectedStation.availableVehicles}{" "}
-                      xe
                     </span>
                   </div>
                   <div className="detail-row">
@@ -3309,7 +3237,7 @@ const Admin = () => {
                           <div className="summary-item">
                             <span className="summary-icon">👥</span>
                             <div>
-                              <p className="summary-label">Tổng nhân viên</p>
+                              <p className="summary-label" style={{ color: 'white' }}>Tổng nhân viên</p>
                               <p className="summary-number">
                                 {stationStaff.length}
                               </p>
@@ -3318,7 +3246,7 @@ const Admin = () => {
                           <div className="summary-item">
                             <span className="summary-icon">🚚</span>
                             <div>
-                              <p className="summary-label">Tổng giao/nhận</p>
+                              <p className="summary-label" style={{ color: 'white' }}>Tổng giao/nhận</p>
                               <p className="summary-number">
                                 {stationStaff.reduce(
                                   (sum, s) => sum + s.totalDeliveries,
@@ -4377,99 +4305,69 @@ const Admin = () => {
   };
 
   const renderDeliveryHistory = () => {
-    // Mock delivery history data
-    const deliveryHistory = [
-      {
-        id: 1,
-        type: "pickup",
-        customer: "Nguyễn Văn A",
-        bike: "VinFast Klara S",
-        station: "Trạm EV Công Viên Tao Đàn",
-        staff: "Phạm Văn D",
-        time: "2025-10-28 08:30",
-        status: "completed",
-      },
-      {
-        id: 2,
-        type: "return",
-        customer: "Trần Thị B",
-        bike: "DatBike Weaver 200",
-        station: "Trạm EV Bờ Sông Sài Gòn",
-        staff: "Hoàng Thị E",
-        time: "2025-10-28 09:15",
-        status: "completed",
-      },
-      {
-        id: 3,
-        type: "pickup",
-        customer: "Lê Văn C",
-        bike: "VinFast Feliz S",
-        station: "Trạm EV Trung Tâm Quận 1",
-        staff: "Võ Văn F",
-        time: "2025-10-28 10:00",
-        status: "in_progress",
-      },
-      {
-        id: 4,
-        type: "return",
-        customer: "Phạm Thị D",
-        bike: "VinFast Klara S",
-        station: "Trạm EV Khu Công Nghệ Cao",
-        staff: "Trần Văn G",
-        time: "2025-10-28 10:30",
-        status: "pending",
-      },
-      {
-        id: 5,
-        type: "pickup",
-        customer: "Hoàng Văn E",
-        bike: "DatBike Weaver 200",
-        station: "Trạm EV Sân Bay Tân Sơn Nhất",
-        staff: "Nguyễn Thị H",
-        time: "2025-10-28 11:00",
-        status: "completed",
-      },
-    ];
-
-    const typeInfo = {
-      pickup: { label: "Giao xe", icon: "🚀", color: "#3b82f6" },
-      return: { label: "Nhận xe", icon: "🏁", color: "#10b981" },
-    };
-
     const statusInfo = {
-      completed: { label: "Hoàn thành", icon: "✅", color: "#10b981" },
-      in_progress: { label: "Đang thực hiện", icon: "⏳", color: "#f59e0b" },
-      pending: { label: "Chờ xử lý", icon: "📋", color: "#6b7280" },
+      0: { label: "Chờ xử lý", icon: "⏳", color: "#f59e0b" },
+      1: { label: "Đã đặt", icon: "📋", color: "#3b82f6" },
+      2: { label: "Đang thuê", icon: "🚗", color: "#8b5cf6" },
+      3: { label: "Đã hủy", icon: "❌", color: "#ef4444" },
+      4: { label: "Hoàn thành", icon: "✅", color: "#10b981" },
     };
+
+    // Show loading state
+    if (deliveryLoading) {
+      return (
+        <div className="management-content">
+          <div className="section-header">
+            <h2>🚚 Lịch sử giao/nhận xe</h2>
+          </div>
+          <div className="loading-container">
+            <div className="spinner"></div>
+            <p>Đang tải lịch sử giao/nhận...</p>
+          </div>
+        </div>
+      );
+    }
+
+    // Show error state
+    if (deliveryError) {
+      return (
+        <div className="management-content">
+          <div className="section-header">
+            <h2>🚚 Lịch sử giao/nhận xe</h2>
+          </div>
+          <div className="error-message">
+            <span className="error-icon">❌</span>
+            <span>{deliveryError}</span>
+            <button onClick={fetchDeliveryHistory}>Thử lại</button>
+          </div>
+        </div>
+      );
+    }
 
     return (
       <div className="management-content">
         <div className="section-header">
           <h2>🚚 Lịch sử giao/nhận xe</h2>
           <div className="header-actions">
+            <button
+              className="btn-refresh"
+              onClick={fetchDeliveryHistory}
+              disabled={deliveryLoading}
+            >
+              {deliveryLoading ? "🔄 Đang tải..." : "🔄 Làm mới"}
+            </button>
             <button className="btn-primary">📊 Xuất báo cáo</button>
           </div>
         </div>
 
         <div className="filters">
           <select className="filter-select">
-            <option value="all">Tất cả loại</option>
-            <option value="pickup">Giao xe</option>
-            <option value="return">Nhận xe</option>
-          </select>
-          <select className="filter-select">
-            <option value="all">Tất cả trạm</option>
-            {stations.map((station) => (
-              <option key={station.id} value={station.id}>
-                {station.name}
-              </option>
-            ))}
-          </select>
-          <select className="filter-select">
             <option value="all">Tất cả trạng thái</option>
-            <option value="completed">Hoàn thành</option>
-            <option value="in_progress">Đang thực hiện</option>
-            <option value="pending">Chờ xử lý</option>
+            <option value="0">⏳ Chờ xử lý</option>
+            <option value="1">📋 Đã đặt</option>
+            <option value="2">🚗 Đang thuê</option>
+            <option value="3">❌ Đã hủy</option>
+            <option value="4">✅ Hoàn thành</option>
           </select>
           <input
             type="date"
@@ -4480,19 +4378,19 @@ const Admin = () => {
 
         <div className="stats-summary">
           <div className="summary-item">
-            <span className="summary-label">Tổng giao dịch hôm nay:</span>
+            <span className="summary-label">Tổng giao dịch:</span>
             <span className="summary-value">{deliveryHistory.length}</span>
           </div>
           <div className="summary-item">
-            <span className="summary-label">🚀 Giao xe:</span>
-            <span className="summary-value" style={{ color: "#3b82f6" }}>
-              {deliveryHistory.filter((d) => d.type === "pickup").length}
+            <span className="summary-label">🚗 Đang thuê:</span>
+            <span className="summary-value" style={{ color: "#8b5cf6" }}>
+              {deliveryHistory.filter((d) => d.status === 2).length}
             </span>
           </div>
           <div className="summary-item">
-            <span className="summary-label">🏁 Nhận xe:</span>
+            <span className="summary-label">✅ Hoàn thành:</span>
             <span className="summary-value" style={{ color: "#10b981" }}>
-              {deliveryHistory.filter((d) => d.type === "return").length}
+              {deliveryHistory.filter((d) => d.status === 4).length}
             </span>
           </div>
         </div>
@@ -4502,72 +4400,74 @@ const Admin = () => {
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Loại</th>
-                <th>Khách hàng</th>
-                <th>Xe</th>
+                <th>Biển số</th>
                 <th>Trạm</th>
-                <th>Nhân viên</th>
-                <th>Thời gian</th>
+                <th>Địa chỉ trạm</th>
+                <th>SĐT</th>
+                <th>Email</th>
+                <th>Ngày bắt đầu</th>
+                <th>Ngày kết thúc</th>
                 <th>Trạng thái</th>
                 <th>Hành động</th>
               </tr>
             </thead>
             <tbody>
-              {deliveryHistory.map((record) => (
-                <tr key={record.id}>
-                  <td>#{record.id}</td>
-                  <td>
-                    <span
-                      style={{
-                        background: typeInfo[record.type].color + "20",
-                        color: typeInfo[record.type].color,
-                        padding: "0.25rem 0.75rem",
-                        borderRadius: "12px",
-                        fontSize: "0.875rem",
-                        fontWeight: "600",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "0.25rem",
-                      }}
-                    >
-                      {typeInfo[record.type].icon} {typeInfo[record.type].label}
-                    </span>
-                  </td>
-                  <td>{record.customer}</td>
-                  <td>{record.bike}</td>
-                  <td>{record.station}</td>
-                  <td>{record.staff}</td>
-                  <td>{record.time}</td>
-                  <td>
-                    <span
-                      style={{
-                        background: statusInfo[record.status].color + "20",
-                        color: statusInfo[record.status].color,
-                        padding: "0.25rem 0.75rem",
-                        borderRadius: "12px",
-                        fontSize: "0.875rem",
-                        fontWeight: "600",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "0.25rem",
-                      }}
-                    >
-                      {statusInfo[record.status].icon}{" "}
-                      {statusInfo[record.status].label}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="action-buttons">
-                      <button
-                        className="btn-action btn-view"
-                        title="Xem chi tiết"
-                      >
-                        👁️
-                      </button>
-                    </div>
+              {deliveryHistory.length === 0 ? (
+                <tr>
+                  <td colSpan="10" style={{ textAlign: "center", padding: "2rem" }}>
+                    📭 Chưa có lịch sử giao/nhận nào
                   </td>
                 </tr>
-              ))}
+              ) : (
+                deliveryHistory.map((record) => (
+                  <tr key={record.id}>
+                    <td>#{record.rentalId}</td>
+                    <td>{record.licensePlate || "N/A"}</td>
+                    <td>{record.stationName || "N/A"}</td>
+                    <td>{record.stationAddress || "N/A"}</td>
+                    <td>{record.phoneNumber || "N/A"}</td>
+                    <td>{record.email || "N/A"}</td>
+                    <td>
+                      {record.startDate
+                        ? new Date(record.startDate).toLocaleDateString("vi-VN")
+                        : "N/A"}
+                    </td>
+                    <td>
+                      {record.endDate
+                        ? new Date(record.endDate).toLocaleDateString("vi-VN")
+                        : "N/A"}
+                    </td>
+                    <td>
+                      <span
+                        style={{
+                          background: statusInfo[record.status]?.color + "20" || "#6b728020",
+                          color: statusInfo[record.status]?.color || "#6b7280",
+                          padding: "0.25rem 0.75rem",
+                          borderRadius: "12px",
+                          fontSize: "0.875rem",
+                          fontWeight: "600",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.25rem",
+                        }}
+                      >
+                        {statusInfo[record.status]?.icon || "❓"}{" "}
+                        {statusInfo[record.status]?.label || "Không xác định"}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="action-buttons">
+                        <button
+                          className="btn-action btn-view"
+                          title="Xem chi tiết"
+                        >
+                          👁️
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

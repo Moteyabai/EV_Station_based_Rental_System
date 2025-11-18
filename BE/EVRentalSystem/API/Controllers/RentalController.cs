@@ -444,6 +444,8 @@ namespace API.Controllers
                     displayDto.AssignedStaff = rental.AssignedStaff;
                     displayDto.InitialBattery = rental.InitialBattery;
                     displayDto.Status = rental.Status;
+
+                    displayDtos.Add(displayDto);
                 }
 
                 return Ok(displayDtos);

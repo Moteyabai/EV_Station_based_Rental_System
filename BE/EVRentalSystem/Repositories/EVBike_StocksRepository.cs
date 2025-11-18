@@ -94,31 +94,7 @@ namespace Repositories
             }
         }
 
-        /// <summary>
-        /// Get count of available bikes by BikeID at each station
-        /// </summary>
-        public async Task<Dictionary<int, int>> GetAvailableStockCountByStationAsync(int bikeID)
-        {
-            try
-            {
-                var stockCounts = await _context.EVBike_Stocks
-                    .AsNoTracking()  // ✅ No tracking needed for aggregation
-                    .Where(stock => stock.BikeID == bikeID && stock.Status == (int)BikeStatus.Available)
-                    .GroupBy(stock => stock.StationID)
-                    .Select(group => new
-                    {
-                        StationID = group.Key,
-                        Count = group.Count()
-                    })
-                    .ToDictionaryAsync(x => x.StationID, x => x.Count);
 
-                return stockCounts;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error getting available stock count by station: {ex.Message}");
-            }
-        }
 
         //get availble stocks at a station
         public async Task<List<EVBike_Stocks>> GetAvailableStocksAtStationAsync(int stationID)
@@ -128,5 +104,16 @@ namespace Repositories
                 .Where(stock => stock.StationID == stationID && stock.Status == (int)BikeStatus.Available)
                 .ToListAsync();
         }
+
+        /// <summary>
+        /// Count all stocks at a station
+        /// </summary>
+        public async Task<int> CountAllStocksAtStationAsync(int stationID)
+        {
+            return await _context.EVBike_Stocks
+                .AsNoTracking()
+                .CountAsync(stock => stock.StationID == stationID);
+        }
+
     }
 }

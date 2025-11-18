@@ -30,11 +30,16 @@ namespace BusinessObject.Models
         [StringLength(500)]
         public string ImageUrl { get; set; }
 
-        [StringLength(500)]
-        public string ExteriorImageUrl { get; set; }
+        [Range(-90, 90, ErrorMessage = "Vĩ độ phải từ -90 đến 90")]
+        public decimal? Latitude { get; set; }
 
-        [StringLength(500)]
-        public string ThumbnailImageUrl { get; set; }
+        [Range(-180, 180, ErrorMessage = "Kinh độ phải từ -180 đến 180")]
+        public decimal? Longitude { get; set; }
+
+        // New: overall station capacity (total slots/space)
+        [Required]
+        [Range(1, 10000, ErrorMessage = "Station capacity must be between 1 and 10000")]
+        public int StationCapacity { get; set; }
 
         public bool IsActive { get; set; } = true;
 

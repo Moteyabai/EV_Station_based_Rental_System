@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { fetchStationById } from "../api/stations";
+import { getAvailableBikesByStationID } from "../api/bikes";
 import { useAuth } from "../contexts/AuthContext";
 import { useCart } from "../contexts/CartContext";
 import { useReviews } from "../contexts/ReviewContext";
 import { formatPrice } from "../utils/helpers";
 import ReviewDisplay from "../components/ReviewDisplay";
 import ReviewForm from "../components/ReviewForm";
+import BookingForm from "../components/BookingForm";
 import "../styles/Stations.css";
 import "../styles/Reviews.css";
 import "../styles/ReviewStations.css";
@@ -16,6 +18,7 @@ export default function StationDetail() {
   const [station, setStation] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [vehicles, setVehicles] = useState([]);
   const { user, verificationStatus } = useAuth();
   const { addToCart } = useCart();
   const { getStationReviews, addReview } = useReviews();
@@ -23,15 +26,7 @@ export default function StationDetail() {
   const [reviews, setReviews] = useState([]);
 
   const [selectedVehicle, setSelectedVehicle] = useState(null);
-  const [bookingData, setBookingData] = useState({
-    pickupDate: "",
-    pickupTime: "",
-    returnDate: "",
-    returnTime: "",
-    additionalServices: [],
-  });
   const [showBookingForm, setShowBookingForm] = useState(false);
-  const [bookingConfirmed, setBookingConfirmed] = useState(false);
   const [activeImage, setActiveImage] = useState("main");
   const [showReviewForm, setShowReviewForm] = useState(false);
 
@@ -40,7 +35,9 @@ export default function StationDetail() {
     if (user) {
       const userRoleId = user?.roleID || user?.RoleID;
       if (userRoleId === 2 || userRoleId === 3) {
-        console.log("StationDetail: Access denied for Staff/Admin, redirecting...");
+        console.log(
+          "StationDetail: Access denied for Staff/Admin, redirecting...",
+        );
         if (userRoleId === 2) {
           navigate("/staff");
         } else {
@@ -56,45 +53,51 @@ export default function StationDetail() {
       try {
         setLoading(true);
         setError(null); // Reset error state
-        console.log('🏪 Fetching station with ID:', id);
-        
-        const token = localStorage.getItem('ev_token');
+        console.log("🏪 Fetching station with ID:", id);
+
+        const token = localStorage.getItem("ev_token");
         const stationData = await fetchStationById(id, token);
-        
-        console.log('✅ Station data received:', stationData);
-        
+
+        console.log("✅ Station data received:", stationData);
+
         // Map backend data to frontend format
         const mappedStation = {
           id: stationData.stationID || stationData.StationID,
           name: stationData.name || stationData.Name,
           address: stationData.address || stationData.Address,
-          description: stationData.description || stationData.Description || '',
-          openingHours: stationData.openingHours || stationData.OpeningHours || "24/7",
-          image: stationData.thumbnailImageUrl || stationData.ThumbnailImageUrl || '/images/stations/default.jpg',
+          description: stationData.description || stationData.Description || "",
+          openingHours:
+            stationData.openingHours || stationData.OpeningHours || "24/7",
+          image:
+            stationData.thumbnailImageUrl ||
+            stationData.ThumbnailImageUrl ||
+            "/images/stations/default.jpg",
           location: {
             lat: stationData.latitude || 10.762622,
-            lng: stationData.longitude || 106.660172
+            lng: stationData.longitude || 106.660172,
           },
-          availableVehicles: stationData.availableBikes || 0,
+          availableVehicles: stationData.bikeCapacity || 0,
           chargingStations: 0,
           amenities: stationData.amenities || [],
           rating: 5,
           reviews: 0,
           status: stationData.status,
-          vehicles: stationData.vehicles || [], // Vehicles from BE or empty
           images: {
             exterior: stationData.imageUrl || stationData.thumbnailImageUrl,
             chargers: stationData.thumbnailImageUrl,
-            thumbnail: stationData.thumbnailImageUrl
-          }
+            thumbnail: stationData.thumbnailImageUrl,
+          },
         };
-        
+
         setStation(mappedStation);
         setError(null);
-        console.log('✅ Station loaded successfully');
+        console.log("✅ Station loaded successfully");
+
+        // Fetch available bikes for this station
+        await loadStationVehicles(id);
       } catch (err) {
-        console.error('❌ Error loading station:', err);
-        setError('Không thể tải thông tin trạm.');
+        console.error("❌ Error loading station:", err);
+        setError("Không thể tải thông tin trạm.");
         setStation(null);
       } finally {
         setLoading(false);
@@ -105,6 +108,39 @@ export default function StationDetail() {
       loadStationData();
     }
   }, [id]);
+
+  // Fetch vehicles for this station
+  const loadStationVehicles = async (stationId) => {
+    try {
+      console.log("🚲 Fetching vehicles for station:", stationId);
+      const bikesData = await getAvailableBikesByStationID(stationId);
+
+      // Map API response to frontend format
+      const mappedVehicles = bikesData.map((bike) => ({
+        id: bike.bikeID,
+        name: bike.bikeName || "Xe điện",
+        type: bike.brand || "Electric",
+        price: bike.pricePerDay || 0,
+        batteryCapacity: bike.batteryCapacity
+          ? `${bike.batteryCapacity}`
+          : "N/A",
+        quantity: bike.quantity || 0,
+        range: bike.maxDistance ? `${bike.maxDistance}km` : "N/A",
+        maxSpeed: `${bike.maxSpeed || 0} km/h`,
+        brandName: bike.brandName || "Unknown",
+        image: bike.frontImg || bike.backImg || "/images/vehicles/default.jpg",
+        available: bike.status === 1,
+        description: bike.description || "",
+        timeRented: bike.timeRented || 0,
+      }));
+
+      console.log("✅ Mapped vehicles:", mappedVehicles);
+      setVehicles(mappedVehicles);
+    } catch (err) {
+      console.error("❌ Error loading vehicles:", err);
+      setVehicles([]);
+    }
+  };
 
   useEffect(() => {
     // Lấy đánh giá cho trạm này
@@ -151,8 +187,8 @@ export default function StationDetail() {
           <h2>❌ Có lỗi xảy ra</h2>
           <p>{error}</p>
           <div className="error-actions">
-            <button 
-              className="btn primary" 
+            <button
+              className="btn primary"
               onClick={() => window.location.reload()}
             >
               🔄 Thử lại
@@ -184,68 +220,21 @@ export default function StationDetail() {
   function handleVehicleSelect(vehicle) {
     setSelectedVehicle(vehicle);
     setShowBookingForm(true);
-    // Scroll to booking form
+    // Scroll to top when modal opens
     setTimeout(() => {
-      document
-        .getElementById("booking-form")
-        ?.scrollIntoView({ behavior: "smooth" });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }, 100);
   }
 
-  function handleInputChange(e) {
-    const { name, value } = e.target;
-    setBookingData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  function handleBookingSubmit() {
+    setShowBookingForm(false);
+    setSelectedVehicle(null);
   }
 
-  function handleCheckboxChange(e) {
-    const { name, checked } = e.target;
-    setBookingData((prev) => {
-      if (checked) {
-        return {
-          ...prev,
-          additionalServices: [...prev.additionalServices, name],
-        };
-      } else {
-        return {
-          ...prev,
-          additionalServices: prev.additionalServices.filter(
-            (service) => service !== name
-          ),
-        };
-      }
-    });
+  function handleCloseModal() {
+    setShowBookingForm(false);
+    setSelectedVehicle(null);
   }
-
-  function handleBookingSubmit(e) {
-    e.preventDefault();
-
-    if (!user) {
-      navigate("/login");
-      return;
-    }
-
-    // Check verification status
-    if (verificationStatus && !verificationStatus.documentsVerified) {
-      navigate("/verification-pending");
-      return;
-    }
-
-    // In a real app, this would call an API to create the booking
-    setBookingConfirmed(true);
-
-    // Scroll to confirmation message
-    setTimeout(() => {
-      document
-        .getElementById("booking-confirmation")
-        ?.scrollIntoView({ behavior: "smooth" });
-    }, 100);
-  }
-
-  // Generate a booking ID (in a real app, this would come from the backend)
-  const bookingId = "BK" + Math.floor(100000 + Math.random() * 900000);
 
   return (
     <div className="page-container">
@@ -274,95 +263,21 @@ export default function StationDetail() {
         {/* Station Gallery */}
         <div className="station-gallery">
           <div className="main-image">
-            {activeImage === "main" && station.image && (
-              <img
-                src={station.image}
-                alt={`${station.name}`}
-              />
-            )}
-            {activeImage === "exterior" && station.images?.exterior && (
+            {station.images?.exterior ? (
               <img
                 src={station.images.exterior}
                 alt={`${station.name} bên ngoài`}
               />
-            )}
-            {activeImage === "chargers" && station.images?.chargers && (
-              <img
-                src={station.images.chargers}
-                alt={`${station.name} trạm sạc`}
-              />
-            )}
-            {activeImage === "thumbnail" && station.images?.thumbnail && (
-              <img
-                src={station.images.thumbnail}
-                alt={`${station.name} tổng quan`}
-              />
-            )}
-          </div>
-
-          <div className="gallery-thumbnails">
-            {station.image && (
-              <div
-                className={`thumbnail ${
-                  activeImage === "main" ? "active" : ""
-                }`}
-                onClick={() => setActiveImage("main")}
-              >
-                <img src={station.image} alt="Hình ảnh chính" />
-              </div>
-            )}
-
-            {station.images?.exterior && (
-              <div
-                className={`thumbnail ${
-                  activeImage === "exterior" ? "active" : ""
-                }`}
-                onClick={() => setActiveImage("exterior")}
-              >
-                <img src={station.images.exterior} alt="Hình ảnh bên ngoài" />
-              </div>
-            )}
-
-            {station.images?.chargers && (
-              <div
-                className={`thumbnail ${
-                  activeImage === "chargers" ? "active" : ""
-                }`}
-                onClick={() => setActiveImage("chargers")}
-              >
-                <img src={station.images.chargers} alt="Charging stations" />
-              </div>
-            )}
-
-            {station.images?.thumbnail && (
-              <div
-                className={`thumbnail ${
-                  activeImage === "thumbnail" ? "active" : ""
-                }`}
-                onClick={() => setActiveImage("thumbnail")}
-              >
-                <img src={station.images.thumbnail} alt="Overview" />
-              </div>
-            )}
+            ) : station.image ? (
+              <img src={station.image} alt={`${station.name}`} />
+            ) : null}
           </div>
         </div>
 
         {/* Station Description */}
         <div className="station-description">
-          <h2>About This Location</h2>
+          <h2>Chi tiết trạm</h2>
           <p>{station.description}</p>
-
-          <div className="amenities">
-            <h3>Amenities</h3>
-            <div className="amenities-list">
-              {station.amenities.map((amenity, index) => (
-                <div key={index} className="amenity-item">
-                  <div className="amenity-icon">✓</div>
-                  <div className="amenity-name">{amenity}</div>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
 
         {/* Available Vehicles */}
@@ -370,330 +285,93 @@ export default function StationDetail() {
           <h2>Xe máy điện hiện có</h2>
 
           <div className="vehicles-list">
-            {!station.vehicles || station.vehicles.length === 0 ? (
+            {!vehicles || vehicles.length === 0 ? (
               <div className="no-vehicles">
                 <p>Hiện tại chưa có thông tin xe tại trạm này.</p>
                 <p>Vui lòng liên hệ trực tiếp để biết thêm chi tiết.</p>
               </div>
             ) : (
-              station.vehicles
+              vehicles
                 .filter((vehicle) => vehicle.available)
                 .map((vehicle) => (
-                <div
-                  key={vehicle.id}
-                  className={`vehicle-card ${
-                    selectedVehicle?.id === vehicle.id ? "selected" : ""
-                  }`}
-                  onClick={() => handleVehicleSelect(vehicle)}
-                >
-                  <div className="vehicle-image">
-                    {vehicle.image ? (
-                      <img src={vehicle.image} alt={vehicle.name} />
-                    ) : (
-                      <div className="image-placeholder">
-                        <span>{vehicle.name.split(" ")[0]}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="vehicle-details">
-                    <h3 className="vehicle-name">{vehicle.name}</h3>
-                    <div className="vehicle-meta">
-                      <span className="vehicle-type">{vehicle.type}</span>
-                      <span className="vehicle-price">
-                        {formatPrice(vehicle.price)}/ngày
-                      </span>
+                  <div
+                    key={vehicle.id}
+                    className={`station-vehicle-card ${
+                      selectedVehicle?.id === vehicle.id ? "selected" : ""
+                    }`}
+                  >
+                    <div className="vehicle-image">
+                      {vehicle.image ? (
+                        <img src={vehicle.image} alt={vehicle.name} />
+                      ) : (
+                        <div className="image-placeholder">
+                          <span>{vehicle.name.split(" ")[0]}</span>
+                        </div>
+                      )}
                     </div>
 
-                    <div className="vehicle-specs">
-                      <div className="spec">
-                        <span className="spec-label">Pin:</span>
-                        <span className="spec-value">
-                          {vehicle.batteryCapacity}
+                    <div className="vehicle-details">
+                      <h3 className="vehicle-name">
+                        {vehicle.name}
+                      </h3>
+                      <div className="vehicle-meta">
+                        <span className="vehicle-type">{vehicle.brandName}</span>
+                        <span className="vehicle-price">
+                          {formatPrice(vehicle.price)}/ngày
                         </span>
                       </div>
-                      <div className="spec">
-                        <span className="spec-label">Quãng đường:</span>
-                        <span className="spec-value">{vehicle.range}</span>
+
+                        <div className="vehicle-specs">
+                          <div className="spec">
+                            <span className="spec-label">PIN:</span>
+                            <span className="spec-value">
+                              {vehicle.batteryCapacity} kWh
+                            </span>
+                          </div>
+                          <div className="spec">
+                            <span className="spec-label">QUÃNG ĐƯỜNG:</span>
+                            <span className="spec-value">{vehicle.range}</span>
+                          </div>
+                          <div className="spec">
+                            <span className="spec-label">TỐC ĐỘ TỐI ĐA:</span>
+                            <span className="spec-value">{vehicle.maxSpeed}</span>
+                          </div>
+                        </div>
+
+                        <div className="vehicle-actions">
+                          <button
+                            className="btn secondary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/vehicles/${vehicle.id}`);
+                            }}
+                          >
+                            Chi tiết xe
+                          </button>
+                          <button
+                            className="btn primary btn-select"
+                            onClick={() => handleVehicleSelect(vehicle)}
+                          >
+                            {selectedVehicle?.id === vehicle.id
+                              ? "Đã chọn"
+                              : "Chọn xe"}
+                          </button>
+                        </div>
                       </div>
                     </div>
-
-                    <div className="vehicle-actions">
-                      <button
-                        className="btn secondary"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          addToCart(vehicle, {
-                            pickupDate: new Date().toISOString().split("T")[0],
-                            returnDate: new Date(Date.now() + 86400000)
-                              .toISOString()
-                              .split("T")[0],
-                            pickupTime: "09:00",
-                            returnTime: "18:00",
-                            pickupStation: station.name,
-                            returnStation: station.name,
-                            days: 1,
-                          });
-                          alert("✅ Đã thêm xe vào giỏ hàng!");
-                        }}
-                      >
-                        Thêm vào giỏ hàng
-                      </button>
-                      <button
-                        className="btn primary"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          addToCart(vehicle, {
-                            pickupDate: new Date().toISOString().split("T")[0],
-                            returnDate: new Date(Date.now() + 86400000)
-                              .toISOString()
-                              .split("T")[0],
-                            pickupTime: "09:00",
-                            returnTime: "18:00",
-                            pickupStation: station.name,
-                            returnStation: station.name,
-                            days: 1,
-                          });
-                          navigate("/cart");
-                        }}
-                      >
-                        Thuê ngay
-                      </button>
-                      <button
-                        className="btn primary btn-select"
-                        onClick={() => handleVehicleSelect(vehicle)}
-                      >
-                        {selectedVehicle?.id === vehicle.id
-                          ? "Đã chọn"
-                          : "Chọn xe"}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))
+                  ))
             )}
           </div>
         </div>
 
-        {/* Booking Form */}
-        {showBookingForm && selectedVehicle && !bookingConfirmed && (
-          <div id="booking-form" className="booking-form-container">
-            <h2>Đặt thuê {selectedVehicle.name}</h2>
-
-            <form onSubmit={handleBookingSubmit} className="booking-form">
-              <div className="form-section">
-                <h3>Thời gian thuê</h3>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="pickupDate">Ngày nhận</label>
-                    <input
-                      type="date"
-                      id="pickupDate"
-                      name="pickupDate"
-                      value={bookingData.pickupDate}
-                      onChange={handleInputChange}
-                      min={new Date().toISOString().split("T")[0]}
-                      required
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="pickupTime">Giờ nhận</label>
-                    <input
-                      type="time"
-                      id="pickupTime"
-                      name="pickupTime"
-                      value={bookingData.pickupTime}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="returnDate">Ngày trả</label>
-                    <input
-                      type="date"
-                      id="returnDate"
-                      name="returnDate"
-                      value={bookingData.returnDate}
-                      onChange={handleInputChange}
-                      min={
-                        bookingData.pickupDate ||
-                        new Date().toISOString().split("T")[0]
-                      }
-                      required
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="returnTime">Giờ trả</label>
-                    <input
-                      type="time"
-                      id="returnTime"
-                      name="returnTime"
-                      value={bookingData.returnTime}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="form-section">
-                <h3>Dịch vụ bổ sung</h3>
-
-                <div className="checkbox-group">
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      name="insurance"
-                      checked={bookingData.additionalServices.includes(
-                        "insurance"
-                      )}
-                      onChange={handleCheckboxChange}
-                    />
-                    Bảo hiểm (+{formatPrice(15000)}/ngày)
-                  </label>
-
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      name="charger"
-                      checked={bookingData.additionalServices.includes(
-                        "charger"
-                      )}
-                      onChange={handleCheckboxChange}
-                    />
-                    Bộ sạc di động (+{formatPrice(10000)}/ngày)
-                  </label>
-
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      name="gps"
-                      checked={bookingData.additionalServices.includes("gps")}
-                      onChange={handleCheckboxChange}
-                    />
-                    Hệ thống định vị GPS (+{formatPrice(5000)}/ngày)
-                  </label>
-                </div>
-              </div>
-
-              <div className="booking-summary">
-                <h3>Thông tin đặt xe</h3>
-                <div className="summary-item">
-                  <span>Thuê xe:</span>
-                  <span>{formatPrice(selectedVehicle.price)}/ngày</span>
-                </div>{" "}
-                {bookingData.additionalServices.includes("insurance") && (
-                  <div className="summary-item">
-                    <span>Bảo hiểm:</span>
-                    <span>{formatPrice(15000)}/ngày</span>
-                  </div>
-                )}
-                {bookingData.additionalServices.includes("charger") && (
-                  <div className="summary-item">
-                    <span>Bộ sạc di động:</span>
-                    <span>{formatPrice(10000)}/ngày</span>
-                  </div>
-                )}
-                {bookingData.additionalServices.includes("gps") && (
-                  <div className="summary-item">
-                    <span>Định vị GPS:</span>
-                    <span>{formatPrice(5000)}/ngày</span>
-                  </div>
-                )}
-                <div className="summary-total">
-                  <span>Tổng tiền dự tính:</span>
-                  <span>Tính khi thanh toán</span>
-                </div>
-              </div>
-
-              <div className="booking-actions">
-                <button
-                  type="button"
-                  className="btn secondary"
-                  onClick={() => setShowBookingForm(false)}
-                >
-                  Hủy
-                </button>
-                <button type="submit" className="btn primary">
-                  Xác nhận đặt xe
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* Booking Confirmation */}
-        {bookingConfirmed && (
-          <div id="booking-confirmation" className="booking-confirmation">
-            <div className="confirmation-icon">✓</div>
-            <h2>Đã xác nhận đặt xe!</h2>
-
-            <div className="confirmation-details">
-              <p>
-                Your booking has been confirmed. Please see the details below:
-              </p>
-
-              <div className="confirmation-data">
-                <div className="confirmation-item">
-                  <span className="label">Booking ID:</span>
-                  <span className="value">{bookingId}</span>
-                </div>
-
-                <div className="confirmation-item">
-                  <span className="label">Xe:</span>
-                  <span className="value">{selectedVehicle.name}</span>
-                </div>
-
-                <div className="confirmation-item">
-                  <span className="label">Nhận xe:</span>
-                  <span className="value">
-                    {new Date(bookingData.pickupDate).toLocaleDateString()} lúc{" "}
-                    {bookingData.pickupTime}
-                  </span>
-                </div>
-
-                <div className="confirmation-item">
-                  <span className="label">Trả xe:</span>
-                  <span className="value">
-                    {new Date(bookingData.returnDate).toLocaleDateString()} lúc{" "}
-                    {bookingData.returnTime}
-                  </span>
-                </div>
-
-                <div className="confirmation-item">
-                  <span className="label">Địa điểm:</span>
-                  <span className="value">{station.name}</span>
-                </div>
-              </div>
-
-              <div className="next-steps">
-                <h3>Các bước tiếp theo</h3>
-                <ol>
-                  <li>Đến trạm đúng giờ đã hẹn</li>
-                  <li>Xuất trình CMND/CCCD và giấy phép lái xe tại quầy</li>
-                  <li>Hoàn tất thủ tục đăng ký với nhân viên</li>
-                  <li>Kiểm tra xe cùng nhân viên và ghi nhận tình trạng</li>
-                  <li>Ký hợp đồng thuê xe điện tử</li>
-                  <li>Bắt đầu hành trình với xe máy điện!</li>
-                </ol>
-              </div>
-            </div>
-
-            <div className="confirmation-actions">
-              <Link to="/stations" className="btn secondary">
-                Xem các trạm khác
-              </Link>
-              <Link to="/" className="btn primary">
-                Trở về trang chủ
-              </Link>
-            </div>
-          </div>
+        {/* Booking Form Modal */}
+        {showBookingForm && selectedVehicle && (
+          <BookingForm
+            vehicle={selectedVehicle}
+            stationId={station.id}
+            onSubmit={handleBookingSubmit}
+            onCancel={handleCloseModal}
+          />
         )}
         {/* Phần đánh giá trạm */}
         <div className="station-reviews">
