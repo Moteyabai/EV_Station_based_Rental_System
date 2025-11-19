@@ -164,7 +164,9 @@ namespace API.Controllers
                         ImageUrl = imageUrl,
                         IsActive = station.IsActive,
                         CreatedAt = station.CreatedAt,
-                        UpdatedAt = station.UpdatedAt
+                        UpdatedAt = station.UpdatedAt,
+                        Latitude = station.Latitude,
+                        Longitude = station.Longitude
                     };
                     display.Add(dis);
                 }
@@ -322,7 +324,7 @@ namespace API.Controllers
 
         [HttpPost("CreateStation")]
         [Authorize]
-        public async Task<ActionResult> CreateStation([FromBody] StationCreateDTO stationDto)
+        public async Task<ActionResult> CreateStation([FromForm] StationCreateDTO stationDto)
         {
             // Check user permission (only admin can create stations)
             var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
@@ -382,8 +384,6 @@ namespace API.Controllers
                 // Use Appwrite CDN URL for better performance
                 var imageUrl = $"{_appWriteClient.Endpoint}/storage/buckets/{response.BucketId}/files/{imageID}/view?project={projectID}";
 
-                Console.WriteLine($"[STATION] Uploaded image URL: {imageUrl}"); // Debug log
-
                 // Create new station
                 var station = new Station
                 {
@@ -393,10 +393,9 @@ namespace API.Controllers
                     OpeningHours = stationDto.OpeningHours,
                     ContactNumber = stationDto.ContactNumber,
                     ImageUrl = imageUrl,
-                    IsActive = stationDto.IsActive,
                     StationCapacity = stationDto.StationCapacity,
-                    CreatedAt = DateTime.Now,
-                    UpdatedAt = DateTime.Now
+                    Latitude = stationDto.Latitude,
+                    Longitude = stationDto.Longitude,
                 };
 
                 await _stationService.AddAsync(station);
