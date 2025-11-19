@@ -56,12 +56,12 @@ const Admin = () => {
     name: "",
     address: "",
     description: "",
-    bikeCapacity: 0,
+    stationCapacity: 0,
     openingHours: "",
     contactNumber: "",
+    latitude: "",
+    longitude: "",
     imageUrl: null,
-    exteriorImageUrl: null,
-    thumbnailImageUrl: null,
   });
 
   const [newVehicle, setNewVehicle] = useState({
@@ -1870,15 +1870,13 @@ const Admin = () => {
       formData.append("name", newStation.name);
       formData.append("address", newStation.address);
       formData.append("description", newStation.description || "");
-      formData.append("bikeCapacity", parseInt(newStation.bikeCapacity) || 0);
+      formData.append("stationCapacity", parseInt(newStation.stationCapacity) || 0);
       formData.append("openingHours", newStation.openingHours || "");
       formData.append("contactNumber", newStation.contactNumber || "");
+      formData.append("latitude", newStation.latitude || "0");
+      formData.append("longitude", newStation.longitude || "0");
 
       if (newStation.imageUrl) formData.append("imageUrl", newStation.imageUrl);
-      if (newStation.exteriorImageUrl)
-        formData.append("exteriorImageUrl", newStation.exteriorImageUrl);
-      if (newStation.thumbnailImageUrl)
-        formData.append("thumbnailImageUrl", newStation.thumbnailImageUrl);
 
       formData.append("isActive", true);
 
@@ -2130,12 +2128,52 @@ const Admin = () => {
     }));
   };
 
+  // Geocoding function to get coordinates from address
+  const geocodeAddress = async (address) => {
+    if (!address || address.trim() === "") return;
+
+    try {
+      // Using Nominatim OpenStreetMap API (free, no API key required)
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          address
+        )}&limit=1`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.length > 0) {
+          const { lat, lon } = data[0];
+          setNewStation((prev) => ({
+            ...prev,
+            latitude: lat,
+            longitude: lon,
+          }));
+          console.log("Geocoded coordinates:", { lat, lon });
+        } else {
+          console.log("No coordinates found for address");
+        }
+      }
+    } catch (error) {
+      console.error("Error geocoding address:", error);
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewStation((prev) => ({
       ...prev,
       [name]: value,
     }));
+
+    // Trigger geocoding when address is changed
+    if (name === "address" && value.trim() !== "") {
+      // Debounce the geocoding call
+      clearTimeout(window.geocodeTimeout);
+      window.geocodeTimeout = setTimeout(() => {
+        geocodeAddress(value);
+      }, 1000); // Wait 1 second after user stops typing
+    }
   };
 
   const renderDashboard = () => (
@@ -2544,8 +2582,8 @@ const Admin = () => {
                     <label>Sức chứa xe</label>
                     <input
                       type="number"
-                      name="bikeCapacity"
-                      value={newStation.bikeCapacity}
+                      name="stationCapacity"
+                      value={newStation.stationCapacity}
                       onChange={handleInputChange}
                       placeholder="0"
                       className="form-input"
@@ -2576,6 +2614,36 @@ const Admin = () => {
                     placeholder="Ví dụ: 06:00 - 22:00"
                     className="form-input"
                   />
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Vĩ độ (Latitude)</label>
+                    <input
+                      type="text"
+                      name="latitude"
+                      value={newStation.latitude}
+                      onChange={handleInputChange}
+                      placeholder="Tự động điền từ địa chỉ"
+                      className="form-input"
+                      readOnly
+                      style={{ backgroundColor: "#f9fafb" }}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Kinh độ (Longitude)</label>
+                    <input
+                      type="text"
+                      name="longitude"
+                      value={newStation.longitude}
+                      onChange={handleInputChange}
+                      placeholder="Tự động điền từ địa chỉ"
+                      className="form-input"
+                      readOnly
+                      style={{ backgroundColor: "#f9fafb" }}
+                    />
+                  </div>
                 </div>
 
                 <div className="form-group">

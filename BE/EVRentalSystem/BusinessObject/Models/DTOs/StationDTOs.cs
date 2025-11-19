@@ -33,8 +33,6 @@ namespace BusinessObject.Models.DTOs
 
         [Range(-180, 180, ErrorMessage = "Kinh độ phải từ -180 đến 180")]
         public decimal? Longitude { get; set; }
-
-        public bool IsActive { get; set; } = false;
     }
 
     public class StationDisplayDTO
