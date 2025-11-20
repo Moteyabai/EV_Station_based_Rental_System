@@ -1,7 +1,7 @@
 import React from "react";
 import { useParams, Link } from "react-router-dom";
-import { mockBookings } from "../constants/mockData";
-import "../styles/VehiclePickup.css";
+import { mockBookings } from "../../constants/mockData";
+import "../../styles/VehiclePickup.css";
 
 export default function PickupSuccess() {
   const { bookingId } = useParams();

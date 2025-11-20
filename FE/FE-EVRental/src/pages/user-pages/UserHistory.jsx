@@ -1,6 +1,6 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { Card, Badge, Empty, Statistic, Row, Col, Tabs, Tag, Spin } from "antd";
 import {
   CarOutlined,
@@ -15,11 +15,11 @@ import {
   LoadingOutlined,
   ThunderboltOutlined,
 } from "@ant-design/icons";
-import { formatPrice, formatDate } from "../utils/helpers";
-import { getRentalsByAccountID, getRenterByAccountID } from "../api/rentals";
-import { fetchStationById } from "../api/stations";
-import { getToken } from "../utils/auth";
-import "../styles/UserHistory.css";
+import { formatPrice, formatDate } from "../../utils/helpers";
+import { getRentalsByAccountID, getRenterByAccountID } from "../../api/rentals";
+import { fetchStationById } from "../../api/stations";
+import { getToken } from "../../utils/auth";
+import "../../styles/UserHistory.css";
 
 export default function UserHistory() {
   const { user } = useAuth();
@@ -46,7 +46,7 @@ export default function UserHistory() {
       return;
     }
     
-    // Chặn Staff (roleID = 2) và Admin (roleID = 3)
+    // Ch?n Staff (roleID = 2) v� Admin (roleID = 3)
     const userRoleId = user?.roleID || user?.RoleID;
     if (userRoleId === 2 || userRoleId === 3) {
       console.log('UserHistory: Access denied for Staff/Admin, redirecting...');
@@ -70,10 +70,10 @@ export default function UserHistory() {
       const accountID = user?.accountID || user?.AccountID;
       
       if (!accountID) {
-        throw new Error('Không tìm thấy thông tin tài khoản');
+        throw new Error('Kh�ng t�m th?y th�ng tin t�i kho?n');
       }
       
-      console.log('📋 Fetching rentals for account:', accountID);
+      console.log('?? Fetching rentals for account:', accountID);
       
       // Fetch renter information and rentals from API
       const [renterData, rentals] = await Promise.all([
@@ -81,22 +81,22 @@ export default function UserHistory() {
         getRentalsByAccountID(accountID, token)
       ]);
       
-      console.log('✅ Renter info from API:', renterData);
-      console.log('✅ Rentals from API:', rentals);
+      console.log('? Renter info from API:', renterData);
+      console.log('? Rentals from API:', rentals);
       
       setRenterInfo(renterData);
       
       // Log the first rental to see its structure
       if (rentals && rentals.length > 0) {
-        console.log('📊 First rental structure:', JSON.stringify(rentals[0], null, 2));
+        console.log('?? First rental structure:', JSON.stringify(rentals[0], null, 2));
       }
       
       // Map API response to rental format
       const mappedRentals = await Promise.all(rentals.map(async (rental) => {
-        console.log('🔍 Processing rental:', rental);
+        console.log('?? Processing rental:', rental);
         
         // Extract bike data directly from rental response
-        const bikeName = rental.bikeName || rental.BikeName || 'Xe điện';
+        const bikeName = rental.bikeName || rental.BikeName || 'Xe di?n';
         const licensePlate = rental.licensePlate || rental.LicensePlate || '';
         
         // Get bike image from rental response, or use default
@@ -108,12 +108,12 @@ export default function UserHistory() {
         const returnStationID = rental.returnStationID || rental.ReturnStationID;
         
         // Fetch station names only if we have valid IDs
-        let pickupStationName = 'Chưa xác định';
-        let returnStationName = 'Chưa xác định';
+        let pickupStationName = 'Chua x�c d?nh';
+        let returnStationName = 'Chua x�c d?nh';
         
         try {
           if (pickupStationID && typeof pickupStationID === 'number' && pickupStationID > 0) {
-            console.log('📍 Fetching pickup station for ID:', pickupStationID);
+            console.log('?? Fetching pickup station for ID:', pickupStationID);
             const pickupStation = await fetchStationById(pickupStationID, token);
             if (pickupStation && !pickupStation.notFound) {
               pickupStationName = pickupStation.stationName || pickupStation.StationName || pickupStationName;
@@ -121,14 +121,14 @@ export default function UserHistory() {
           }
           
           if (returnStationID && typeof returnStationID === 'number' && returnStationID > 0) {
-            console.log('📍 Fetching return station for ID:', returnStationID);
+            console.log('?? Fetching return station for ID:', returnStationID);
             const returnStation = await fetchStationById(returnStationID, token);
             if (returnStation && !returnStation.notFound) {
               returnStationName = returnStation.stationName || returnStation.StationName || returnStationName;
             }
           }
         } catch (err) {
-          console.warn('⚠️ Failed to fetch station details:', err);
+          console.warn('?? Failed to fetch station details:', err);
         }
         
         // Map status from API
@@ -153,8 +153,8 @@ export default function UserHistory() {
           vehicleName: bikeName,
           vehicleImage: bikeImage,
           image: bikeImage,
-          pickupDate: rental.handoverDate || rental.HandoverDate || "Chưa nhận xe",
-          returnDate: rental.returnDate || rental.ReturnDate || "Chưa trả xe",
+          pickupDate: rental.handoverDate || rental.HandoverDate || "Chua nh?n xe",
+          returnDate: rental.returnDate || rental.ReturnDate || "Chua tr? xe",
           pickupStation: rental.stationName,
           returnStation: rental.stationName,
           stationAddress: rental.stationAddress || rental.StationAddress || '',
@@ -186,8 +186,8 @@ export default function UserHistory() {
       
       setRentals(mappedRentals);
     } catch (err) {
-      console.error('❌ Error fetching user rentals:', err);
-      setError(err.message || 'Không thể tải lịch sử thuê xe');
+      console.error('? Error fetching user rentals:', err);
+      setError(err.message || 'Kh�ng th? t?i l?ch s? thu� xe');
     } finally {
       setLoading(false);
     }
@@ -210,7 +210,7 @@ export default function UserHistory() {
         <Spin
           size="large"
           indicator={<LoadingOutlined style={{ fontSize: 48, color: "#4db6ac" }} spin />}
-          tip="Đang tải lịch sử thuê xe..."
+          tip="�ang t?i l?ch s? thu� xe..."
         />
       </div>
     );
@@ -243,7 +243,7 @@ export default function UserHistory() {
                       marginTop: "16px",
                     }}
                   >
-                    Thử lại
+                    Th? l?i
                   </button>
                 </div>
               }
@@ -274,17 +274,17 @@ export default function UserHistory() {
   const getStatusBadge = (status) => {
     switch (status) {
       case "pending_payment":
-        return <Badge status="warning" text="Chờ thanh toán" />;
+        return <Badge status="warning" text="Ch? thanh to�n" />;
       case "booked":
-        return <Badge status="processing" text="Đã đặt xe" />;
+        return <Badge status="processing" text="�� d?t xe" />;
       case "confirmed":
-        return <Badge status="processing" text="Đã xác nhận" />;
+        return <Badge status="processing" text="�� x�c nh?n" />;
       case "renting":
-        return <Badge status="success" text="Đang thuê xe" />;
+        return <Badge status="success" text="�ang thu� xe" />;
       case "completed":
-        return <Badge status="success" text="Hoàn thành" />;
+        return <Badge status="success" text="Ho�n th�nh" />;
       case "cancelled":
-        return <Badge status="error" text="Đã hủy" />;
+        return <Badge status="error" text="�� h?y" />;
       default:
         return <Badge status="default" text={status} />;
     }
@@ -330,17 +330,17 @@ export default function UserHistory() {
               gap: "12px",
             }}
           >
-            <HistoryOutlined style={{ color: "#4db6ac" }} /> Lịch sử thuê xe
+            <HistoryOutlined style={{ color: "#4db6ac" }} /> L?ch s? thu� xe
           </h1>
           <p style={{ fontSize: "16px", color: "#666" }}>
-            Quản lý và theo dõi các đơn thuê xe của bạn
+            Qu?n l� v� theo d�i c�c don thu� xe c?a b?n
           </p>
         </div>
         <Row gutter={[16, 16]} style={{ marginBottom: "32px" }}>
           <Col xs={24} sm={8}>
             <Card>
               <Statistic
-                title="Tổng đơn thuê"
+                title="T?ng don thu�"
                 value={totalRentals}
                 prefix={<ThunderboltOutlined style={{ color: "#4db6ac" }} />}
                 valueStyle={{ color: "#4db6ac" }}
@@ -350,7 +350,7 @@ export default function UserHistory() {
           <Col xs={24} sm={8}>
             <Card>
               <Statistic
-                title="Tổng số xe đã thuê"
+                title="T?ng s? xe d� thu�"
                 value={totalRental}
                 prefix={<ThunderboltOutlined style={{ color: "#1890ff" }} />}
                 valueStyle={{ color: "#1890ff" }}
@@ -360,8 +360,8 @@ export default function UserHistory() {
           <Col xs={24} sm={8}>
             <Card>
               <Statistic
-                title="Tổng chi tiêu"
-                value={formatPrice(totalSpent, "VNĐ")}
+                title="T?ng chi ti�u"
+                value={formatPrice(totalSpent, "VN�")}
                 prefix={<DollarOutlined style={{ color: "#52c41a" }} />}
                 valueStyle={{ color: "#52c41a", fontSize: "20px" }}
               />
@@ -373,22 +373,22 @@ export default function UserHistory() {
             activeKey={activeTab}
             onChange={setActiveTab}
             items={[
-              { key: "all", label: `Tất cả (${rentals.length})` },
+              { key: "all", label: `T?t c? (${rentals.length})` },
               {
                 key: "confirmed",
-                label: `Đã đặt xe (${
+                label: `�� d?t xe (${
                   rentals.filter((r) => r.status === "confirmed" || r.status === "booked").length
                 })`,
               },
               {
                 key: "renting",
-                label: `Đang thuê (${
+                label: `�ang thu� (${
                   rentals.filter((r) => r.status === "renting").length
                 })`,
               },
               {
                 key: "completed",
-                label: `Hoàn thành (${
+                label: `Ho�n th�nh (${
                   rentals.filter((r) => r.status === "completed").length
                 })`,
               },
@@ -396,7 +396,7 @@ export default function UserHistory() {
           />
           {filteredRentals.length === 0 ? (
             <Empty
-              description="Chưa có đơn thuê xe nào"
+              description="Chua c� don thu� xe n�o"
               image={Empty.PRESENTED_IMAGE_SIMPLE}
             >
               <button
@@ -410,7 +410,7 @@ export default function UserHistory() {
                   cursor: "pointer",
                 }}
               >
-                Thuê xe ngay
+                Thu� xe ngay
               </button>
             </Empty>
           ) : (
@@ -443,7 +443,7 @@ export default function UserHistory() {
                       >
                         {getStatusIcon(rental.status)}
                         <span style={{ marginLeft: "8px" }}>
-                          Mã đơn: {rental.rentalID}
+                          M� don: {rental.rentalID}
                         </span>
                       </h3>
                       <p
@@ -458,7 +458,7 @@ export default function UserHistory() {
                     </div>
                     <div>{getStatusBadge(rental.status)}</div>
                   </div>
-                  {/* Thông tin xe thuê */}
+                  {/* Th�ng tin xe thu� */}
                   <div
                     style={{
                       display: "flex",
@@ -469,7 +469,7 @@ export default function UserHistory() {
                       borderRadius: "8px",
                     }}
                   >
-                    {/* Hình ảnh xe */}
+                    {/* H�nh ?nh xe */}
                     <div style={{ flexShrink: 0 }}>
                       <img
                         src={rental.vehicleImage || rental.image}
@@ -486,7 +486,7 @@ export default function UserHistory() {
                             "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=300&q=60";
                         }}
                       />
-                      {/* Biển số xe */}
+                      {/* Bi?n s? xe */}
                       {rental.licensePlate && (
                         <div
                           style={{
@@ -506,7 +506,7 @@ export default function UserHistory() {
                               marginBottom: "2px",
                             }}
                           >
-                            Biển số
+                            Bi?n s?
                           </div>
                           <div
                             style={{
@@ -522,7 +522,7 @@ export default function UserHistory() {
                       )}
                     </div>
 
-                    {/* Thông tin chi tiết */}
+                    {/* Th�ng tin chi ti?t */}
                     <div style={{ flex: 1 }}>
                       <h3
                         style={{
@@ -536,7 +536,7 @@ export default function UserHistory() {
                         {rental.vehicleName}
                       </h3>
 
-                      {/* Grid thông tin */}
+                      {/* Grid th�ng tin */}
                       <div
                         style={{
                           display: "grid",
@@ -544,7 +544,7 @@ export default function UserHistory() {
                           gap: "12px",
                         }}
                       >
-                        {/* Ngày giờ nhận xe */}
+                        {/* Ng�y gi? nh?n xe */}
                         <div
                           style={{
                             background: "white",
@@ -560,9 +560,9 @@ export default function UserHistory() {
                               marginBottom: "4px",
                             }}
                           >
-                            <CalendarOutlined /> Nhận xe lúc
+                            <CalendarOutlined /> Nh?n xe l�c
                           </div>
-                          {rental.pickupDate && rental.pickupDate !== "Chưa nhận xe" ? (
+                          {rental.pickupDate && rental.pickupDate !== "Chua nh?n xe" ? (
                             <>
                               <div
                                 style={{
@@ -585,12 +585,12 @@ export default function UserHistory() {
                                 color: "#999",
                               }}
                             >
-                              Chưa nhận xe
+                              Chua nh?n xe
                             </div>
                           )}
                         </div>
 
-                        {/* Ngày giờ trả xe */}
+                        {/* Ng�y gi? tr? xe */}
                         <div
                           style={{
                             background: "white",
@@ -606,9 +606,9 @@ export default function UserHistory() {
                               marginBottom: "4px",
                             }}
                           >
-                            <CalendarOutlined /> Trả xe lúc
+                            <CalendarOutlined /> Tr? xe l�c
                           </div>
-                          {rental.returnDate && rental.returnDate !== "Chưa trả xe" ? (
+                          {rental.returnDate && rental.returnDate !== "Chua tr? xe" ? (
                             <>
                               <div
                                 style={{
@@ -631,12 +631,12 @@ export default function UserHistory() {
                                 color: "#999",
                               }}
                             >
-                              Chưa trả xe
+                              Chua tr? xe
                             </div>
                           )}
                         </div>
 
-                        {/* Điểm thuê/trả xe */}
+                        {/* �i?m thu�/tr? xe */}
                         <div
                           style={{
                             background: "white",
@@ -652,7 +652,7 @@ export default function UserHistory() {
                               marginBottom: "4px",
                             }}
                           >
-                            <EnvironmentOutlined style={{ color: "#4db6ac" }} /> Trạm thuê/trả
+                            <EnvironmentOutlined style={{ color: "#4db6ac" }} /> Tr?m thu�/tr?
                           </div>
                           <div
                             style={{
@@ -661,7 +661,7 @@ export default function UserHistory() {
                               color: "#1a1a1a",
                             }}
                           >
-                            {rental.pickupStation || "Chưa xác định"}
+                            {rental.pickupStation || "Chua x�c d?nh"}
                           </div>
                           {rental.stationAddress && (
                             <div
@@ -672,12 +672,12 @@ export default function UserHistory() {
                                 lineHeight: "1.4",
                               }}
                             >
-                              📍 {rental.stationAddress}
+                              ?? {rental.stationAddress}
                             </div>
                           )}
                         </div>
 
-                        {/* Thời gian thuê */}
+                        {/* Th?i gian thu� */}
                         <div
                           style={{
                             background: "white",
@@ -693,7 +693,7 @@ export default function UserHistory() {
                               marginBottom: "4px",
                             }}
                           >
-                            <ClockCircleOutlined style={{ color: "#1890ff" }} /> Thời gian thuê
+                            <ClockCircleOutlined style={{ color: "#1890ff" }} /> Th?i gian thu�
                           </div>
                           <div
                             style={{
@@ -705,30 +705,30 @@ export default function UserHistory() {
                           >
                             {formatDate(rental.startDate)} - {formatDate(rental.endDate)}
                             <div style={{ color: "#666", marginTop: "4px" }}>
-                              ({calculateDuration(rental.startDate, rental.endDate)} ngày)
+                              ({calculateDuration(rental.startDate, rental.endDate)} ng�y)
                             </div>
                           </div>
                         </div>
                       </div>
 
-                      {/* Số ngày thuê */}
+                      {/* S? ng�y thu� */}
                       {rental.days && (
                         <div style={{ marginTop: "12px" }}>
                           <Tag
                             color="blue"
                             style={{ fontSize: "14px", padding: "4px 12px" }}
                           >
-                            <ClockCircleOutlined /> Thời gian thuê: {rental.days} ngày
+                            <ClockCircleOutlined /> Th?i gian thu�: {rental.days} ng�y
                           </Tag>
                         </div>
                       )}
                     </div>
 
-                    {/* Giá tiền */}
+                    {/* Gi� ti?n */}
                     
                   </div>
                   
-                  {/* Thông tin bàn giao xe */}
+                  {/* Th�ng tin b�n giao xe */}
                   {rental.status === "renting" && rental.handoverAt && (
                     <div
                       style={{
@@ -741,15 +741,15 @@ export default function UserHistory() {
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
                         <CheckCircleOutlined style={{ color: "#1890ff", fontSize: "18px" }} />
-                        <strong style={{ color: "#1890ff" }}>Xe đã được bàn giao</strong>
+                        <strong style={{ color: "#1890ff" }}>Xe d� du?c b�n giao</strong>
                       </div>
                       <div style={{ fontSize: "13px", color: "#666", marginLeft: "26px" }}>
-                        <CalendarOutlined /> Thời gian nhận xe: {formatDate(rental.handoverAt)}
+                        <CalendarOutlined /> Th?i gian nh?n xe: {formatDate(rental.handoverAt)}
                       </div>
                     </div>
                   )}
                   
-                  {/* Thông tin hoàn thành */}
+                  {/* Th�ng tin ho�n th�nh */}
                   {rental.status === "completed" && rental.completedAt && (
                     <div
                       style={{
@@ -762,16 +762,16 @@ export default function UserHistory() {
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
                         <CheckCircleOutlined style={{ color: "#52c41a", fontSize: "18px" }} />
-                        <strong style={{ color: "#52c41a" }}>Đã hoàn thành thuê xe</strong>
+                        <strong style={{ color: "#52c41a" }}>�� ho�n th�nh thu� xe</strong>
                       </div>
                       {rental.handoverAt && (
                         <div style={{ fontSize: "13px", color: "#666", marginLeft: "26px" }}>
-                          <CalendarOutlined /> Nhận xe: {formatDate(rental.handoverAt)}
+                          <CalendarOutlined /> Nh?n xe: {formatDate(rental.handoverAt)}
                         </div>
                       )}
                       {rental.returnedAt && (
                         <div style={{ fontSize: "13px", color: "#666", marginLeft: "26px" }}>
-                          <CalendarOutlined /> Trả xe: {formatDate(rental.returnedAt)}
+                          <CalendarOutlined /> Tr? xe: {formatDate(rental.returnedAt)}
                         </div>
                       )}
                     </div>
@@ -795,10 +795,10 @@ export default function UserHistory() {
                     >
                       <Tag color={rental.payment?.methodType === 'payos' ? "blue" : "green"}>
                         {rental.payment?.methodType === 'payos' 
-                          ? "💳 PayOS" 
+                          ? "?? PayOS" 
                           : rental.payment?.methodType === 'cash'
-                          ? "💵 Tiền mặt"
-                          : "❓ Chưa xác định"}
+                          ? "?? Ti?n m?t"
+                          : "? Chua x�c d?nh"}
                       </Tag>
                     </div>
                     <div style={{ textAlign: "right" }}>
@@ -809,7 +809,7 @@ export default function UserHistory() {
                           marginBottom: "4px",
                         }}
                       >
-                        Phí phát sinh:
+                        Ph� ph�t sinh:
                       </div>
                       <div
                         style={{
@@ -819,7 +819,7 @@ export default function UserHistory() {
                           marginBottom: "12px",
                         }}
                       >
-                        {formatPrice(rental.fee|| 0, "VNĐ")}
+                        {formatPrice(rental.fee|| 0, "VN�")}
                       </div>
                       <div
                         style={{
@@ -828,7 +828,7 @@ export default function UserHistory() {
                           marginBottom: "4px",
                         }}
                       >
-                        Tổng tiền:
+                        T?ng ti?n:
                       </div>
                       <div
                         style={{
@@ -837,7 +837,7 @@ export default function UserHistory() {
                           color: "#4db6ac",
                         }}
                       >
-                        {formatPrice(rental.deposit || 0, "VNĐ")}
+                        {formatPrice(rental.deposit || 0, "VN�")}
                       </div>
                     </div>
                   </div>

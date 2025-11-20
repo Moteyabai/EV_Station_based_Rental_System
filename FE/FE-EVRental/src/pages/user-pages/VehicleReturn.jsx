@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
-import { mockBookings } from "../constants/mockData";
-import "../styles/VehicleReturn.css";
+import { useAuth } from "../../contexts/AuthContext";
+import { mockBookings } from "../../constants/mockData";
+import "../../styles/VehicleReturn.css";
 
 export default function VehicleReturn() {
   const { bookingId } = useParams();

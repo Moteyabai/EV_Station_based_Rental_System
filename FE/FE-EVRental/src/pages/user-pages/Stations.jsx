@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import StationFinder from "../components/StationFinder";
-import StationMap from "../components/StationMap";
-import { fetchActiveStations } from "../api/stations";
-import { calculateDistance } from "../utils/helpers";
-import "../styles/Stations.css";
+import StationFinder from "../../components/StationFinder";
+import StationMap from "../../components/StationMap";
+import { fetchActiveStations } from "../../api/stations";
+import { calculateDistance } from "../../utils/helpers";
+import "../../styles/Stations.css";
 import { useNavigate } from "react-router-dom";
 import { FaMapMarkerAlt, FaClock, FaMotorcycle } from "react-icons/fa";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function Stations() {
   const navigate = useNavigate();

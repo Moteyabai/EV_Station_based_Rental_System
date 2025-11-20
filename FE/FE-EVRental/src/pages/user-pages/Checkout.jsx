@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useCart } from "../contexts/CartContext";
-import { useAuth } from "../contexts/AuthContext";
-import { formatPrice, formatDate } from "../utils/helpers";
-import { saveBooking } from "../utils/bookingStorage";
-import { createPayOSPayment, createCashPayment } from "../api/payment";
-import { getBikeById } from "../api/bikes";
-import { fetchStationById } from "../api/stations";
-import "../styles/Checkout.css";
-import { getToken } from "../utils/auth";
+import { useCart } from "../../contexts/CartContext";
+import { useAuth } from "../../contexts/AuthContext";
+import { formatPrice, formatDate } from "../../utils/helpers";
+import { saveBooking } from "../../utils/bookingStorage";
+import { createPayOSPayment, createCashPayment } from "../../api/payment";
+import { getBikeById } from "../../api/bikes";
+import { fetchStationById } from "../../api/stations";
+import "../../styles/Checkout.css";
+import { getToken } from "../../utils/auth";
 
 export default function Checkout() {
   const navigate = useNavigate();

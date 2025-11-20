@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { formatPrice, formatDate } from "../utils/helpers";
-import { getBookingById } from "../utils/bookingStorage";
-import { useCart } from "../contexts/CartContext";
-import { useAuth } from "../contexts/AuthContext";
-import "../styles/BookingSuccess.css";
+import { formatPrice, formatDate } from "../../utils/helpers";
+import { getBookingById } from "../../utils/bookingStorage";
+import { useCart } from "../../contexts/CartContext";
+import { useAuth } from "../../contexts/AuthContext";
+import "../../styles/BookingSuccess.css";
 
 export default function BookingSuccess() {
   const { bookingId } = useParams();

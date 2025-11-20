@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { fetchStationById } from "../api/stations";
-import { getAvailableBikesByStationID } from "../api/bikes";
-import { useAuth } from "../contexts/AuthContext";
-import { useCart } from "../contexts/CartContext";
-import { useReviews } from "../contexts/ReviewContext";
-import { formatPrice } from "../utils/helpers";
-import ReviewDisplay from "../components/ReviewDisplay";
-import ReviewForm from "../components/ReviewForm";
-import BookingForm from "../components/BookingForm";
-import "../styles/Stations.css";
-import "../styles/Reviews.css";
-import "../styles/ReviewStations.css";
+import { fetchStationById } from "../../api/stations";
+import { getAvailableBikesByStationID } from "../../api/bikes";
+import { useAuth } from "../../contexts/AuthContext";
+import { useCart } from "../../contexts/CartContext";
+import { useReviews } from "../../contexts/ReviewContext";
+import { formatPrice } from "../../utils/helpers";
+import ReviewDisplay from "../../components/ReviewDisplay";
+import ReviewForm from "../../components/ReviewForm";
+import BookingForm from "../../components/BookingForm";
+import "../../styles/Stations.css";
+import "../../styles/Reviews.css";
+import "../../styles/ReviewStations.css";
 
 export default function StationDetail() {
   const { id } = useParams();
