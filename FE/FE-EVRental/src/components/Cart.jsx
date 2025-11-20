@@ -93,79 +93,67 @@ export default function Cart() {
                 <div className="rental-details">
                   {/* Ngày thuê */}
                   <div className="rental-info-row">
-                    <div className="info-label">
-                      <span className="icon">📅</span>
-                      <span className="text">Ngày thuê</span>
-                    </div>
-                    <div className="info-value">
-                      <div>{formatDate(item.rentalDetails.pickupDate)}</div>
-                      <div className="separator">→</div>
-                      <div>{formatDate(item.rentalDetails.returnDate)}</div>
-                      <div className="duration-badge">
-                        {item.rentalDetails.days} ngày
-                      </div>
-                    </div>
+                    <span className="icon">📅</span>
+                    <span className="label">Ngày thuê:</span>
+                    <span>{formatDate(item.rentalDetails.pickupDate)}</span>
+                    <span className="separator">→</span>
+                    <span>{formatDate(item.rentalDetails.returnDate)}</span>
+                    <span className="duration-badge">{item.rentalDetails.days} ngày</span>
                   </div>
 
                   {/* Thời gian */}
                   <div className="rental-info-row">
-                    <div className="info-label">
-                      <span className="icon">🕒</span>
-                      <span className="text">Thời gian</span>
-                    </div>
-                    <div className="info-value">
-                      <div>Nhận: {item.rentalDetails.pickupTime}</div>
-                      <div className="separator">•</div>
-                      <div>Trả: {item.rentalDetails.returnTime}</div>
-                    </div>
+                    <span className="icon">🕒</span>
+                    <span className="label">Thời gian:</span>
+                    <span>Nhận: {item.rentalDetails.pickupTime}</span>
+                    <span className="separator">•</span>
+                    <span>Trả: {item.rentalDetails.returnTime}</span>
                   </div>
 
                   {/* Điểm nhận xe */}
                   <div className="rental-info-row">
-                    <div className="info-label">
-                      <span className="icon">📍</span>
-                      <span className="text">Điểm nhận/trả</span>
-                    </div>
-                    <div className="info-value">
-                      {(() => {
-                        const station = item.rentalDetails?.pickupStation;
-                        if (!station) return <span className="not-selected">Chưa chọn điểm nhận/trả</span>;
-                        if (typeof station === 'object' && station.name) {
-                          return (
-                            <div className="station-info">
-                              <div className="station-name">{station.name}</div>
-                              {station.address && (
-                                <div className="station-address">{station.address}</div>
-                              )}
-                            </div>
-                          );
-                        }
-                        if (typeof station === 'string') return <span>{station}</span>;
-                        return <span className="not-selected">Chưa chọn điểm nhận/trả</span>;
-                      })()}
-                    </div>
+                    <span className="icon">📍</span>
+                    <span className="label">Điểm nhận/trả:</span>
+                    {(() => {
+                      const station = item.rentalDetails?.pickupStation;
+                      if (!station) return <span className="not-selected">Chưa chọn điểm nhận/trả</span>;
+                      if (typeof station === 'object' && station.name) {
+                        return (
+                          <span className="station-info">
+                            <span className="station-name">{station.name}</span>
+                            {station.address && (
+                              <span className="station-address"> - {station.address}</span>
+                            )}
+                          </span>
+                        );
+                      }
+                      if (typeof station === 'string') return <span>{station}</span>;
+                      return <span className="not-selected">Chưa chọn điểm nhận/trả</span>;
+                    })()}
                   </div>
 
                   {/* Giá thuê */}
                   <div className="rental-info-row">
-                    <div className="info-label">
-                      <span className="icon">💰</span>
-                      <span className="text">Giá thuê</span>
-                    </div>
-                    <div className="info-value">
-                      <div className="daily-price">
-                        {formatPrice(item.vehicle.price)}/ngày
-                      </div>
-                      <div className="separator">•</div>
-                      <div className="total-price">
-                        Tổng: {formatPrice(item.totalPrice)}
-                      </div>
-                    </div>
+                    <span className="icon">💰</span>
+                    <span className="label">Giá thuê:</span>
+                    <span className="daily-price">{formatPrice(item.vehicle.price)}/ngày</span>
+                    <span className="separator">•</span>
+                    <span className="total-price">Tổng: {formatPrice(item.totalPrice)}</span>
                   </div>
                 </div>
               </div>
 
               <div className="cart-item-price">
+                <div className="price-breakdown">
+                  <div className="price-calculation">
+                    <div className="daily-rate">
+                      Tổng tiền 
+                    </div>
+                  </div>
+                  <div className="total-price">
+                    {formatPrice(item.totalPrice)}
+                  </div>
+                </div>
 
                 <div className="cart-item-actions">
                   <Link 
