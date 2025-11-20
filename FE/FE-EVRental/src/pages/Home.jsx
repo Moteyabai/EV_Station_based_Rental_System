@@ -118,7 +118,7 @@ export default function Home() {
             address: s.address || s.Address,
             description: s.description || s.Description,
             image: imageUrl || stationImg,
-            availableVehicles: s.availableBikes || 0,
+            availableVehicles: s.bikeCapacity || s.Quantity || 0,
           };
         });
         
@@ -147,7 +147,7 @@ export default function Home() {
           console.log("✅ [HOME] Bikes data received:", bikesData);
 
           const mappedVehicles = bikesData.map((bike) => {
-            const quantity = bike.quantity || 0;
+            const quantity = bike.quantity || bike.Quantity || 0;
             return {
               id: bike.bikeID || bike.BikeID,
               name: bike.bikeName || bike.model || bike.Model || "Xe điện",
@@ -549,7 +549,7 @@ export default function Home() {
                         <p className="station-address">{station.address}</p>
                         <div className="station-meta">
                           <span className="station-hours">
-                            {station.openingHours}
+                            7:00-21:00
                           </span>
                           <span className="station-available">
                             {station.availableVehicles} xe có sẵn
