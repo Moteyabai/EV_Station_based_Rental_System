@@ -52,16 +52,30 @@ const Admin = () => {
   // Search state for bike instances
   const [bikeInstanceSearchTerm, setBikeInstanceSearchTerm] = useState("");
 
+  // Rental history states
+  const [rentalHistory, setRentalHistory] = useState([]);
+  const [rentalHistoryLoading, setRentalHistoryLoading] = useState(false);
+  const [rentalTypeFilter, setRentalTypeFilter] = useState("all");
+  const [rentalStationFilter, setRentalStationFilter] = useState("all");
+  const [rentalStatusFilter, setRentalStatusFilter] = useState("all");
+  const [rentalDateFilter, setRentalDateFilter] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+
+  // Payment states
+  const [payments, setPayments] = useState([]);
+  const [paymentsLoading, setPaymentsLoading] = useState(false);
+
   const [newStation, setNewStation] = useState({
     name: "",
     address: "",
     description: "",
-    stationCapacity: 0,
+    bikeCapacity: 0,
     openingHours: "",
     contactNumber: "",
-    latitude: "",
-    longitude: "",
     imageUrl: null,
+    exteriorImageUrl: null,
+    thumbnailImageUrl: null,
   });
 
   const [newVehicle, setNewVehicle] = useState({
@@ -210,11 +224,6 @@ const Admin = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  // Delivery history state
-  const [deliveryHistory, setDeliveryHistory] = useState([]);
-  const [deliveryLoading, setDeliveryLoading] = useState(false);
-  const [deliveryError, setDeliveryError] = useState(null);
-
   // staff list will be loaded from API; start empty to avoid showing mock data
   const [staff, setStaff] = useState([]);
   const [staffLoading, setStaffLoading] = useState(false);
@@ -257,19 +266,84 @@ const Admin = () => {
     ],
   });
 
-  // Fetch stations from API only when vehicles tab is active
+  // Fetch stations from API
   useEffect(() => {
-    if (activeTab === "vehicles") {
-      fetchStations();
-    }
-  }, [activeTab]);
+    fetchStations();
+    fetchRentalHistory();
+    fetchPayments();
+    fetchAllBikesCount();
+  }, []);
 
-  // Fetch delivery history when delivery tab is active
-  useEffect(() => {
-    if (activeTab === "delivery") {
-      fetchDeliveryHistory();
+  // Fetch total bikes count for stats
+  const fetchAllBikesCount = async () => {
+    try {
+      const token = getToken();
+      if (!token) return;
+
+      // Get all bike types first
+      const brandsResponse = await fetch(
+        "http://localhost:5168/api/Brand/GetAllBrands",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!brandsResponse.ok) return;
+      const brandsData = await brandsResponse.json();
+
+      let totalBikes = 0;
+
+      // For each brand, get bikes and count stocks
+      for (const brand of brandsData) {
+        const brandId = brand.brandID || brand.BrandID;
+        const bikesResponse = await fetch(
+          `http://localhost:5168/api/EVBike/GetBikesByBrandID/${brandId}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (bikesResponse.ok) {
+          const bikesData = await bikesResponse.json();
+          for (const bike of bikesData) {
+            const bikeId = bike.bikeID || bike.BikeID;
+            const stocksResponse = await fetch(
+              `http://localhost:5168/api/EVBike_Stocks/GetStocksByBikeID/${bikeId}`,
+              {
+                method: "GET",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+
+            if (stocksResponse.ok) {
+              const stocksData = await stocksResponse.json();
+              totalBikes += stocksData.length;
+            }
+          }
+        }
+      }
+
+      console.log("Total bikes counted:", totalBikes);
+      setStats((prev) => ({
+        ...prev,
+        totalVehicles: totalBikes,
+        availableVehicles: Math.max(0, totalBikes - prev.vehiclesInUse), // Cập nhật xe còn trống
+      }));
+    } catch (error) {
+      console.error("Error fetching total bikes count:", error);
     }
-  }, [activeTab]);
+  };
 
   // Helper function to get full image URL
   const getStationImageUrl = (filename) => {
@@ -282,6 +356,125 @@ const Admin = () => {
     return `http://localhost:5168/api/Station/images/${encodeURIComponent(
       filename
     )}`;
+  };
+
+  const fetchPayments = async () => {
+    setPaymentsLoading(true);
+    try {
+      const data = await adminService.getAllPayments();
+      console.log("Payments loaded from API:", data);
+      setPayments(data || []);
+
+      // Calculate revenue statistics from payment data
+      if (data && data.length > 0) {
+        const totalRevenue = data.reduce((sum, payment) => {
+          // Check all possible field names for amount
+          const amount =
+            payment.amount ||
+            payment.Amount ||
+            payment.totalAmount ||
+            payment.TotalAmount ||
+            payment.Total ||
+            0;
+          return sum + amount;
+        }, 0);
+
+        console.log("Total revenue calculated:", totalRevenue);
+
+        setStats((prev) => ({
+          ...prev,
+          revenue: totalRevenue,
+        }));
+
+        // Calculate revenue by station from rentalHistory (has stationAddress)
+        // Payment API may not have station info, so we'll use rental data instead
+      }
+    } catch (error) {
+      console.error("Error fetching payments:", error);
+      setPayments([]);
+      console.warn("⚠️ API GetAllPayments chưa sẵn sàng hoặc không có dữ liệu");
+    } finally {
+      setPaymentsLoading(false);
+    }
+  };
+
+  const fetchRentalHistory = async () => {
+    setRentalHistoryLoading(true);
+    try {
+      const data = await adminService.getCompletedAndOngoingRentals();
+      console.log("Rental history loaded from API:", data);
+      setRentalHistory(data || []);
+
+      // Update active rentals count and calculate revenue by station
+      if (data && data.length > 0) {
+        const activeRentals = data.filter(
+          (rental) => !rental.returnDate
+        ).length;
+
+        // Calculate revenue by station from rental + payment data
+        const revenueByStationMap = {};
+
+        // Group rentals by station
+        data.forEach((rental) => {
+          const stationAddress = rental.stationAddress || "Unknown Station";
+          const stationId = rental.stationID;
+
+          if (!revenueByStationMap[stationId]) {
+            revenueByStationMap[stationId] = {
+              station: stationAddress,
+              revenue: 0,
+              rentals: 0,
+            };
+          }
+          revenueByStationMap[stationId].rentals += 1;
+        });
+
+        // Match with payment amounts
+        if (payments && payments.length > 0) {
+          payments.forEach((payment) => {
+            const rentalId = payment.rentalID || payment.RentalID;
+            const rental = data.find((r) => r.rentalID === rentalId);
+            if (rental) {
+              const stationId = rental.stationID;
+              const amount =
+                payment.amount ||
+                payment.Amount ||
+                payment.totalAmount ||
+                payment.TotalAmount ||
+                payment.Total ||
+                0;
+              if (revenueByStationMap[stationId]) {
+                revenueByStationMap[stationId].revenue += amount;
+              }
+            }
+          });
+        }
+
+        const revenueByStation = Object.values(revenueByStationMap).sort(
+          (a, b) => b.revenue - a.revenue
+        );
+
+        setStats((prev) => ({
+          ...prev,
+          activeRentals,
+          vehiclesInUse: activeRentals, // Cập nhật số xe đang cho thuê từ API
+          availableVehicles: Math.max(0, prev.totalVehicles - activeRentals), // Xe còn trống, không cho âm
+        }));
+
+        setReports((prev) => ({
+          ...prev,
+          revenueByStation,
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching rental history:", error);
+      setRentalHistory([]);
+      console.warn(
+        "⚠️ API GetCompletedAndOngoingRentals chưa sẵn sàng hoặc không có dữ liệu"
+      );
+    } finally {
+      setRentalHistoryLoading(false);
+    }
   };
 
   const fetchStations = async () => {
@@ -299,10 +492,11 @@ const Admin = () => {
         name: station.name,
         address: station.address,
         description: station.description,
+        bikeCapacity: station.bikeCapacity,
         openingHours: station.openingHours,
         contactNumber: station.contactNumber,
         availableVehicles: station.bikeCapacity || 0, // This should come from bike count API
-        totalVehicles: station.stationCapacity || 0,
+        totalVehicles: station.bikeCapacity || 0,
         chargingStations: 0, // Not in API, keep as 0 or add to API
         status: station.isActive ? "active" : "maintenance",
         // Convert image filenames to full URLs
@@ -317,52 +511,6 @@ const Admin = () => {
       setStationsError("Không thể tải danh sách trạm. Vui lòng thử lại.");
     } finally {
       setStationsLoading(false);
-    }
-  };
-
-  const fetchDeliveryHistory = async () => {
-    setDeliveryLoading(true);
-    setDeliveryError(null);
-
-    try {
-      const data = await adminService.getCompletedAndOngoingRentals();
-      console.log("Delivery history loaded from API:", data);
-
-      // Transform API data to match component structure
-      const transformedDelivery = data.map((rental) => ({
-        id: rental.rentalID,
-        rentalId: rental.rentalID,
-        bikeId: rental.bikeID,
-        bikeName: rental.bikeImage || "N/A",
-        bikeImage: rental.bikeImage,
-        stationId: rental.stationID,
-        stationName: rental.stationName,
-        stationAddress: rental.stationAddress,
-        licensePlate: rental.licensePlate,
-        phoneNumber: rental.phoneNumber,
-        email: rental.email,
-        startDate: rental.startDate,
-        endDate: rental.endDate,
-        handoverDate: rental.handoverDate,
-        returnDate: rental.returnDate,
-        status: rental.status,
-        initialBattery: rental.initialBattery,
-        finalBattery: rental.finalBattery,
-        initBikeCondition: rental.initBikeCondition,
-        finalBikeCondition: rental.finalBikeCondition,
-        deposit: rental.deposit,
-        fee: rental.fee,
-        paymentId: rental.paymentID,
-        createdAt: rental.createdAt,
-        updatedAt: rental.updatedAt,
-      }));
-
-      setDeliveryHistory(transformedDelivery);
-    } catch (error) {
-      console.error("Error loading delivery history:", error);
-      setDeliveryError("Không thể tải lịch sử giao/nhận. Vui lòng thử lại.");
-    } finally {
-      setDeliveryLoading(false);
     }
   };
 
@@ -1153,6 +1301,12 @@ const Admin = () => {
         customerAccounts
       );
       setCustomers(customerAccounts);
+
+      // Update total customers count in stats
+      setStats((prev) => ({
+        ...prev,
+        totalCustomers: customerAccounts.length,
+      }));
     } catch (error) {
       console.error("❌ Error fetching customers:", error);
       setCustomersError(error.message || "Không thể tải khách hàng");
@@ -1870,13 +2024,15 @@ const Admin = () => {
       formData.append("name", newStation.name);
       formData.append("address", newStation.address);
       formData.append("description", newStation.description || "");
-      formData.append("stationCapacity", parseInt(newStation.stationCapacity) || 0);
+      formData.append("bikeCapacity", parseInt(newStation.bikeCapacity) || 0);
       formData.append("openingHours", newStation.openingHours || "");
       formData.append("contactNumber", newStation.contactNumber || "");
-      formData.append("latitude", newStation.latitude || "0");
-      formData.append("longitude", newStation.longitude || "0");
 
       if (newStation.imageUrl) formData.append("imageUrl", newStation.imageUrl);
+      if (newStation.exteriorImageUrl)
+        formData.append("exteriorImageUrl", newStation.exteriorImageUrl);
+      if (newStation.thumbnailImageUrl)
+        formData.append("thumbnailImageUrl", newStation.thumbnailImageUrl);
 
       formData.append("isActive", true);
 
@@ -2128,52 +2284,12 @@ const Admin = () => {
     }));
   };
 
-  // Geocoding function to get coordinates from address
-  const geocodeAddress = async (address) => {
-    if (!address || address.trim() === "") return;
-
-    try {
-      // Using Nominatim OpenStreetMap API (free, no API key required)
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          address
-        )}&limit=1`
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data && data.length > 0) {
-          const { lat, lon } = data[0];
-          setNewStation((prev) => ({
-            ...prev,
-            latitude: lat,
-            longitude: lon,
-          }));
-          console.log("Geocoded coordinates:", { lat, lon });
-        } else {
-          console.log("No coordinates found for address");
-        }
-      }
-    } catch (error) {
-      console.error("Error geocoding address:", error);
-    }
-  };
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewStation((prev) => ({
       ...prev,
       [name]: value,
     }));
-
-    // Trigger geocoding when address is changed
-    if (name === "address" && value.trim() !== "") {
-      // Debounce the geocoding call
-      clearTimeout(window.geocodeTimeout);
-      window.geocodeTimeout = setTimeout(() => {
-        geocodeAddress(value);
-      }, 1000); // Wait 1 second after user stops typing
-    }
   };
 
   const renderDashboard = () => (
@@ -2336,6 +2452,18 @@ const Admin = () => {
           <div style={{ display: "flex", gap: "10px" }}>
             <button
               className="btn-primary"
+              onClick={() => {
+                console.log("TEST: Opening detail modal for first station");
+                if (stations.length > 0) {
+                  handleViewStationDetail(stations[0]);
+                }
+              }}
+              style={{ background: "#10b981" }}
+            >
+              🧪 Test Chi tiết
+            </button>
+            <button
+              className="btn-primary"
               onClick={() => setShowAddStationModal(true)}
             >
               + Thêm trạm mới
@@ -2383,7 +2511,7 @@ const Admin = () => {
             <tbody>
               {filteredStations.map((station) => {
                 const usageRate =
-                  (station.availableVehicles /
+                  ((station.totalVehicles - station.availableVehicles) /
                     station.totalVehicles) *
                   100;
                 return (
@@ -2408,9 +2536,9 @@ const Admin = () => {
                             style={{
                               width: `${usageRate}%`,
                               backgroundColor:
-                                station.availableVehicles >= 20
+                                station.availableVehicles < 5
                                   ? "#f44336"
-                                  : station.availableVehicles >= 10
+                                  : station.availableVehicles < 10
                                   ? "#ff9800"
                                   : "#4caf50",
                             }}
@@ -2582,8 +2710,8 @@ const Admin = () => {
                     <label>Sức chứa xe</label>
                     <input
                       type="number"
-                      name="stationCapacity"
-                      value={newStation.stationCapacity}
+                      name="bikeCapacity"
+                      value={newStation.bikeCapacity}
                       onChange={handleInputChange}
                       placeholder="0"
                       className="form-input"
@@ -2616,36 +2744,6 @@ const Admin = () => {
                   />
                 </div>
 
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Vĩ độ (Latitude)</label>
-                    <input
-                      type="text"
-                      name="latitude"
-                      value={newStation.latitude}
-                      onChange={handleInputChange}
-                      placeholder="Tự động điền từ địa chỉ"
-                      className="form-input"
-                      readOnly
-                      style={{ backgroundColor: "#f9fafb" }}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label>Kinh độ (Longitude)</label>
-                    <input
-                      type="text"
-                      name="longitude"
-                      value={newStation.longitude}
-                      onChange={handleInputChange}
-                      placeholder="Tự động điền từ địa chỉ"
-                      className="form-input"
-                      readOnly
-                      style={{ backgroundColor: "#f9fafb" }}
-                    />
-                  </div>
-                </div>
-
                 <div className="form-group">
                   <label>Hình ảnh chính</label>
                   <input
@@ -2668,6 +2766,58 @@ const Admin = () => {
                       }}
                     >
                       ✅ {newStation.imageUrl.name}
+                    </p>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label>Hình ảnh bên ngoài</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) =>
+                      setNewStation({
+                        ...newStation,
+                        exteriorImageUrl: e.target.files[0],
+                      })
+                    }
+                    className="form-input"
+                  />
+                  {newStation.exteriorImageUrl && (
+                    <p
+                      style={{
+                        fontSize: "0.85rem",
+                        color: "#64748b",
+                        marginTop: "0.5rem",
+                      }}
+                    >
+                      ✅ {newStation.exteriorImageUrl.name}
+                    </p>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label>Hình thumbnail</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) =>
+                      setNewStation({
+                        ...newStation,
+                        thumbnailImageUrl: e.target.files[0],
+                      })
+                    }
+                    className="form-input"
+                  />
+                  {newStation.thumbnailImageUrl && (
+                    <p
+                      style={{
+                        fontSize: "0.85rem",
+                        color: "#64748b",
+                        marginTop: "0.5rem",
+                      }}
+                    >
+                      ✅ {newStation.thumbnailImageUrl.name}
                     </p>
                   )}
                 </div>
@@ -2823,6 +2973,64 @@ const Admin = () => {
                         }}
                       >
                         ✅ {newStation.imageUrl.name}
+                      </p>
+                    )}
+                </div>
+
+                <div className="form-group">
+                  <label>
+                    Hình ảnh bên ngoài (để trống nếu không muốn thay đổi)
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) =>
+                      setNewStation({
+                        ...newStation,
+                        exteriorImageUrl: e.target.files[0],
+                      })
+                    }
+                    className="form-input"
+                  />
+                  {newStation.exteriorImageUrl &&
+                    newStation.exteriorImageUrl instanceof File && (
+                      <p
+                        style={{
+                          fontSize: "0.85rem",
+                          color: "#64748b",
+                          marginTop: "0.5rem",
+                        }}
+                      >
+                        ✅ {newStation.exteriorImageUrl.name}
+                      </p>
+                    )}
+                </div>
+
+                <div className="form-group">
+                  <label>
+                    Hình thumbnail (để trống nếu không muốn thay đổi)
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) =>
+                      setNewStation({
+                        ...newStation,
+                        thumbnailImageUrl: e.target.files[0],
+                      })
+                    }
+                    className="form-input"
+                  />
+                  {newStation.thumbnailImageUrl &&
+                    newStation.thumbnailImageUrl instanceof File && (
+                      <p
+                        style={{
+                          fontSize: "0.85rem",
+                          color: "#64748b",
+                          marginTop: "0.5rem",
+                        }}
+                      >
+                        ✅ {newStation.thumbnailImageUrl.name}
                       </p>
                     )}
                 </div>
@@ -3004,7 +3212,8 @@ const Admin = () => {
                   <div className="detail-row">
                     <span className="detail-label">🏍️ Sức chứa xe:</span>
                     <span className="detail-value">
-                      {selectedStation.totalVehicles}{" "}
+                      {selectedStation.bikeCapacity ||
+                        selectedStation.totalVehicles}{" "}
                       xe
                     </span>
                   </div>
@@ -3012,6 +3221,14 @@ const Admin = () => {
                     <span className="detail-label">✅ Xe khả dụng:</span>
                     <span className="detail-value">
                       {selectedStation.availableVehicles} xe
+                    </span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">🚴 Xe đang cho thuê:</span>
+                    <span className="detail-value">
+                      {selectedStation.totalVehicles -
+                        selectedStation.availableVehicles}{" "}
+                      xe
                     </span>
                   </div>
                   <div className="detail-row">
@@ -3305,7 +3522,7 @@ const Admin = () => {
                           <div className="summary-item">
                             <span className="summary-icon">👥</span>
                             <div>
-                              <p className="summary-label" style={{ color: 'white' }}>Tổng nhân viên</p>
+                              <p className="summary-label">Tổng nhân viên</p>
                               <p className="summary-number">
                                 {stationStaff.length}
                               </p>
@@ -3314,7 +3531,7 @@ const Admin = () => {
                           <div className="summary-item">
                             <span className="summary-icon">🚚</span>
                             <div>
-                              <p className="summary-label" style={{ color: 'white' }}>Tổng giao/nhận</p>
+                              <p className="summary-label">Tổng giao/nhận</p>
                               <p className="summary-number">
                                 {stationStaff.reduce(
                                   (sum, s) => sum + s.totalDeliveries,
@@ -4373,172 +4590,284 @@ const Admin = () => {
   };
 
   const renderDeliveryHistory = () => {
-    const statusInfo = {
-      0: { label: "Chờ xử lý", icon: "⏳", color: "#f59e0b" },
-      1: { label: "Đã đặt", icon: "📋", color: "#3b82f6" },
-      2: { label: "Đang thuê", icon: "🚗", color: "#8b5cf6" },
-      3: { label: "Đã hủy", icon: "❌", color: "#ef4444" },
-      4: { label: "Hoàn thành", icon: "✅", color: "#10b981" },
+    // Filter rental history based on selected filters
+    const filteredHistory = rentalHistory.filter((rental) => {
+      // Filter by station
+      if (
+        rentalStationFilter !== "all" &&
+        rental.stationID !== parseInt(rentalStationFilter)
+      ) {
+        return false;
+      }
+
+      // Filter by status
+      if (rentalStatusFilter !== "all") {
+        const status = rental.status?.toString() || "";
+        if (status !== rentalStatusFilter) {
+          return false;
+        }
+      }
+
+      // Filter by type (pickup = ongoing, return = completed)
+      if (rentalTypeFilter === "pickup" && rental.returnDate) {
+        return false;
+      }
+      if (rentalTypeFilter === "return" && !rental.returnDate) {
+        return false;
+      }
+
+      // Filter by date
+      if (rentalDateFilter) {
+        const rentalDate = new Date(rental.startDate)
+          .toISOString()
+          .split("T")[0];
+        if (rentalDate !== rentalDateFilter) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    const getStatusInfo = (status) => {
+      const statusStr = status?.toString().toLowerCase() || "";
+      const statusMap = {
+        0: { label: "Đang thuê", icon: "⏳", color: "#f59e0b" },
+        1: { label: "Hoàn thành", icon: "✅", color: "#10b981" },
+        2: { label: "Đã hủy", icon: "❌", color: "#ef4444" },
+        ongoing: { label: "Đang thuê", icon: "⏳", color: "#f59e0b" },
+        completed: { label: "Hoàn thành", icon: "✅", color: "#10b981" },
+        cancelled: { label: "Đã hủy", icon: "❌", color: "#ef4444" },
+      };
+      return (
+        statusMap[statusStr] || {
+          label: "Không xác định",
+          icon: "❓",
+          color: "#6b7280",
+        }
+      );
     };
 
-    // Show loading state
-    if (deliveryLoading) {
-      return (
-        <div className="management-content">
-          <div className="section-header">
-            <h2>🚚 Lịch sử giao/nhận xe</h2>
-          </div>
-          <div className="loading-container">
-            <div className="spinner"></div>
-            <p>Đang tải lịch sử giao/nhận...</p>
-          </div>
-        </div>
-      );
-    }
-
-    // Show error state
-    if (deliveryError) {
-      return (
-        <div className="management-content">
-          <div className="section-header">
-            <h2>🚚 Lịch sử giao/nhận xe</h2>
-          </div>
-          <div className="error-message">
-            <span className="error-icon">❌</span>
-            <span>{deliveryError}</span>
-            <button onClick={fetchDeliveryHistory}>Thử lại</button>
-          </div>
-        </div>
-      );
-    }
+    const getTypeInfo = (rental) => {
+      if (rental.returnDate) {
+        return { label: "Trả xe", icon: "🏁", color: "#10b981" };
+      }
+      return { label: "Giao xe", icon: "🚀", color: "#3b82f6" };
+    };
 
     return (
       <div className="management-content">
         <div className="section-header">
           <h2>🚚 Lịch sử giao/nhận xe</h2>
           <div className="header-actions">
-            <button
-              className="btn-refresh"
-              onClick={fetchDeliveryHistory}
-              disabled={deliveryLoading}
-            >
-              {deliveryLoading ? "🔄 Đang tải..." : "🔄 Làm mới"}
+            <button className="btn-primary" onClick={fetchRentalHistory}>
+              🔄 Làm mới
             </button>
             <button className="btn-primary">📊 Xuất báo cáo</button>
           </div>
         </div>
 
         <div className="filters">
-          <select className="filter-select">
+          <select
+            className="filter-select"
+            value={rentalTypeFilter}
+            onChange={(e) => setRentalTypeFilter(e.target.value)}
+          >
+            <option value="all">Tất cả loại</option>
+            <option value="pickup">Giao xe (Đang thuê)</option>
+            <option value="return">Trả xe (Đã hoàn thành)</option>
+          </select>
+          <select
+            className="filter-select"
+            value={rentalStationFilter}
+            onChange={(e) => setRentalStationFilter(e.target.value)}
+          >
+            <option value="all">Tất cả trạm</option>
+            {stations.map((station) => (
+              <option key={station.id} value={station.id}>
+                {station.name}
+              </option>
+            ))}
+          </select>
+          <select
+            className="filter-select"
+            value={rentalStatusFilter}
+            onChange={(e) => setRentalStatusFilter(e.target.value)}
+          >
             <option value="all">Tất cả trạng thái</option>
-            <option value="0">⏳ Chờ xử lý</option>
-            <option value="1">📋 Đã đặt</option>
-            <option value="2">🚗 Đang thuê</option>
-            <option value="3">❌ Đã hủy</option>
-            <option value="4">✅ Hoàn thành</option>
+            <option value="0">Đang thuê</option>
+            <option value="1">Hoàn thành</option>
+            <option value="2">Đã hủy</option>
           </select>
           <input
             type="date"
             className="filter-select"
-            defaultValue={new Date().toISOString().split("T")[0]}
+            value={rentalDateFilter}
+            onChange={(e) => setRentalDateFilter(e.target.value)}
           />
         </div>
 
-        <div className="stats-summary">
-          <div className="summary-item">
-            <span className="summary-label">Tổng giao dịch:</span>
-            <span className="summary-value">{deliveryHistory.length}</span>
+        {rentalHistoryLoading ? (
+          <div style={{ textAlign: "center", padding: "2rem" }}>
+            <p>Đang tải dữ liệu...</p>
           </div>
-          <div className="summary-item">
-            <span className="summary-label">🚗 Đang thuê:</span>
-            <span className="summary-value" style={{ color: "#8b5cf6" }}>
-              {deliveryHistory.filter((d) => d.status === 2).length}
-            </span>
+        ) : rentalHistory.length === 0 && filteredHistory.length === 0 ? (
+          <div
+            style={{
+              textAlign: "center",
+              padding: "3rem",
+              background: "#fff3cd",
+              borderRadius: "8px",
+              margin: "1rem 0",
+              border: "1px solid #ffc107",
+            }}
+          >
+            <h3 style={{ color: "#856404", marginBottom: "1rem" }}>
+              ⚠️ API chưa sẵn sàng
+            </h3>
+            <p style={{ color: "#856404", marginBottom: "0.5rem" }}>
+              Endpoint{" "}
+              <code>GET /api/Rental/GetCompletedAndOngoingRentals</code> trả về
+              lỗi 404.
+            </p>
+            <p style={{ color: "#856404" }}>
+              Backend cần implement API này để hiển thị lịch sử giao/nhận xe.
+            </p>
           </div>
-          <div className="summary-item">
-            <span className="summary-label">✅ Hoàn thành:</span>
-            <span className="summary-value" style={{ color: "#10b981" }}>
-              {deliveryHistory.filter((d) => d.status === 4).length}
-            </span>
-          </div>
-        </div>
+        ) : (
+          <>
+            <div className="stats-summary">
+              <div className="summary-item">
+                <span className="summary-label">Tổng giao dịch:</span>
+                <span className="summary-value">{filteredHistory.length}</span>
+              </div>
+              <div className="summary-item">
+                <span className="summary-label">🚀 Đang thuê:</span>
+                <span className="summary-value" style={{ color: "#3b82f6" }}>
+                  {filteredHistory.filter((d) => !d.returnDate).length}
+                </span>
+              </div>
+              <div className="summary-item">
+                <span className="summary-label">🏁 Đã trả:</span>
+                <span className="summary-value" style={{ color: "#10b981" }}>
+                  {filteredHistory.filter((d) => d.returnDate).length}
+                </span>
+              </div>
+            </div>
 
-        <div className="data-table">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Biển số</th>
-                <th>Trạm</th>
-                <th>Địa chỉ trạm</th>
-                <th>SĐT</th>
-                <th>Email</th>
-                <th>Ngày bắt đầu</th>
-                <th>Ngày kết thúc</th>
-                <th>Trạng thái</th>
-                <th>Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              {deliveryHistory.length === 0 ? (
-                <tr>
-                  <td colSpan="10" style={{ textAlign: "center", padding: "2rem" }}>
-                    📭 Chưa có lịch sử giao/nhận nào
-                  </td>
-                </tr>
-              ) : (
-                deliveryHistory.map((record) => (
-                  <tr key={record.id}>
-                    <td>#{record.rentalId}</td>
-                    <td>{record.licensePlate || "N/A"}</td>
-                    <td>{record.stationName || "N/A"}</td>
-                    <td>{record.stationAddress || "N/A"}</td>
-                    <td>{record.phoneNumber || "N/A"}</td>
-                    <td>{record.email || "N/A"}</td>
-                    <td>
-                      {record.startDate
-                        ? new Date(record.startDate).toLocaleDateString("vi-VN")
-                        : "N/A"}
-                    </td>
-                    <td>
-                      {record.endDate
-                        ? new Date(record.endDate).toLocaleDateString("vi-VN")
-                        : "N/A"}
-                    </td>
-                    <td>
-                      <span
-                        style={{
-                          background: statusInfo[record.status]?.color + "20" || "#6b728020",
-                          color: statusInfo[record.status]?.color || "#6b7280",
-                          padding: "0.25rem 0.75rem",
-                          borderRadius: "12px",
-                          fontSize: "0.875rem",
-                          fontWeight: "600",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "0.25rem",
-                        }}
-                      >
-                        {statusInfo[record.status]?.icon || "❓"}{" "}
-                        {statusInfo[record.status]?.label || "Không xác định"}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="action-buttons">
-                        <button
-                          className="btn-action btn-view"
-                          title="Xem chi tiết"
-                        >
-                          👁️
-                        </button>
-                      </div>
-                    </td>
+            <div className="data-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Loại</th>
+                    <th>Khách hàng</th>
+                    <th>SĐT</th>
+                    <th>Xe</th>
+                    <th>Biển số</th>
+                    <th>Trạm</th>
+                    <th>Ngày bắt đầu</th>
+                    <th>Ngày trả</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                </thead>
+                <tbody>
+                  {filteredHistory.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan="11"
+                        style={{ textAlign: "center", padding: "2rem" }}
+                      >
+                        Không có dữ liệu
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredHistory.map((rental) => {
+                      const typeInfo = getTypeInfo(rental);
+                      const statusInfo = getStatusInfo(rental.status);
+
+                      return (
+                        <tr key={rental.rentalID}>
+                          <td>#{rental.rentalID}</td>
+                          <td>
+                            <span
+                              style={{
+                                background: typeInfo.color + "20",
+                                color: typeInfo.color,
+                                padding: "0.25rem 0.75rem",
+                                borderRadius: "12px",
+                                fontSize: "0.875rem",
+                                fontWeight: "600",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "0.25rem",
+                              }}
+                            >
+                              {typeInfo.icon} {typeInfo.label}
+                            </span>
+                          </td>
+                          <td>{rental.customerName || "N/A"}</td>
+                          <td>{rental.phoneNumber || "N/A"}</td>
+                          <td>{rental.bikeName || "N/A"}</td>
+                          <td>{rental.licensePlate || "N/A"}</td>
+                          <td>{rental.stationAddress || "N/A"}</td>
+                          <td>
+                            {rental.startDate
+                              ? new Date(rental.startDate).toLocaleString(
+                                  "vi-VN"
+                                )
+                              : "N/A"}
+                          </td>
+                          <td>
+                            {rental.returnDate
+                              ? new Date(rental.returnDate).toLocaleString(
+                                  "vi-VN"
+                                )
+                              : "Chưa trả"}
+                          </td>
+                          <td>
+                            <span
+                              style={{
+                                background: statusInfo.color + "20",
+                                color: statusInfo.color,
+                                padding: "0.25rem 0.75rem",
+                                borderRadius: "12px",
+                                fontSize: "0.875rem",
+                                fontWeight: "600",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "0.25rem",
+                              }}
+                            >
+                              {statusInfo.icon} {statusInfo.label}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="action-buttons">
+                              <button
+                                className="btn-action btn-view"
+                                title="Xem chi tiết"
+                                onClick={() => {
+                                  console.log("View rental details:", rental);
+                                  alert(
+                                    `Chi tiết thuê xe #${rental.rentalID}\n\nKhách hàng: ${rental.customerName}\nXe: ${rental.bikeName}\nBiển số: ${rental.licensePlate}\nTrạm: ${rental.stationAddress}`
+                                  );
+                                }}
+                              >
+                                👁️
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
       </div>
     );
   };
