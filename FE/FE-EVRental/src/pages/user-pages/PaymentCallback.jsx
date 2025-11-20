@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { markPaymentSuccess, markPaymentFailed } from '../api/payment';
-import { useAuth } from '../contexts/AuthContext';
+import { markPaymentSuccess, markPaymentFailed } from "../../api/payment";
+import { useAuth } from "../../contexts/AuthContext";
 
 const PaymentCallback = () => {
   const [searchParams] = useSearchParams();

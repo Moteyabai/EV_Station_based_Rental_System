@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { getRenterByAccountID } from "../api/rentals";
-import { getToken } from "../utils/auth";
-import "../styles/UserProfile.css";
+import { getRenterByAccountID } from "../../api/rentals";
+import { getToken } from "../../utils/auth";
+import "../../styles/UserProfile.css";
 
 export default function UserProfile() {
   const { user, logout, verificationStatus } = useAuth();

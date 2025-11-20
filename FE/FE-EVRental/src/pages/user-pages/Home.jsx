@@ -1,10 +1,10 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import "../styles/Home.css";
-import "../styles/media.css";
-import { fetchActiveStations } from "../api/stations";
-import { getAvailableBikes } from "../api/bikes";
-import { useAuth } from "../contexts/AuthContext";
+import "../../styles/Home.css";
+import "../../styles/media.css";
+import { fetchActiveStations } from "../../api/stations";
+import { getAvailableBikes } from "../../api/bikes";
+import { useAuth } from "../../contexts/AuthContext";
 
 // Default placeholder images
 const defaultBikeImg =

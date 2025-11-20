@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { getAvailableBikes } from "../api/bikes";
-import "../styles/Vehicles.css";
-import { useCart } from "../contexts/CartContext";
-import { useAuth } from "../contexts/AuthContext";
-import BookingForm from "../components/BookingForm";
+import { getAvailableBikes } from "../../api/bikes";
+import "../../styles/Vehicles.css";
+import { useCart } from "../../contexts/CartContext";
+import { useAuth } from "../../contexts/AuthContext";
+import BookingForm from "../../components/BookingForm";
 
 export default function Vehicles() {
   const [vehicles, setVehicles] = useState([]);

@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { getToken } from "../utils/auth";
+import { getToken } from "../../utils/auth";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 const PaymentFailure = () => {

@@ -19,26 +19,26 @@ import RoleBasedRoute from "./components/RoleBasedRoute";
 import SessionTimer from "./components/SessionTimer";
 
 // Pages
-import Home from "./pages/Home";
-import Vehicles from "./pages/Vehicles";
-import Stations from "./pages/Stations";
-import About from "./pages/About";
+import Home from "./pages/user-pages/Home";
+import Vehicles from "./pages/user-pages/Vehicles";
+import Stations from "./pages/user-pages/Stations";
+import About from "./pages/user-pages/About";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import ProductDetail from "./pages/ProductDetail";
-import StationDetail from "./pages/StationDetail";
-import UserHistory from "./pages/UserHistory";
-import VehiclePickup from "./pages/VehiclePickup";
-import VehicleReturn from "./pages/VehicleReturn";
-import PickupSuccess from "./pages/PickupSuccess";
-import ReturnSuccess from "./pages/ReturnSuccess";
-import Checkout from "./pages/Checkout";
-import BookingSuccess from "./pages/BookingSuccess";
-import PaymentCallback from "./pages/PaymentCallback";
-import PaymentSuccess from "./pages/PaymentSuccess";
-import PaymentFailure from "./pages/PaymentFailure";
-import UserProfile from "./pages/UserProfile";
-import Staff from "./pages/Staff";
+import ProductDetail from "./pages/user-pages/ProductDetail";
+import StationDetail from "./pages/user-pages/StationDetail";
+import UserHistory from "./pages/user-pages/UserHistory";
+import VehiclePickup from "./pages/user-pages/VehiclePickup";
+import VehicleReturn from "./pages/user-pages/VehicleReturn";
+import PickupSuccess from "./pages/user-pages/PickupSuccess";
+import ReturnSuccess from "./pages/user-pages/ReturnSuccess";
+import Checkout from "./pages/user-pages/Checkout";
+import BookingSuccess from "./pages/user-pages/BookingSuccess";
+import PaymentCallback from "./pages/user-pages/PaymentCallback";
+import PaymentSuccess from "./pages/user-pages/PaymentSuccess";
+import PaymentFailure from "./pages/user-pages/PaymentFailure";
+import UserProfile from "./pages/user-pages/UserProfile";
+import Staff from "./pages/staff-pages/Staff";
 import Admin from "./pages/Admin";
 
 // Styles

@@ -1,15 +1,15 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "antd";
 import { StarOutlined } from "@ant-design/icons";
-import { useCart } from "../contexts/CartContext";
-import { useAuth } from "../contexts/AuthContext";
-import { getBikeById, getAvailableBikes } from "../api/bikes";
-import BookingForm from "../components/BookingForm";
-import ReviewList from "../components/ReviewList";
-import ReviewForm from "../components/ReviewForm";
-import { formatPrice } from "../utils/helpers";
-import "../styles/ProductDetail.css";
+import { useCart } from "../../contexts/CartContext";
+import { useAuth } from "../../contexts/AuthContext";
+import { getBikeById, getAvailableBikes } from "../../api/bikes";
+import BookingForm from "../../components/BookingForm";
+import ReviewList from "../../components/ReviewList";
+import ReviewForm from "../../components/ReviewForm";
+import { formatPrice } from "../../utils/helpers";
+import "../../styles/ProductDetail.css";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -48,13 +48,13 @@ export default function ProductDetail() {
       try {
         setLoading(true);
         setError(null); // Reset error state
-        console.log("🚲 [DETAIL] Fetching bike with ID:", id);
+        console.log("?? [DETAIL] Fetching bike with ID:", id);
 
         const bikeData = await getBikeById(id);
 
         if (!isMounted) return;
 
-        console.log("🚲 Bike detail from API:", bikeData);
+        console.log("?? Bike detail from API:", bikeData);
 
         // Map backend data to frontend format
         const quantity = bikeData.quantity || 0;
@@ -63,7 +63,7 @@ export default function ProductDetail() {
         const mappedVehicle = {
           id: bikeData.bikeID || bikeData.BikeID,
           name:
-            bikeData.bikeName || bikeData.model || bikeData.Model || "Xe điện",
+            bikeData.bikeName || bikeData.model || bikeData.Model || "Xe di?n",
           brand: bikeData.brandName || bikeData.BrandName || "Unknown",
           image:
             bikeData.thumbnailImageUrl ||
@@ -72,13 +72,13 @@ export default function ProductDetail() {
             "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=800&q=60",
           backImage: bikeData.backImg || bikeData.thumbnailImageUrl,
           price: bikeData.pricePerDay || bikeData.PricePerDay || 0,
-          priceUnit: "/ngày",
+          priceUnit: "/ng�y",
           category: "scooter",
-          short: `${bikeData.brandName || bikeData.BrandName || "Xe điện"} - Số lượng có sẵn: ${quantity}`,
+          short: `${bikeData.brandName || bikeData.BrandName || "Xe di?n"} - S? lu?ng c� s?n: ${quantity}`,
           description:
             bikeData.description ||
             bikeData.Description ||
-            "Không có mô tả chi tiết.",
+            "Kh�ng c� m� t? chi ti?t.",
           quantity: quantity,
           available: isAvailable,
           specs: {
@@ -99,19 +99,19 @@ export default function ProductDetail() {
             weight: bikeData.weight || "N/A",
           },
           status: isAvailable ? "available" : "out-of-stock",
-          statusText: isAvailable ? "Có sẵn" : "Hết xe",
+          statusText: isAvailable ? "C� s?n" : "H?t xe",
           statusColor: isAvailable ? "green" : "red",
         };
 
-        console.log("✅ Mapped vehicle:", mappedVehicle);
+        console.log("? Mapped vehicle:", mappedVehicle);
 
         setVehicle(mappedVehicle);
         setError(null);
-        console.log("✅ [DETAIL] Vehicle loaded successfully");
+        console.log("? [DETAIL] Vehicle loaded successfully");
       } catch (err) {
-        console.error("❌ [DETAIL] Error loading vehicle:", err);
+        console.error("? [DETAIL] Error loading vehicle:", err);
         if (isMounted) {
-          setError("Không thể tải thông tin xe. Vui lòng thử lại sau.");
+          setError("Kh�ng th? t?i th�ng tin xe. Vui l�ng th? l?i sau.");
           setVehicle(null);
         }
       } finally {
@@ -167,8 +167,8 @@ export default function ProductDetail() {
       <div className="product-detail">
         <div className="container">
           <div className="loading-message">
-            <h2>🔄 Đang tải thông tin xe...</h2>
-            <p>Vui lòng đợi trong giây lát.</p>
+            <h2>?? �ang t?i th�ng tin xe...</h2>
+            <p>Vui l�ng d?i trong gi�y l�t.</p>
           </div>
         </div>
       </div>
@@ -180,17 +180,17 @@ export default function ProductDetail() {
     return (
       <div className="product-not-found">
         <div className="container">
-          <h2>❌ Có lỗi xảy ra</h2>
+          <h2>? C� l?i x?y ra</h2>
           <p>{error}</p>
           <div className="error-actions">
             <button
               className="btn primary"
               onClick={() => window.location.reload()}
             >
-              🔄 Thử lại
+              ?? Th? l?i
             </button>
             <Link to="/vehicles" className="btn secondary">
-              Quay lại danh sách xe
+              Quay l?i danh s�ch xe
             </Link>
           </div>
         </div>
@@ -203,10 +203,10 @@ export default function ProductDetail() {
     return (
       <div className="product-not-found">
         <div className="container">
-          <h2>Không tìm thấy xe</h2>
-          <p>Xe bạn đang tìm không tồn tại hoặc đã bị xóa.</p>
+          <h2>Kh�ng t�m th?y xe</h2>
+          <p>Xe b?n dang t�m kh�ng t?n t?i ho?c d� b? x�a.</p>
           <Link to="/vehicles" className="btn primary">
-            Quay lại danh sách xe
+            Quay l?i danh s�ch xe
           </Link>
         </div>
       </div>
@@ -226,7 +226,7 @@ export default function ProductDetail() {
         navigate("/cart");
       }, 2000);
     } catch (error) {
-      console.error("Lỗi khi thêm vào giỏ hàng:", error);
+      console.error("L?i khi th�m v�o gi? h�ng:", error);
     }
   };
 
@@ -267,7 +267,7 @@ export default function ProductDetail() {
           </div>
           {!vehicle.available && (
             <div className="unavailable-overlay">
-              <span>Hiện không có sẵn</span>
+              <span>Hi?n kh�ng c� s?n</span>
             </div>
           )}
           {/* Image Navigation Dots */}
@@ -278,7 +278,7 @@ export default function ProductDetail() {
                 onClick={() => setCurrentImageIndex(0)}
                 aria-label="Front view"
               >
-                Trước
+                Tru?c
               </button>
               <button
                 className={`nav-dot ${currentImageIndex === 1 ? "active" : ""}`}
@@ -309,8 +309,8 @@ export default function ProductDetail() {
 
           <div className="vehicle-status">
             <div className="status-item">
-              <span className="status-icon">●</span>
-              <span className="status-label">Trạng thái:</span>
+              <span className="status-icon">?</span>
+              <span className="status-label">Tr?ng th�i:</span>
               <span
                 className={`status-value ${vehicle.status}`}
                 style={{ color: vehicle.statusColor, fontWeight: "bold" }}
@@ -319,38 +319,38 @@ export default function ProductDetail() {
               </span>
             </div>
             <div className="status-item">
-              <span className="status-icon">🏷️</span>
-              <span className="status-label">Hãng:</span>
+              <span className="status-icon">???</span>
+              <span className="status-label">H�ng:</span>
               <span className="status-value">{vehicle.brand}</span>
             </div>
             <div className="status-item">
-              <span className="status-icon">📦</span>
-              <span className="status-label">Số lượng:</span>
+              <span className="status-icon">??</span>
+              <span className="status-label">S? lu?ng:</span>
               <span className="status-value">{vehicle.quantity} xe</span>
             </div>
           </div>
 
           <div className="description-section">
-            <h3 className="section-title">Mô tả sản phẩm</h3>
+            <h3 className="section-title">M� t? s?n ph?m</h3>
             <p className="section-content">{vehicle.description}</p>
           </div>
 
           <div className="specs-section">
-            <h3 className="section-title">Thông số kỹ thuật</h3>
+            <h3 className="section-title">Th�ng s? k? thu?t</h3>
             <div className="specs-grid">
               <div className="spec-item">
-                <span className="spec-icon">🔋</span>
-                <span className="spec-label">Dung lượng pin</span>
+                <span className="spec-icon">??</span>
+                <span className="spec-label">Dung lu?ng pin</span>
                 <span className="spec-value">{vehicle.specs.battery}</span>
               </div>
               <div className="spec-item">
-                <span className="spec-icon">📏</span>
-                <span className="spec-label">Quảng đường tối đa</span>
+                <span className="spec-icon">??</span>
+                <span className="spec-label">Qu?ng du?ng t?i da</span>
                 <span className="spec-value">{vehicle.specs.range}</span>
               </div>
               <div className="spec-item">
-                <span className="spec-icon">⚡</span>
-                <span className="spec-label">Tốc độ tối đa</span>
+                <span className="spec-icon">?</span>
+                <span className="spec-label">T?c d? t?i da</span>
                 <span className="spec-value">{vehicle.specs.maxSpeed}</span>
               </div>
             </div>
@@ -362,20 +362,20 @@ export default function ProductDetail() {
               onClick={handleRentNow}
               disabled={!vehicle.available}
             >
-              {vehicle.available ? "🚀 Thuê ngay" : "❌ Không có sẵn"}
+              {vehicle.available ? "?? Thu� ngay" : "? Kh�ng c� s?n"}
             </button>
             <button
               className="btn btn-secondary cart-btn"
               onClick={() => navigate("/cart")}
             >
-              🛒 Giỏ hàng ({getItemCount()})
+              ?? Gi? h�ng ({getItemCount()})
             </button>
             <Button
               icon={<StarOutlined />}
               onClick={() => setShowReviewForm(true)}
               className="review-btn"
             >
-              Viết đánh giá
+              Vi?t d�nh gi�
             </Button>
           </div>
         </div>
@@ -392,8 +392,8 @@ export default function ProductDetail() {
           <div className="success-content">
             <div className="success-icon"></div>
             <div className="success-message">
-              <h4>Đã thêm vào giỏ hàng!</h4>
-              <p>Xe {vehicle.name} đã được thêm vào giỏ hàng của bạn.</p>
+              <h4>�� th�m v�o gi? h�ng!</h4>
+              <p>Xe {vehicle.name} d� du?c th�m v�o gi? h�ng c?a b?n.</p>
             </div>
           </div>
         </div>
