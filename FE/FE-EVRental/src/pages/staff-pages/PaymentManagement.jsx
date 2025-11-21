@@ -27,6 +27,15 @@ export default function PaymentManagement() {
   useEffect(() => {
     console.log("🔄 [PAYMENTS] Loading payments for type:", paymentType, "filter:", paymentFilter);
     loadPayments();
+
+    // Auto-refresh every 5 seconds
+    const intervalId = setInterval(() => {
+      console.log("🔄 [PAYMENTS] Auto-refreshing payments...");
+      loadPayments();
+    }, 5000);
+
+    // Cleanup interval on unmount or when dependencies change
+    return () => clearInterval(intervalId);
   }, [paymentType, paymentFilter]);
 
   useEffect(() => {
@@ -277,7 +286,7 @@ export default function PaymentManagement() {
             border: 'none',
             borderRadius: '8px 8px 0 0',
             cursor: 'pointer',
-            background: paymentType === "cash" ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#f5f5f5',
+            background: paymentType === "cash" ? '    background: linear-gradient(135deg, #66c9adff 0%, #079724ff 100%)' : '#27c253ff',
             color: paymentType === "cash" ? 'white' : '#666',
             transition: 'all 0.3s ease',
           }}
@@ -295,7 +304,7 @@ export default function PaymentManagement() {
             border: 'none',
             borderRadius: '8px 8px 0 0',
             cursor: 'pointer',
-            background: paymentType === "online" ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#f5f5f5',
+            background: paymentType === "online" ? '    background: linear-gradient(135deg, #66c9a9 0%, #56ab91 100%)' : '#3acfe0ff',
             color: paymentType === "online" ? 'white' : '#666',
             transition: 'all 0.3s ease',
           }}
