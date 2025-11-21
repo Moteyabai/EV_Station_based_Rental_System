@@ -14,12 +14,15 @@ namespace API.Controllers
         private readonly EVBike_StocksService _evBikeStocksService;
         private readonly EVBikeService _evBikeService;
         private readonly StationService _stationService;
+        private readonly StationStaffService _stationStaffService;
 
-        public EVBike_StocksController(EVBike_StocksService evBikeStocksService, EVBikeService evBikeService, StationService stationService)
+        public EVBike_StocksController(EVBike_StocksService evBikeStocksService
+            , EVBikeService evBikeService, StationService stationService, StationStaffService stationStaffService)
         {
             _evBikeStocksService = evBikeStocksService;
             _evBikeService = evBikeService;
             _stationService = stationService;
+            _stationStaffService = stationStaffService;
         }
 
         [HttpGet("GetAllEVBikeStocks")]
@@ -266,6 +269,70 @@ namespace API.Controllers
             catch (Exception ex)
             {
                 res.Message = $"Lỗi khi xóa xe: {ex.Message}";
+                return StatusCode(StatusCodes.Status500InternalServerError, res);
+            }
+        }
+
+        [HttpGet("GetStocksAtStationByAccountID/{accountID}")]
+        [Authorize]
+        public async Task<IActionResult> GetStocksAtStationByAccountID(int accountID)
+        {
+            var res = new ResponseDTO();
+            // Check user permission (Staff only)
+            var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
+            if (permission != "2")
+            {
+                res.Message = "Không có quyền truy cập!";
+                return Unauthorized(res);
+            }
+            try
+            {
+                var staff = await _stationStaffService.GetStaffByAccountID(accountID);
+                if (staff == null)
+                {
+                    res.Message = "Nhân viên không tồn tại.";
+                    return NotFound(res);
+                }
+
+                if (staff.StationID == null)
+                {
+                    res.Message = "Nhân viên chưa được phân công trạm.";
+                    return BadRequest(res);
+                }
+
+                var station = await _stationService.GetByIdAsync(staff.StationID.Value);
+                if (station == null)
+                {
+                    res.Message = "Trạm không tồn tại.";
+                    return NotFound(res);
+                }
+                var stocks = await _evBikeStocksService.GetAllStocksAtStationAsync(staff.StationID.Value);
+                if (stocks == null || !stocks.Any())
+                {
+                    res.Message = "Không tìm thấy xe nào.";
+                    return NotFound(res);
+                }
+                var display = new List<EVBike_StocksDisplayDTO>();
+                foreach (var stock in stocks)
+                {
+                    var dis = new EVBike_StocksDisplayDTO
+                    {
+                        StockID = stock.StockID,
+                        BikeID = stock.BikeID,
+                        Color = stock.Color,
+                        StationID = stock.StationID,
+                        StationName = stock.Station.Name,
+                        BatteryCapacity = stock.BatteryCapacity,
+                        LicensePlate = stock.LicensePlate,
+                        Status = stock.Status
+                    };
+                    display.Add(dis);
+                }
+                return Ok(display);
+            }
+            catch (Exception ex)
+            {
+                res.Message = $"Lỗi khi lấy danh sách xe: {ex.Message}";
                 return StatusCode(StatusCodes.Status500InternalServerError, res);
             }
         }
