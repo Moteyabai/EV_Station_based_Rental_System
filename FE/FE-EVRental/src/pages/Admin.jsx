@@ -180,11 +180,12 @@ const Admin = () => {
 
   const [stats, setStats] = useState({
     totalVehicles: 125,
-    activeRentals: 48,
-    totalCustomers: 356,
+    activeRentals: 0, // Sẽ được cập nhật từ API rental
+    totalCustomers: 0, // Sẽ được cập nhật từ API customers
     totalStaff: 24,
     revenue: 45680000,
-    vehiclesInUse: 48,
+    monthlyRevenue: 0, // Doanh thu tháng hiện tại
+    vehiclesInUse: 0, // Sẽ được cập nhật từ API rental
     availableVehicles: 77,
   });
 
@@ -254,25 +255,24 @@ const Admin = () => {
   const [apiErrors, setApiErrors] = useState({});
 
   const [reports, setReports] = useState({
-    revenueByStation: [
-      { station: "Quận 1", revenue: 18500000, rentals: 45 },
-      { station: "Quận 3", revenue: 15200000, rentals: 38 },
-      { station: "Quận 7", revenue: 11980000, rentals: 29 },
-    ],
-    peakHours: [
-      { hour: "7-9h", usage: 85 },
-      { hour: "12-14h", usage: 72 },
-      { hour: "17-19h", usage: 93 },
-    ],
+    revenueByStation: [],
+    peakHours: [],
   });
 
   // Fetch stations from API
   useEffect(() => {
     fetchStations();
     fetchRentalHistory();
-    fetchPayments();
     fetchAllBikesCount();
   }, []);
+
+  // Fetch payments after stations are loaded
+  useEffect(() => {
+    if (stations.length > 0) {
+      console.log("Stations loaded, now fetching payments...");
+      fetchPayments();
+    }
+  }, [stations.length]);
 
   // Fetch total bikes count for stats
   const fetchAllBikesCount = async () => {
@@ -361,14 +361,20 @@ const Admin = () => {
   const fetchPayments = async () => {
     setPaymentsLoading(true);
     try {
+      // Wait for stations to be loaded first
+      if (stations.length === 0) {
+        console.warn("Stations not loaded yet, waiting...");
+        return;
+      }
+
       const data = await adminService.getAllPayments();
       console.log("Payments loaded from API:", data);
       setPayments(data || []);
 
       // Calculate revenue statistics from payment data
       if (data && data.length > 0) {
+        // Calculate total revenue
         const totalRevenue = data.reduce((sum, payment) => {
-          // Check all possible field names for amount
           const amount =
             payment.amount ||
             payment.Amount ||
@@ -380,14 +386,70 @@ const Admin = () => {
         }, 0);
 
         console.log("Total revenue calculated:", totalRevenue);
+        console.log("Total payments:", data.length);
+        console.log("Stations array:", stations);
+        console.log("Payment data sample:", data[0]);
+
+        // Calculate revenue by station - group by stationID
+        const revenueByStationMap = {};
+
+        data.forEach((payment) => {
+          const stationId = payment.stationID || payment.StationID;
+          const amount =
+            payment.amount ||
+            payment.Amount ||
+            payment.totalAmount ||
+            payment.TotalAmount ||
+            payment.Total ||
+            0;
+
+          console.log(`Payment: stationID=${stationId}, amount=${amount}`);
+
+          if (stationId) {
+            if (!revenueByStationMap[stationId]) {
+              // Find station name from stations array
+              const station = stations.find((s) => {
+                console.log(
+                  `Checking station: s.id=${s.id}, s.stationID=${s.stationID}, s.name=${s.name}`
+                );
+                return s.id === stationId || s.stationID === stationId;
+              });
+              const stationName =
+                station?.name || station?.Name || `Trạm ${stationId}`;
+
+              console.log(
+                `Found station for ID ${stationId}:`,
+                station,
+                `-> Name: ${stationName}`
+              );
+
+              revenueByStationMap[stationId] = {
+                station: stationName,
+                revenue: 0,
+                rentals: 0,
+              };
+            }
+            revenueByStationMap[stationId].revenue += amount;
+            revenueByStationMap[stationId].rentals += 1;
+          }
+        });
+
+        const revenueByStation = Object.values(revenueByStationMap).sort(
+          (a, b) => b.revenue - a.revenue
+        );
+
+        console.log("Revenue by station:", revenueByStation);
 
         setStats((prev) => ({
           ...prev,
           revenue: totalRevenue,
+          monthlyRevenue: totalRevenue,
         }));
 
-        // Calculate revenue by station from rentalHistory (has stationAddress)
-        // Payment API may not have station info, so we'll use rental data instead
+        setReports((prev) => ({
+          ...prev,
+          revenueByStation: revenueByStation,
+        }));
       }
     } catch (error) {
       console.error("Error fetching payments:", error);
@@ -405,54 +467,50 @@ const Admin = () => {
       console.log("Rental history loaded from API:", data);
       setRentalHistory(data || []);
 
-      // Update active rentals count and calculate revenue by station
+      // Update active rentals count and calculate peak hours
       if (data && data.length > 0) {
         const activeRentals = data.filter(
           (rental) => !rental.returnDate
         ).length;
 
-        // Calculate revenue by station from rental + payment data
-        const revenueByStationMap = {};
-
-        // Group rentals by station
+        // Calculate peak hours from rental start times
+        const hourlyUsage = {};
         data.forEach((rental) => {
-          const stationAddress = rental.stationAddress || "Unknown Station";
-          const stationId = rental.stationID;
+          if (rental.startDate) {
+            const startDate = new Date(rental.startDate);
+            const hour = startDate.getHours();
 
-          if (!revenueByStationMap[stationId]) {
-            revenueByStationMap[stationId] = {
-              station: stationAddress,
-              revenue: 0,
-              rentals: 0,
-            };
+            // Group into time ranges
+            let timeRange = "";
+            if (hour >= 6 && hour < 9) {
+              timeRange = "6-9h (Sáng sớm)";
+            } else if (hour >= 9 && hour < 12) {
+              timeRange = "9-12h (Buổi sáng)";
+            } else if (hour >= 12 && hour < 14) {
+              timeRange = "12-14h (Trưa)";
+            } else if (hour >= 14 && hour < 17) {
+              timeRange = "14-17h (Chiều)";
+            } else if (hour >= 17 && hour < 20) {
+              timeRange = "17-20h (Tối)";
+            } else if (hour >= 20 && hour < 23) {
+              timeRange = "20-23h (Tối muộn)";
+            } else {
+              timeRange = "23-6h (Đêm)";
+            }
+
+            hourlyUsage[timeRange] = (hourlyUsage[timeRange] || 0) + 1;
           }
-          revenueByStationMap[stationId].rentals += 1;
         });
 
-        // Match with payment amounts
-        if (payments && payments.length > 0) {
-          payments.forEach((payment) => {
-            const rentalId = payment.rentalID || payment.RentalID;
-            const rental = data.find((r) => r.rentalID === rentalId);
-            if (rental) {
-              const stationId = rental.stationID;
-              const amount =
-                payment.amount ||
-                payment.Amount ||
-                payment.totalAmount ||
-                payment.TotalAmount ||
-                payment.Total ||
-                0;
-              if (revenueByStationMap[stationId]) {
-                revenueByStationMap[stationId].revenue += amount;
-              }
-            }
-          });
-        }
-
-        const revenueByStation = Object.values(revenueByStationMap).sort(
-          (a, b) => b.revenue - a.revenue
-        );
+        // Convert to array and calculate percentage
+        const totalRentals = data.length;
+        const peakHours = Object.entries(hourlyUsage)
+          .map(([hour, count]) => ({
+            hour,
+            usage: Math.round((count / totalRentals) * 100),
+            count,
+          }))
+          .sort((a, b) => b.count - a.count);
 
         setStats((prev) => ({
           ...prev,
@@ -463,7 +521,7 @@ const Admin = () => {
 
         setReports((prev) => ({
           ...prev,
-          revenueByStation,
+          peakHours: peakHours, // Luôn update, kể cả khi empty
         }));
       }
     } catch (error) {
@@ -1236,12 +1294,10 @@ const Admin = () => {
     navigate("/login");
   };
 
-  // Fetch customers from API
+  // Fetch customers from API on initial load
   useEffect(() => {
-    if (activeTab === "customers") {
-      fetchCustomers();
-    }
-  }, [activeTab]);
+    fetchCustomers();
+  }, []);
 
   const fetchCustomers = async () => {
     setCustomersLoading(true);
@@ -2334,7 +2390,7 @@ const Admin = () => {
               {new Date().getFullYear()}
             </h3>
             <p className="stat-number">
-              {(stats.revenue / 1000000).toFixed(1)}M
+              {((stats.monthlyRevenue || 0) / 1000000).toFixed(1)}M
             </p>
             <span className="stat-detail">VNĐ</span>
           </div>
@@ -2345,39 +2401,74 @@ const Admin = () => {
         <div className="chart-card">
           <h3>Doanh thu theo điểm</h3>
           <div className="bar-chart">
-            {reports.revenueByStation.map((item, index) => (
-              <div key={index} className="bar-item">
-                <div className="bar-label">{item.station}</div>
-                <div className="bar-container">
-                  <div
-                    className="bar-fill"
-                    style={{ width: `${(item.revenue / 20000000) * 100}%` }}
-                  ></div>
-                </div>
-                <div className="bar-value">
-                  {(item.revenue / 1000000).toFixed(1)}M
-                </div>
+            {reports.revenueByStation.length === 0 ? (
+              <div
+                style={{ textAlign: "center", padding: "2rem", color: "#888" }}
+              >
+                <p>📊 Chưa có dữ liệu doanh thu tháng này</p>
+                <p style={{ fontSize: "0.9rem", marginTop: "0.5rem" }}>
+                  Dữ liệu sẽ xuất hiện khi có giao dịch thanh toán
+                </p>
               </div>
-            ))}
+            ) : (
+              reports.revenueByStation.map((item, index) => (
+                <div key={index} className="bar-item">
+                  <div className="bar-label">{item.station}</div>
+                  <div className="bar-container">
+                    <div
+                      className="bar-fill"
+                      style={{ width: `${(item.revenue / 20000000) * 100}%` }}
+                    ></div>
+                  </div>
+                  <div className="bar-value">
+                    {(item.revenue / 1000000).toFixed(1)}M
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
         <div className="chart-card">
           <h3>Giờ cao điểm</h3>
           <div className="peak-hours">
-            {reports.peakHours.map((item, index) => (
-              <div key={index} className="peak-item">
-                <div className="peak-label">{item.hour}</div>
-                <div className="peak-bar">
-                  <div
-                    className="peak-fill"
-                    style={{ width: `${item.usage}%` }}
-                  >
-                    {item.usage}%
+            {reports.peakHours.length === 0 ? (
+              <div
+                style={{ textAlign: "center", padding: "2rem", color: "#888" }}
+              >
+                <p>⏰ Chưa có dữ liệu giờ cao điểm</p>
+                <p style={{ fontSize: "0.9rem", marginTop: "0.5rem" }}>
+                  Dữ liệu sẽ xuất hiện khi có người thuê xe
+                </p>
+              </div>
+            ) : (
+              reports.peakHours.map((item, index) => (
+                <div key={index} className="peak-item">
+                  <div className="peak-label">
+                    {item.hour}
+                    {item.count && (
+                      <span
+                        style={{
+                          fontSize: "0.85rem",
+                          color: "#666",
+                          marginLeft: "0.5rem",
+                        }}
+                      >
+                        ({item.count} lượt)
+                      </span>
+                    )}
+                  </div>
+                  <div className="peak-bar">
+                    <div
+                      className="peak-fill"
+                      style={{ width: `${item.usage}%` }}
+                    >
+                      {item.usage}%
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -6007,7 +6098,20 @@ const Admin = () => {
           <div className="peak-analysis">
             {reports.peakHours.map((item, index) => (
               <div key={index} className="peak-detail">
-                <div className="peak-time">{item.hour}</div>
+                <div className="peak-time">
+                  {item.hour}
+                  {item.count && (
+                    <span
+                      style={{
+                        fontSize: "0.85rem",
+                        color: "#888",
+                        marginLeft: "0.5rem",
+                      }}
+                    >
+                      ({item.count} lượt)
+                    </span>
+                  )}
+                </div>
                 <div className="peak-meter">
                   <div
                     className="peak-meter-fill"
@@ -6019,14 +6123,20 @@ const Admin = () => {
               </div>
             ))}
           </div>
-          <div className="peak-summary">
-            <p>
-              📊 Giờ cao điểm nhất: <strong>17-19h (93%)</strong>
-            </p>
-            <p>
-              📈 Khuyến nghị: Tăng cường xe tại các điểm chính vào khung giờ này
-            </p>
-          </div>
+          {reports.peakHours.length > 0 && (
+            <div className="peak-summary">
+              <p>
+                📊 Giờ cao điểm nhất:{" "}
+                <strong>
+                  {reports.peakHours[0].hour} ({reports.peakHours[0].usage}%)
+                </strong>
+              </p>
+              <p>
+                📈 Khuyến nghị: Tăng cường xe tại các điểm chính vào khung giờ
+                này
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
