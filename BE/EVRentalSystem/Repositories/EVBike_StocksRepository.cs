@@ -110,6 +110,7 @@ namespace Repositories
         {
             return await _context.EVBike_Stocks
                 .Include(s => s.Station)
+                .Include(s => s.EVBike)
                 .Where(stock => stock.StationID == stationID)
                 .ToListAsync();
         }

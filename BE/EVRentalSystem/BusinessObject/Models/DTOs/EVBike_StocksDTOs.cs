@@ -32,6 +32,7 @@ namespace BusinessObject.Models.DTOs
     {
         public int StockID { get; set; }
         public int BikeID { get; set; }
+        public string BikeName { get; set; }
         public int Color { get; set; }
         public int StationID { get; set; }
         public string StationName { get; set; }
