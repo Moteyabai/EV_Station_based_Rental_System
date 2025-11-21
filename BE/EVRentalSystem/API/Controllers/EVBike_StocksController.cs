@@ -319,6 +319,7 @@ namespace API.Controllers
                     {
                         StockID = stock.StockID,
                         BikeID = stock.BikeID,
+                        BikeName = stock.EVBike.BikeName,
                         Color = stock.Color,
                         StationID = stock.StationID,
                         StationName = stock.Station.Name,
