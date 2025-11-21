@@ -105,6 +105,15 @@ namespace Repositories
                 .ToListAsync();
         }
 
+        //get all stocks at station
+        public async Task<List<EVBike_Stocks>> GetAllStocksAtStationAsync(int stationID)
+        {
+            return await _context.EVBike_Stocks
+                .Include(s => s.Station)
+                .Where(stock => stock.StationID == stationID)
+                .ToListAsync();
+        }
+
         /// <summary>
         /// Count all stocks at a station
         /// </summary>

@@ -43,5 +43,6 @@ namespace Services
 
         public async Task<int> GetAvailableStockCountByBikeIDAsync(int bikeID) => await _evBikeStocksRepository.GetAvailableStockCountByBikeIDAsync(bikeID);
         public async Task<List<EVBike_Stocks>> GetAvailableStocksAtStationAsync(int stationID) => await _evBikeStocksRepository.GetAvailableStocksAtStationAsync(stationID);
+        public async Task<List<EVBike_Stocks>> GetAllStocksAtStationAsync(int stationID) => await _evBikeStocksRepository.GetAllStocksAtStationAsync(stationID);
     }
 }
