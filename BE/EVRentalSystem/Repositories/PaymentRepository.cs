@@ -48,5 +48,13 @@ namespace Repositories
                 .Where(payment => payment.Rental.StationID == stationID && payment.PaymentMethod == (int)PaymentMethod.Cash)
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<Payment>> GetPaymentsAtStationAsync(int stationID)
+        {
+            return await _context.Payments
+                .Include(payment => payment.Rental)
+                .Where(payment => payment.Rental.StationID == stationID)
+                .ToListAsync();
+        }
     }
 }

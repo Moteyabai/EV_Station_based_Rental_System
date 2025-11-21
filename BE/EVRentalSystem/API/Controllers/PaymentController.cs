@@ -19,10 +19,11 @@ namespace API.Controllers
         private readonly EVBikeService _evbikeService;
         private readonly EVBike_StocksService _evbike_StocksService;
         private readonly StationStaffService _stationStaffService;
+        private readonly StationService _stationService;
 
         public PaymentController(PaymentService paymentService, RenterService renterService, RentalService rentalService
             , AccountService accountService, EVBikeService evbikeService, EVBike_StocksService evbike_StocksService,
-            StationStaffService stationStaffService)
+            StationStaffService stationStaffService, StationService stationService)
         {
             _paymentService = paymentService;
             _renterService = renterService;
@@ -31,11 +32,12 @@ namespace API.Controllers
             _evbikeService = evbikeService;
             _evbike_StocksService = evbike_StocksService;
             _stationStaffService = stationStaffService;
+            _stationService = stationService;
         }
 
         [HttpGet("GetAllPayments")]
         [Authorize]
-        public async Task<ActionResult<IEnumerable<Payment>>> GetAllPayments()
+        public async Task<ActionResult<IEnumerable<PaymentAdminDisplayDTO>>> GetAllPayments()
         {
             // Check user permission
             var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;
@@ -50,16 +52,42 @@ namespace API.Controllers
 
             try
             {
+                var res = new ResponseDTO();
                 var payments = await _paymentService.GetAllAsync();
                 if (payments == null || !payments.Any())
                 {
-                    var res = new ResponseDTO
-                    {
-                        Message = "Danh sách thanh toán trống"
-                    };
+                    res.Message = "Danh sách thanh toán trống";
                     return NotFound(res);
                 }
-                return Ok(payments);
+
+                var displays = new List<PaymentAdminDisplayDTO>();
+                foreach (var payment in payments)
+                {
+                    var rental = await _rentalService.GetRentalByIDAsync(payment.RentalID);
+                    if(rental == null)
+                    {
+                        res.Message = "Không tìm thấy đơn thuê!";
+                        return NotFound(res);
+                    }
+
+                    var station = await _stationService.GetByIdAsync(rental.StationID);
+                    if(station == null)
+                    {
+                        res.Message = "Không tìm thấy trạm";
+                        return NotFound(res);
+                    }
+
+                    var display = new PaymentAdminDisplayDTO
+                    {
+                        RentalID = rental.RentalID,
+                        StationID = rental.StationID,
+                        PaymentID = (int)payment.PaymentID,
+                        Amount = payment.Amount,
+                        PaymentType = payment.PaymentType
+                    };
+                    displays.Add(display);
+                }
+                return Ok(displays);
             }
             catch (Exception ex)
             {
