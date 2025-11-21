@@ -406,7 +406,7 @@
 .auth-form .show-password-btn {
   position: absolute;
   right: 0.5rem;
-  top: 50%;
+  top: 25%;
   transform: translateY(-50%);
   background: transparent !important;
   border: none !important;
