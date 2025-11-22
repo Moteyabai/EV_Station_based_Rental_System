@@ -86,57 +86,95 @@ export default function Stations() {
   // Yêu cầu quyền truy cập vị trí từ người dùng
   const requestLocationPermission = () => {
     setIsRequestingLocation(true);
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const location = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          };
-          setUserLocation(location);
-          setLocationPermission("granted");
-          setIsRequestingLocation(false);
-
-          // Tính khoảng cách và sắp xếp trạm theo khoảng cách gần nhất
-          const stationsWithDistance = stations
-            .map((station) => {
-              const distance = calculateDistance(
-                location.lat,
-                location.lng,
-                station.location.lat,
-                station.location.lng
-              );
-              return { ...station, distance };
-            })
-            .sort((a, b) => a.distance - b.distance);
-
-          setStations(stationsWithDistance);
-          setNearbyStations(stationsWithDistance.slice(0, 5)); // 5 trạm gần nhất
-        },
-        (error) => {
-          console.error("Lỗi khi lấy vị trí:", error);
-          setLocationPermission("denied");
-          setIsRequestingLocation(false);
-          // Giữ nguyên stations từ API
-          const defaultLocation = { lat: 10.762622, lng: 106.660172 };
-          setUserLocation(defaultLocation);
-        }
-      );
-    } else {
-      // Trình duyệt không hỗ trợ geolocation
+    
+    if (!navigator.geolocation) {
+      alert("❌ Trình duyệt của bạn không hỗ trợ định vị.\nVui lòng sử dụng trình duyệt khác hoặc cập nhật lên phiên bản mới nhất.");
       setLocationPermission("denied");
       setIsRequestingLocation(false);
       const defaultLocation = { lat: 10.762622, lng: 106.660172 };
       setUserLocation(defaultLocation);
+      return;
     }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const location = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
+        setUserLocation(location);
+        setLocationPermission("granted");
+        setIsRequestingLocation(false);
+
+        // Tính khoảng cách và sắp xếp trạm theo khoảng cách gần nhất
+        const stationsWithDistance = stations
+          .map((station) => {
+            const distance = calculateDistance(
+              location.lat,
+              location.lng,
+              station.location.lat,
+              station.location.lng
+            );
+            return { ...station, distance };
+          })
+          .sort((a, b) => a.distance - b.distance);
+
+        setStations(stationsWithDistance);
+        const nearby = stationsWithDistance.slice(0, 5);
+        setNearbyStations(nearby);
+
+        // Thông báo thành công và hiển thị trạm gần nhất
+        if (nearby.length > 0) {
+          console.log(`✅ Đã tìm thấy ${nearby.length} trạm gần bạn. Trạm gần nhất: ${nearby[0].name} (${nearby[0].distance.toFixed(1)} km)`);
+        }
+      },
+      (error) => {
+        console.error("❌ Lỗi khi lấy vị trí:", error);
+        setLocationPermission("denied");
+        setIsRequestingLocation(false);
+        
+        // Thông báo lỗi chi tiết
+        let errorMessage = "❌ Không thể lấy vị trí của bạn.\n\n";
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage += "Bạn đã từ chối quyền truy cập vị trí.\nVui lòng bật quyền trong cài đặt trình duyệt.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage += "Thông tin vị trí không khả dụng.\nVui lòng kiểm tra kết nối mạng.";
+            break;
+          case error.TIMEOUT:
+            errorMessage += "Yêu cầu lấy vị trí đã hết thời gian.\nVui lòng thử lại.";
+            break;
+          default:
+            errorMessage += "Đã xảy ra lỗi không xác định.\nVui lòng thử lại sau.";
+        }
+        alert(errorMessage);
+        
+        // Giữ nguyên stations từ API
+        const defaultLocation = { lat: 10.762622, lng: 106.660172 };
+        setUserLocation(defaultLocation);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
   };
 
   const handleStationSelect = (station) => {
     navigate(`/stations/${station.id}`);
   };
 
-  // Hàm tìm trạm gần nhất
+  // Hàm tìm trạm gần nhất - tự động yêu cầu vị trí nếu chưa có
   const findNearestStation = () => {
+    // Nếu chưa có vị trí, yêu cầu quyền truy cập
+    if (locationPermission !== "granted") {
+      requestLocationPermission();
+      return;
+    }
+    
+    // Nếu đã có vị trí và có trạm gần, chuyển đến trạm gần nhất
     if (nearbyStations.length > 0) {
       navigate(`/stations/${nearbyStations[0].id}`);
     }
@@ -210,6 +248,15 @@ export default function Stations() {
           >
             📋 Xem danh sách
           </button>
+          {locationPermission !== "granted" && !loading && (
+            <button
+              className="toggle-btn nearest-station-btn"
+              onClick={findNearestStation}
+              disabled={isRequestingLocation}
+            >
+              {isRequestingLocation ? "⏳ Đang lấy vị trí..." : "🎯 Tìm trạm gần nhất"}
+            </button>
+          )}
         </div>
 
         {/* Thông tin vị trí và trạm gần nhất */}
