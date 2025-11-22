@@ -605,7 +605,7 @@ namespace API.Controllers
         /// </summary>
         [HttpPut("ReturnBike")]
         [Authorize]
-        public async Task<ActionResult> ReturnBike([FromForm] RentalReturnDTO returnDto)
+        public async Task<ActionResult> ReturnBike([FromBody] RentalReturnDTO returnDto)
         {
             // Check user permission (only staff and admin can process returns)
             var permission = User.FindFirst(UserClaimTypes.RoleID)?.Value;

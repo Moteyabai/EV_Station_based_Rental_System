@@ -85,6 +85,35 @@
   color: white;
 }
 
+.toggle-btn.nearest-station-btn {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+  color: white;
+  border: none;
+  font-weight: 700;
+  animation: pulseGlow 2s infinite;
+}
+
+.toggle-btn.nearest-station-btn:hover {
+  background: linear-gradient(135deg, #ee5a24, #ff6b6b);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+}
+
+.toggle-btn.nearest-station-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  animation: none;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 107, 107, 0.8);
+  }
+}
+
 /* Location Request Banner */
 .location-request-banner,
 .location-denied-banner {

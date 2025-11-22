@@ -118,13 +118,9 @@ namespace BusinessObject.Models.DTOs
         [Required(ErrorMessage = "Rental ID là bắt buộc")]
         public int RentalID { get; set; }
 
-        [Required(ErrorMessage = "Mức pin cuối là bắt buộc")]
-        [Range(0, 100, ErrorMessage = "Mức pin cuối phải từ 0 đến 100")]
-        public int FinalBattery { get; set; }
+        public int? FinalBattery { get; set; }
 
-        [Required(ErrorMessage = "Tình trạng xe là bắt buộc")]
-        [StringLength(500, ErrorMessage = "Tình trạng xe không được quá 500 ký tự!")]
-        public string FinalBikeCondition { get; set; }
+        public string? FinalBikeCondition { get; set; }
 
         public string? Note { get; set; }
 
