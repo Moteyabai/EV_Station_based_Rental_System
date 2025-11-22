@@ -46,7 +46,7 @@ export default function UserHistory() {
       return;
     }
     
-    // Ch?n Staff (roleID = 2) v‡ Admin (roleID = 3)
+    // Ch·∫∑n Staff (roleID = 2) v√† Admin (roleID = 3)
     const userRoleId = user?.roleID || user?.RoleID;
     if (userRoleId === 2 || userRoleId === 3) {
       console.log('UserHistory: Access denied for Staff/Admin, redirecting...');
@@ -70,7 +70,7 @@ export default function UserHistory() {
       const accountID = user?.accountID || user?.AccountID;
       
       if (!accountID) {
-        throw new Error('KhÙng tÏm th?y thÙng tin t‡i kho?n');
+        throw new Error('Kh√¥ng t√¨m th·∫•y th√¥ng tin t√†i kho·∫£n');
       }
       
       console.log('?? Fetching rentals for account:', accountID);
@@ -108,8 +108,8 @@ export default function UserHistory() {
         const returnStationID = rental.returnStationID || rental.ReturnStationID;
         
         // Fetch station names only if we have valid IDs
-        let pickupStationName = 'Chua x·c d?nh';
-        let returnStationName = 'Chua x·c d?nh';
+        let pickupStationName = 'Ch∆∞a x√°c ƒë·ªãnh';
+        let returnStationName = 'Ch∆∞a x√°c ƒë·ªãnh';
         
         try {
           if (pickupStationID && typeof pickupStationID === 'number' && pickupStationID > 0) {
@@ -153,8 +153,8 @@ export default function UserHistory() {
           vehicleName: bikeName,
           vehicleImage: bikeImage,
           image: bikeImage,
-          pickupDate: rental.handoverDate || rental.HandoverDate || "Chua nh?n xe",
-          returnDate: rental.returnDate || rental.ReturnDate || "Chua tr? xe",
+          pickupDate: rental.handoverDate || rental.HandoverDate || "Ch∆∞a nh·∫≠n xe",
+          returnDate: rental.returnDate || rental.ReturnDate || "Ch∆∞a tr·∫£ xe",
           pickupStation: rental.stationName,
           returnStation: rental.stationName,
           stationAddress: rental.stationAddress || rental.StationAddress || '',
@@ -187,7 +187,7 @@ export default function UserHistory() {
       setRentals(mappedRentals);
     } catch (err) {
       console.error('? Error fetching user rentals:', err);
-      setError(err.message || 'KhÙng th? t?i l?ch s? thuÍ xe');
+      setError(err.message || 'Kh√¥ng th·ªÉ t·∫£i l·ªãch s·ª≠ thu√™ xe');
     } finally {
       setLoading(false);
     }
@@ -210,7 +210,7 @@ export default function UserHistory() {
         <Spin
           size="large"
           indicator={<LoadingOutlined style={{ fontSize: 48, color: "#4db6ac" }} spin />}
-          tip="–ang t?i l?ch s? thuÍ xe..."
+          tip="ƒêang t·∫£i l·ªãch s·ª≠ thu√™ xe..."
         />
       </div>
     );
@@ -243,7 +243,7 @@ export default function UserHistory() {
                       marginTop: "16px",
                     }}
                   >
-                    Th? l?i
+                    Th·ª≠ l·∫°i
                   </button>
                 </div>
               }
@@ -274,17 +274,17 @@ export default function UserHistory() {
   const getStatusBadge = (status) => {
     switch (status) {
       case "pending_payment":
-        return <Badge status="warning" text="Ch? thanh to·n" />;
+        return <Badge status="warning" text="Ch·ªù thanh to√°n" />;
       case "booked":
-        return <Badge status="processing" text="–„ d?t xe" />;
+        return <Badge status="processing" text="ƒê√£ ƒë·∫∑t xe" />;
       case "confirmed":
-        return <Badge status="processing" text="–„ x·c nh?n" />;
+        return <Badge status="processing" text="ƒê√£ x√°c nh·∫≠n" />;
       case "renting":
-        return <Badge status="success" text="–ang thuÍ xe" />;
+        return <Badge status="success" text="ƒêang thu√™ xe" />;
       case "completed":
-        return <Badge status="success" text="Ho‡n th‡nh" />;
+        return <Badge status="success" text="Ho√†n th√†nh" />;
       case "cancelled":
-        return <Badge status="error" text="–„ h?y" />;
+        return <Badge status="error" text="ƒê√£ h·ªßy" />;
       default:
         return <Badge status="default" text={status} />;
     }
@@ -330,17 +330,17 @@ export default function UserHistory() {
               gap: "12px",
             }}
           >
-            <HistoryOutlined style={{ color: "#4db6ac" }} /> L?ch s? thuÍ xe
+            <HistoryOutlined style={{ color: "#4db6ac" }} /> L·ªãch s·ª≠ thu√™ xe
           </h1>
           <p style={{ fontSize: "16px", color: "#666" }}>
-            Qu?n l˝ v‡ theo dıi c·c don thuÍ xe c?a b?n
+            Qu·∫£n l√Ω v√† theo d√µi c√°c ƒë∆°n thu√™ xe c·ªßa b·∫°n
           </p>
         </div>
         <Row gutter={[16, 16]} style={{ marginBottom: "32px" }}>
           <Col xs={24} sm={8}>
             <Card>
               <Statistic
-                title="T?ng don thuÍ"
+                title="T·ªïng ƒë∆°n thu√™"
                 value={totalRentals}
                 prefix={<ThunderboltOutlined style={{ color: "#4db6ac" }} />}
                 valueStyle={{ color: "#4db6ac" }}
@@ -350,7 +350,7 @@ export default function UserHistory() {
           <Col xs={24} sm={8}>
             <Card>
               <Statistic
-                title="T?ng s? xe d„ thuÍ"
+                title="T·ªïng s·ªë xe ƒë√£ thu√™"
                 value={totalRental}
                 prefix={<ThunderboltOutlined style={{ color: "#1890ff" }} />}
                 valueStyle={{ color: "#1890ff" }}
@@ -360,8 +360,8 @@ export default function UserHistory() {
           <Col xs={24} sm={8}>
             <Card>
               <Statistic
-                title="T?ng chi tiÍu"
-                value={formatPrice(totalSpent, "VN–")}
+                title="T·ªïng chi ti√™u"
+                value={formatPrice(totalSpent, "VNƒê")}
                 prefix={<DollarOutlined style={{ color: "#52c41a" }} />}
                 valueStyle={{ color: "#52c41a", fontSize: "20px" }}
               />
@@ -373,22 +373,22 @@ export default function UserHistory() {
             activeKey={activeTab}
             onChange={setActiveTab}
             items={[
-              { key: "all", label: `T?t c? (${rentals.length})` },
+              { key: "all", label: `T·∫•t c·∫£ (${rentals.length})` },
               {
                 key: "confirmed",
-                label: `–„ d?t xe (${
+                label: `ƒê√£ ƒë·∫∑t xe (${
                   rentals.filter((r) => r.status === "confirmed" || r.status === "booked").length
                 })`,
               },
               {
                 key: "renting",
-                label: `–ang thuÍ (${
+                label: `ƒêang thu√™ (${
                   rentals.filter((r) => r.status === "renting").length
                 })`,
               },
               {
                 key: "completed",
-                label: `Ho‡n th‡nh (${
+                label: `Ho√†n th√†nh (${
                   rentals.filter((r) => r.status === "completed").length
                 })`,
               },
@@ -396,7 +396,7 @@ export default function UserHistory() {
           />
           {filteredRentals.length === 0 ? (
             <Empty
-              description="Chua cÛ don thuÍ xe n‡o"
+              description="Ch∆∞a c√≥ ƒë∆°n thu√™ xe n√†o"
               image={Empty.PRESENTED_IMAGE_SIMPLE}
             >
               <button
@@ -410,7 +410,7 @@ export default function UserHistory() {
                   cursor: "pointer",
                 }}
               >
-                ThuÍ xe ngay
+                Thu√™ xe ngay
               </button>
             </Empty>
           ) : (
@@ -443,7 +443,7 @@ export default function UserHistory() {
                       >
                         {getStatusIcon(rental.status)}
                         <span style={{ marginLeft: "8px" }}>
-                          M„ don: {rental.rentalID}
+                          M√£ ƒë∆°n: {rental.rentalID}
                         </span>
                       </h3>
                       <p
@@ -458,7 +458,7 @@ export default function UserHistory() {
                     </div>
                     <div>{getStatusBadge(rental.status)}</div>
                   </div>
-                  {/* ThÙng tin xe thuÍ */}
+                  {/* ThÔøΩng tin xe thuÔøΩ */}
                   <div
                     style={{
                       display: "flex",
@@ -469,7 +469,7 @@ export default function UserHistory() {
                       borderRadius: "8px",
                     }}
                   >
-                    {/* HÏnh ?nh xe */}
+                    {/* HÔøΩnh ?nh xe */}
                     <div style={{ flexShrink: 0 }}>
                       <img
                         src={rental.vehicleImage || rental.image}
@@ -506,7 +506,7 @@ export default function UserHistory() {
                               marginBottom: "2px",
                             }}
                           >
-                            Bi?n s?
+                            Bi·ªÉn s·ªë
                           </div>
                           <div
                             style={{
@@ -522,7 +522,7 @@ export default function UserHistory() {
                       )}
                     </div>
 
-                    {/* ThÙng tin chi ti?t */}
+                    {/* ThÔøΩng tin chi ti?t */}
                     <div style={{ flex: 1 }}>
                       <h3
                         style={{
@@ -536,7 +536,7 @@ export default function UserHistory() {
                         {rental.vehicleName}
                       </h3>
 
-                      {/* Grid thÙng tin */}
+                      {/* Grid thÔøΩng tin */}
                       <div
                         style={{
                           display: "grid",
@@ -544,7 +544,7 @@ export default function UserHistory() {
                           gap: "12px",
                         }}
                       >
-                        {/* Ng‡y gi? nh?n xe */}
+                        {/* NgÔøΩy gi? nh?n xe */}
                         <div
                           style={{
                             background: "white",
@@ -560,7 +560,7 @@ export default function UserHistory() {
                               marginBottom: "4px",
                             }}
                           >
-                            <CalendarOutlined /> Nh?n xe l˙c
+                            <CalendarOutlined /> Nh·∫≠n xe l√∫c
                           </div>
                           {rental.pickupDate && rental.pickupDate !== "Chua nh?n xe" ? (
                             <>
@@ -585,12 +585,12 @@ export default function UserHistory() {
                                 color: "#999",
                               }}
                             >
-                              Chua nh?n xe
+                              Ch∆∞a nh·∫≠n xe
                             </div>
                           )}
                         </div>
 
-                        {/* Ng‡y gi? tr? xe */}
+                        {/* NgÔøΩy gi? tr? xe */}
                         <div
                           style={{
                             background: "white",
@@ -606,7 +606,7 @@ export default function UserHistory() {
                               marginBottom: "4px",
                             }}
                           >
-                            <CalendarOutlined /> Tr? xe l˙c
+                            <CalendarOutlined /> Tr·∫£ xe l√∫c
                           </div>
                           {rental.returnDate && rental.returnDate !== "Chua tr? xe" ? (
                             <>
@@ -631,12 +631,12 @@ export default function UserHistory() {
                                 color: "#999",
                               }}
                             >
-                              Chua tr? xe
+                              Ch∆∞a tr·∫£ xe
                             </div>
                           )}
                         </div>
 
-                        {/* –i?m thuÍ/tr? xe */}
+                        {/* ÔøΩi?m thuÔøΩ/tr? xe */}
                         <div
                           style={{
                             background: "white",
@@ -652,7 +652,7 @@ export default function UserHistory() {
                               marginBottom: "4px",
                             }}
                           >
-                            <EnvironmentOutlined style={{ color: "#4db6ac" }} /> Tr?m thuÍ/tr?
+                            <EnvironmentOutlined style={{ color: "#4db6ac" }} /> Tr·∫°m thu√™/tr·∫£
                           </div>
                           <div
                             style={{
@@ -661,7 +661,7 @@ export default function UserHistory() {
                               color: "#1a1a1a",
                             }}
                           >
-                            {rental.pickupStation || "Chua x·c d?nh"}
+                            {rental.pickupStation || "Ch∆∞a x√°c ƒë·ªãnh"}
                           </div>
                           {rental.stationAddress && (
                             <div
@@ -677,7 +677,7 @@ export default function UserHistory() {
                           )}
                         </div>
 
-                        {/* Th?i gian thuÍ */}
+                        {/* Th?i gian thuÔøΩ */}
                         <div
                           style={{
                             background: "white",
@@ -693,7 +693,7 @@ export default function UserHistory() {
                               marginBottom: "4px",
                             }}
                           >
-                            <ClockCircleOutlined style={{ color: "#1890ff" }} /> Th?i gian thuÍ
+                            <ClockCircleOutlined style={{ color: "#1890ff" }} /> Th·ªùi gian thu√™
                           </div>
                           <div
                             style={{
@@ -705,30 +705,30 @@ export default function UserHistory() {
                           >
                             {formatDate(rental.startDate)} - {formatDate(rental.endDate)}
                             <div style={{ color: "#666", marginTop: "4px" }}>
-                              ({calculateDuration(rental.startDate, rental.endDate)} ng‡y)
+                              ({calculateDuration(rental.startDate, rental.endDate)} ng√†y)
                             </div>
                           </div>
                         </div>
                       </div>
 
-                      {/* S? ng‡y thuÍ */}
+                      {/* S? ngÔøΩy thuÔøΩ */}
                       {rental.days && (
                         <div style={{ marginTop: "12px" }}>
                           <Tag
                             color="blue"
                             style={{ fontSize: "14px", padding: "4px 12px" }}
                           >
-                            <ClockCircleOutlined /> Th?i gian thuÍ: {rental.days} ng‡y
+                            <ClockCircleOutlined /> Th·ªùi gian thu√™: {rental.days} ng√†y
                           </Tag>
                         </div>
                       )}
                     </div>
 
-                    {/* Gi· ti?n */}
+                    {/* GiÔøΩ ti?n */}
                     
                   </div>
                   
-                  {/* ThÙng tin b‡n giao xe */}
+                  {/* ThÔøΩng tin bÔøΩn giao xe */}
                   {rental.status === "renting" && rental.handoverAt && (
                     <div
                       style={{
@@ -741,15 +741,15 @@ export default function UserHistory() {
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
                         <CheckCircleOutlined style={{ color: "#1890ff", fontSize: "18px" }} />
-                        <strong style={{ color: "#1890ff" }}>Xe d„ du?c b‡n giao</strong>
+                        <strong style={{ color: "#1890ff" }}>Xe ƒë√£ ƒë∆∞·ª£c b√†n giao</strong>
                       </div>
                       <div style={{ fontSize: "13px", color: "#666", marginLeft: "26px" }}>
-                        <CalendarOutlined /> Th?i gian nh?n xe: {formatDate(rental.handoverAt)}
+                        <CalendarOutlined /> Th·ªùi gian nh·∫≠n xe: {formatDate(rental.handoverAt)}
                       </div>
                     </div>
                   )}
                   
-                  {/* ThÙng tin ho‡n th‡nh */}
+                  {/* ThÔøΩng tin hoÔøΩn thÔøΩnh */}
                   {rental.status === "completed" && rental.completedAt && (
                     <div
                       style={{
@@ -762,16 +762,16 @@ export default function UserHistory() {
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
                         <CheckCircleOutlined style={{ color: "#52c41a", fontSize: "18px" }} />
-                        <strong style={{ color: "#52c41a" }}>–„ ho‡n th‡nh thuÍ xe</strong>
+                        <strong style={{ color: "#52c41a" }}>ƒê√£ ho√†n th√†nh thu√™ xe</strong>
                       </div>
                       {rental.handoverAt && (
                         <div style={{ fontSize: "13px", color: "#666", marginLeft: "26px" }}>
-                          <CalendarOutlined /> Nh?n xe: {formatDate(rental.handoverAt)}
+                          <CalendarOutlined /> Nh·∫≠n xe: {formatDate(rental.handoverAt)}
                         </div>
                       )}
                       {rental.returnedAt && (
                         <div style={{ fontSize: "13px", color: "#666", marginLeft: "26px" }}>
-                          <CalendarOutlined /> Tr? xe: {formatDate(rental.returnedAt)}
+                          <CalendarOutlined /> Tr·∫£ xe: {formatDate(rental.returnedAt)}
                         </div>
                       )}
                     </div>
@@ -795,10 +795,10 @@ export default function UserHistory() {
                     >
                       <Tag color={rental.payment?.methodType === 'payos' ? "blue" : "green"}>
                         {rental.payment?.methodType === 'payos' 
-                          ? "?? PayOS" 
+                          ? "üí≥ PayOS" 
                           : rental.payment?.methodType === 'cash'
-                          ? "?? Ti?n m?t"
-                          : "? Chua x·c d?nh"}
+                          ? "üíµ Ti·ªÅn m·∫∑t"
+                          : "‚ùì Ch∆∞a x√°c ƒë·ªãnh"}
                       </Tag>
                     </div>
                     <div style={{ textAlign: "right" }}>
@@ -809,17 +809,36 @@ export default function UserHistory() {
                           marginBottom: "4px",
                         }}
                       >
-                        PhÌ ph·t sinh:
+                        Ph√≠ thu√™ xe:
                       </div>
                       <div
                         style={{
-                          fontSize: "18px",
+                          fontSize: "16px",
+                          fontWeight: 600,
+                          color: "#1890ff",
+                          marginBottom: "8px",
+                        }}
+                      >
+                        {formatPrice(rental.deposit || 0, "VNƒê")}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "13px",
+                          color: "#666",
+                          marginBottom: "4px",
+                        }}
+                      >
+                        Ph√≠ ph√°t sinh:
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "16px",
                           fontWeight: 600,
                           color: "#ff4d4f",
                           marginBottom: "12px",
                         }}
                       >
-                        {formatPrice(rental.fee|| 0, "VN–")}
+                        {formatPrice(rental.fee || 0, "VNƒê")}
                       </div>
                       <div
                         style={{
@@ -828,7 +847,7 @@ export default function UserHistory() {
                           marginBottom: "4px",
                         }}
                       >
-                        T?ng ti?n:
+                        T·ªïng ti·ªÅn:
                       </div>
                       <div
                         style={{
@@ -837,7 +856,7 @@ export default function UserHistory() {
                           color: "#4db6ac",
                         }}
                       >
-                        {formatPrice(rental.deposit || 0, "VN–")}
+                        {formatPrice((rental.deposit || 0) + (rental.fee || 0), "VNƒê")}
                       </div>
                     </div>
                   </div>
