@@ -191,11 +191,8 @@ export default function CustomerVerification() {
             setSelectedCustomer(null);
           }}
           onVerify={() => {
-            setCustomers(
-              customers.map((c) =>
-                c.id === selectedCustomer.id ? { ...c, verified: true } : c
-              )
-            );
+            console.log("✅ [VERIFICATION] Customer verified, reloading list...");
+            loadPendingIDDocuments();
             setShowVerifyModal(false);
             setSelectedCustomer(null);
           }}

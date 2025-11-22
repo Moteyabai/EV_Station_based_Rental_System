@@ -9,9 +9,8 @@ namespace BusinessObject.Models.DTOs
         public int DocumentID { get; set; }
 
         public int Status { get; set; }
-
-        [StringLength(500, ErrorMessage = "Note cannot exceed 500 characters")]
-        public string Note { get; set; }
+       
+        public string? Note { get; set; }
 
         [Required(ErrorMessage = "Verified By Staff ID is required")]
         [Range(1, int.MaxValue, ErrorMessage = "Verified By Staff ID must be greater than 0")]

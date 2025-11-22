@@ -138,7 +138,7 @@ export default function PaymentManagement() {
 
     try {
       const token = getToken();
-      const response = await fetch(`http://localhost:5168/api/Payment/success?paymentID=${payment.paymentID}`, {
+      const response = await fetch(`http://localhost:5168/api/Payment/success?orderID=${payment.paymentID}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -173,7 +173,7 @@ export default function PaymentManagement() {
 
     try {
       const token = getToken();
-      const response = await fetch(`http://localhost:5168/api/Payment/failed?paymentID=${cancellingPayment.paymentID}&reason=${encodeURIComponent(cancelReason)}`, {
+      const response = await fetch(`http://localhost:5168/api/Payment/failed?orderID=${cancellingPayment.paymentID}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -424,7 +424,13 @@ export default function PaymentManagement() {
             </div>
 
             <div className="payment-actions">
-              <button className="btn-action btn-view">
+              <button 
+                className="btn-action btn-view"
+                onClick={() => {
+                  setSelectedPayment(payment);
+                  setShowPaymentModal(true);
+                }}
+              >
                 👁️ Xem thông tin
               </button>
               
@@ -467,6 +473,167 @@ export default function PaymentManagement() {
         />
       )}
 
+      {/* Payment Detail Modal */}
+      {showPaymentModal && selectedPayment && (
+        <div className="modal-overlay" onClick={() => setShowPaymentModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '700px', maxHeight: '90vh', overflow: 'auto' }}>
+            <div className="modal-header">
+              <h2>💰 Chi Tiết Thanh Toán</h2>
+              <button className="btn-close" onClick={() => setShowPaymentModal(false)}>✕</button>
+            </div>
+            
+            <div className="modal-body" style={{ padding: '2rem' }}>
+              {/* Payment Info */}
+              <div style={{ marginBottom: '2rem', padding: '1.5rem', background: '#f8f9fa', borderRadius: '12px', border: '1px solid #e9ecef' }}>
+                <h3 style={{ marginBottom: '1.5rem', color: '#333', borderBottom: '2px solid #667eea', paddingBottom: '0.8rem' }}>
+                  💳 Thông tin thanh toán
+                </h3>
+                
+                <div style={{ display: 'grid', gap: '1rem' }}>
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem', background: 'white', borderRadius: '8px' }}>
+                    <span style={{ fontWeight: '600', color: '#6c757d', minWidth: '150px' }}>🆔 Payment ID:</span>
+                    <span style={{ fontWeight: '700', color: '#2c3e50', fontSize: '1.1rem', fontFamily: 'monospace', background: '#e3f2fd', padding: '0.4rem 0.8rem', borderRadius: '6px' }}>
+                      #{selectedPayment.paymentID}
+                    </span>
+                  </div>
+                  
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem', background: 'white', borderRadius: '8px' }}>
+                    <span style={{ fontWeight: '600', color: '#6c757d', minWidth: '150px' }}>💰 Số tiền:</span>
+                    <span style={{ fontWeight: '700', color: '#4CAF50', fontSize: '1.3rem' }}>
+                      {formatCurrency(selectedPayment.amount)}
+                    </span>
+                  </div>
+                  
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem', background: 'white', borderRadius: '8px' }}>
+                    <span style={{ fontWeight: '600', color: '#6c757d', minWidth: '150px' }}>💳 Phương thức:</span>
+                    <span style={{ fontWeight: '700', color: '#2c3e50' }}>
+                      {selectedPayment.paymentMethod === 2 ? "💵 Tiền mặt" : 
+                       selectedPayment.paymentMethod === 1 ? "💳 PayOS" : "N/A"}
+                    </span>
+                  </div>
+                  
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem', background: 'white', borderRadius: '8px' }}>
+                    <span style={{ fontWeight: '600', color: '#6c757d', minWidth: '150px' }}>📊 Trạng thái:</span>
+                    <span>{getStatusBadge(selectedPayment)}</span>
+                  </div>
+                  
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem', background: 'white', borderRadius: '8px' }}>
+                    <span style={{ fontWeight: '600', color: '#6c757d', minWidth: '150px' }}>🕐 Ngày tạo:</span>
+                    <span style={{ fontWeight: '600', color: '#2c3e50' }}>
+                      {formatDate(selectedPayment.createdAt)}
+                    </span>
+                  </div>
+                  
+                  {selectedPayment.updatedAt && (
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem', background: 'white', borderRadius: '8px' }}>
+                      <span style={{ fontWeight: '600', color: '#6c757d', minWidth: '150px' }}>🔄 Cập nhật:</span>
+                      <span style={{ fontWeight: '600', color: '#2c3e50' }}>
+                        {formatDate(selectedPayment.updatedAt)}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {selectedPayment.rentalID && (
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem', background: 'white', borderRadius: '8px' }}>
+                      <span style={{ fontWeight: '600', color: '#6c757d', minWidth: '150px' }}>🏍️ Rental ID:</span>
+                      <span style={{ fontWeight: '700', color: '#2c3e50', fontFamily: 'monospace' }}>
+                        #{selectedPayment.rentalID}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Additional Info for Cash Payment */}
+              {selectedPayment.paymentMethod === 2 && (
+                <div style={{ padding: '1.5rem', background: '#fff3e0', borderRadius: '12px', border: '2px solid #ff9800', marginBottom: '2rem' }}>
+                  <h3 style={{ marginBottom: '1rem', color: '#e65100', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    💵 Thanh toán trực tiếp tại điểm
+                  </h3>
+                  <p style={{ color: '#bf360c', lineHeight: '1.6', margin: 0 }}>
+                    ⚠️ <strong>Lưu ý:</strong> Khách hàng sẽ thanh toán bằng tiền mặt khi nhận xe tại trạm.
+                    Vui lòng kiểm tra kỹ số tiền và xác nhận thanh toán sau khi nhận tiền.
+                  </p>
+                </div>
+              )}
+
+              {/* Additional Info for PayOS */}
+              {selectedPayment.paymentMethod === 1 && (
+                <div style={{ padding: '1.5rem', background: '#e3f2fd', borderRadius: '12px', border: '2px solid #2196F3', marginBottom: '2rem' }}>
+                  <h3 style={{ marginBottom: '1rem', color: '#1565c0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    💳 Thanh toán online PayOS
+                  </h3>
+                  <p style={{ color: '#0d47a1', lineHeight: '1.6', margin: 0 }}>
+                    ✅ Khách hàng đã thanh toán online qua cổng PayOS.
+                    Vui lòng xác nhận để hoàn tất giao dịch.
+                  </p>
+                </div>
+              )}
+
+              {/* Instructions */}
+              <div style={{ padding: '1.5rem', background: '#f1f8e9', borderRadius: '12px', border: '1px solid #aed581' }}>
+                <h3 style={{ marginBottom: '1rem', color: '#558b2f' }}>📝 Hướng dẫn xử lý</h3>
+                <ol style={{ margin: 0, paddingLeft: '1.5rem', color: '#33691e', lineHeight: '1.8' }}>
+                  <li>Kiểm tra kỹ thông tin thanh toán và số tiền</li>
+                  <li>
+                    {selectedPayment.paymentMethod === 2 
+                      ? "Thu tiền mặt từ khách hàng và đếm kỹ" 
+                      : "Xác nhận giao dịch PayOS đã hoàn tất"}
+                  </li>
+                  <li>Click nút "✅ Xác nhận" để hoàn tất thanh toán</li>
+                  <li>Nếu có vấn đề, click "❌ Hủy đơn" và ghi rõ lý do</li>
+                </ol>
+              </div>
+            </div>
+            
+            <div className="modal-footer" style={{ display: 'flex', gap: '1rem', justifyContent: 'center', padding: '1.5rem', borderTop: '2px solid #e9ecef' }}>
+              <button 
+                className="btn-secondary" 
+                onClick={() => setShowPaymentModal(false)}
+                style={{ padding: '0.8rem 2rem', fontSize: '1rem' }}
+              >
+                ❌ Đóng
+              </button>
+              
+              {(selectedPayment.status === 0 || selectedPayment.status === 2) && (
+                <>
+                  <button 
+                    className="btn-primary" 
+                    onClick={() => {
+                      setShowPaymentModal(false);
+                      handleConfirmPayment(selectedPayment);
+                    }}
+                    style={{ 
+                      padding: '0.8rem 2rem', 
+                      fontSize: '1rem',
+                      background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)'
+                    }}
+                  >
+                    ✅ Xác nhận thanh toán
+                  </button>
+                  
+                  <button 
+                    className="btn btn-danger" 
+                    onClick={() => {
+                      setShowPaymentModal(false);
+                      handleOpenCancelModal(selectedPayment);
+                    }}
+                    style={{ 
+                      padding: '0.8rem 2rem', 
+                      fontSize: '1rem',
+                      background: 'linear-gradient(135deg, #ee0979 0%, #ff6a00 100%)'
+                    }}
+                  >
+                    ❌ Hủy đơn
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel Payment Modal */}
       {showCancelModal && cancellingPayment && (
         <div className="modal-overlay" onClick={() => setShowCancelModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
