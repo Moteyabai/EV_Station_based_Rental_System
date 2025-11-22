@@ -121,16 +121,100 @@
 
 ---
 
+---
+
+## 💰 PAYMENT APIs (Quản lý Thanh Toán)
+
+### 16. Lấy danh sách payments
+
+- **Endpoint**: `GET /api/Payment/GetAllPayments`
+- **Vị trí**: `fetchPayments()` - line ~370
+- **Service**: `adminService.getAllPayments()`
+- **Response**:
+  ```json
+  [
+    {
+      "paymentID": 6,
+      "rentalID": 3,
+      "stationID": 5,
+      "amount": 150000,
+      "paymentType": 1
+    }
+  ]
+  ```
+- **Mô tả**: Lấy tất cả payments để tính doanh thu
+- **⚠️ Lưu ý**: Backend **chưa có** field `createdAt` → không filter theo tháng được
+
+**Cách tính doanh thu theo trạm:**
+
+```javascript
+// 1. Group payments theo stationID
+data.forEach((payment) => {
+  const stationId = payment.stationID;
+  const amount = payment.amount;
+  revenueByStationMap[stationId].revenue += amount;
+});
+
+// 2. Map stationID → tên trạm từ stations array
+const station = stations.find((s) => s.id === stationId);
+```
+
+---
+
+## 🚗 RENTAL APIs (Quản lý Thuê Xe)
+
+### 17. Lấy lịch sử thuê xe
+
+- **Endpoint**: `GET /api/Rental/GetCompletedAndOngoingRentals`
+- **Vị trí**: `fetchRentalHistory()` - line ~466
+- **Service**: `adminService.getCompletedAndOngoingRentals()`
+- **Response**:
+  ```json
+  [
+    {
+      "rentalID": 3,
+      "accountID": 1,
+      "bikeStockID": 5,
+      "startDate": "2025-11-21T10:30:00",
+      "returnDate": null,
+      "totalAmount": 150000
+    }
+  ]
+  ```
+- **Mô tả**: Lấy rentals đang diễn ra và đã hoàn thành
+- **Cách dùng**:
+  - `activeRentals = rentals.filter(r => !r.returnDate)` → Đếm số xe đang cho thuê
+  - Parse `startDate` để tính giờ cao điểm (6-9h, 9-12h, 12-14h...)
+
+---
+
+## 📈 STATISTICS APIs (Thống Kê)
+
+### 18. Đếm tổng số xe
+
+- **Endpoint**: `GET /api/Brand/GetAllBrands` → `GET /api/EVBike/GetEVBikesByBrandID/{brandId}` → `GET /api/EVBike_Stocks/GetStocksByBikeID/{bikeId}`
+- **Vị trí**: `fetchAllBikesCount()` - line ~280-340
+- **Mô tả**: Đếm tổng số xe bằng cách:
+  1. Lấy tất cả brands
+  2. Với mỗi brand → lấy bike types
+  3. Với mỗi bike type → lấy stocks (xe cụ thể)
+  4. Cộng tổng: `totalBikes += stocksData.length`
+
+---
+
 ## 📊 Tóm tắt theo Module
 
-| Module   | Số lượng API | Ghi chú                         |
-| -------- | ------------ | ------------------------------- |
-| Station  | 1            | Chỉ có GET, chưa có CRUD        |
-| Brand    | 4            | Full CRUD                       |
-| Bike     | 4            | GET, POST (loại xe & xe cụ thể) |
-| Customer | 1            | Chỉ có GET                      |
-| Staff    | 5            | Full CRUD + Assign Station      |
-| **TỔNG** | **15**       |                                 |
+| Module      | Số lượng API | Ghi chú                          |
+| ----------- | ------------ | -------------------------------- |
+| Station     | 1            | Chỉ có GET, chưa có CRUD         |
+| Brand       | 4            | Full CRUD                        |
+| Bike        | 4            | GET, POST (loại xe & xe cụ thể)  |
+| Customer    | 1            | Chỉ có GET                       |
+| Staff       | 5            | Full CRUD + Assign Station       |
+| **Payment** | **1**        | **GET - Tính doanh thu**         |
+| **Rental**  | **1**        | **GET - Lịch sử & giờ cao điểm** |
+| Statistics  | 1 (3 nested) | Đếm tổng xe (nested 3 levels)    |
+| **TỔNG**    | **18**       |                                  |
 
 ---
 
