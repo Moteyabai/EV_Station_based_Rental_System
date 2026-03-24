@@ -399,3 +399,24 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# JetBrains IDE
+.idea/
+*.iml
+
+# Frontend (Vite/React) build and cache
+FE/FE-EVRental/dist/
+FE/FE-EVRental/.vite/
+FE/FE-EVRental/.eslintcache
+FE/FE-EVRental/coverage/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Node package manager logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
